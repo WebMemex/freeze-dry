@@ -1,0 +1,37 @@
+{
+  "name": "freeze-dry",
+  "description": "Snapshots a web page to get it as a static, self-contained HTML document.",
+  "version": "0.1.0",
+  "license": "Unlicense",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WebMemex/freeze-dry"
+  },
+  "files": ["lib"],
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib --ignore '*.test.*'",
+    "watch": "babel src -d lib --ignore '*.test.*' -w",
+    "prepublish": "npm run build",
+    "postinstall": "postinstall-build lib",
+    "test": "jest --verbose --config=.jest-config.json"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-jest": "^20.0.3",
+    "babel-plugin-transform-regenerator": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-1": "^6.24.1",
+    "blob-util": "^1.2.1",
+    "jest": "^20.0.4",
+    "jest-cli": "^20.0.4",
+    "jest-fetch-mock": "^1.2.0"
+  },
+  "dependencies": {
+    "postinstall-build": "^3.0.1",
+    "response-to-data-url": "^0.1.0",
+    "when-all-settled": "^0.1.1"
+  }
+}
