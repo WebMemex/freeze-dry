@@ -1,7 +1,7 @@
 /* eslint-env jest */
 
-import removeNoscripts from 'src/freeze-dry/remove-noscripts'
-import * as common from 'src/freeze-dry/common'
+import removeNoscripts from './remove-noscripts'
+import * as common from './common'
 
 
 describe('removeNoscripts', () => {

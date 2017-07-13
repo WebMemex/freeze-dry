@@ -1,8 +1,8 @@
 /* eslint-env jest */
 /* eslint import/namespace: "off" */
 
-import inlineImages, { getUrlsFromSrcset } from 'src/freeze-dry/inline-images'
-import * as common from 'src/freeze-dry/common'
+import inlineImages, { getUrlsFromSrcset } from './inline-images'
+import * as common from './common'
 
 
 describe('getUrlsFromSrcset', () => {

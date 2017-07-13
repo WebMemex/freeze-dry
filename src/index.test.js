@@ -1,12 +1,12 @@
 /* eslint-env jest */
 /* eslint import/namespace: "off" */
 
-import freezeDry from 'src/freeze-dry/index'
-import * as inlineStyles from 'src/freeze-dry/inline-styles'
-import * as removeScripts from 'src/freeze-dry/remove-scripts'
-import * as inlineImages from 'src/freeze-dry/inline-images'
-import * as setContentSecurityPolicy from 'src/freeze-dry/set-content-security-policy'
-import * as fixLinks from 'src/freeze-dry/fix-links'
+import freezeDry from './index'
+import * as inlineStyles from './inline-styles'
+import * as removeScripts from './remove-scripts'
+import * as inlineImages from './inline-images'
+import * as setContentSecurityPolicy from './set-content-security-policy'
+import * as fixLinks from './fix-links'
 import * as removeNoscripts from './remove-noscripts'
 
 

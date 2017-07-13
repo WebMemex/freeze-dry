@@ -1,5 +1,5 @@
-import responseToDataUri from 'src/util/response-to-data-uri'
-import whenAllSettled from 'src/util/when-all-settled'
+import responseToDataUrl from 'response-to-data-url'
+import whenAllSettled from 'when-all-settled'
 
 
 export function removeNode(node) {
@@ -9,7 +9,7 @@ export function removeNode(node) {
 export async function urlToDataUri(url) {
     try {
         const response = await fetch(url, {cache: 'force-cache'})
-        const dataUri = await responseToDataUri(response)
+        const dataUri = await responseToDataUrl(response)
         return dataUri
     } catch (err) {
         return 'about:invalid'

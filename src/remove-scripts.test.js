@@ -1,6 +1,6 @@
 /* eslint-env jest */
 
-import removeScripts from 'src/freeze-dry/remove-scripts'
+import removeScripts from './remove-scripts'
 
 
 describe('removeScripts', () => {

@@ -1,6 +1,6 @@
 /* eslint-env jest */
 
-import setContentSecurityPolicy from 'src/freeze-dry/set-content-security-policy'
+import setContentSecurityPolicy from './set-content-security-policy'
 
 
 describe('setContentSecurityPolicy', () => {

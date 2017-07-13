@@ -1,7 +1,7 @@
 /* eslint-env jest */
 
-import inlineStyles from 'src/freeze-dry/inline-styles'
-import * as common from 'src/freeze-dry/common'
+import inlineStyles from './inline-styles'
+import * as common from './common'
 import { dataURLToBlob } from 'blob-util'
 
 

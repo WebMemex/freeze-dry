@@ -1,6 +1,6 @@
 /* eslint-env jest */
 
-import fixLinks from 'src/freeze-dry/fix-links'
+import fixLinks from './fix-links'
 
 
 describe('fixLinks', () => {
