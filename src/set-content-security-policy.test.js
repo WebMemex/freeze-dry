@@ -11,11 +11,10 @@ describe('setContentSecurityPolicy', () => {
             "style-src data: 'unsafe-inline'",
             "font-src data:",
         ]
+        const csp = policyDirectives.join('; ')
         const doc = window.document.implementation.createHTMLDocument()
-        // XXX insertAdjacentElement is not yet implemented in jsdom. This test is a placeholder
-        // until a better solution arises.
-        doc.querySelector('head').insertAdjacentElement = jest.fn()
         setContentSecurityPolicy({doc, policyDirectives})
-        expect(doc.querySelector('head').insertAdjacentElement).toHaveBeenCalled()
+        expect(doc.querySelector('meta').getAttribute('http-equiv')).toBe('Content-Security-Policy')
+        expect(doc.querySelector('meta').content).toBe(csp)
     })
 })

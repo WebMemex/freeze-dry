@@ -9,15 +9,9 @@ describe('fixLinks', () => {
     test('should insert the <base> element into <head>', async () => {
         const doc = window.document.implementation.createHTMLDocument()
         const rootElement = doc.documentElement
-        doc.querySelector('head').insertAdjacentElement = jest.fn()
-        const docUrl = 'about:blank'
+        const docUrl = 'https://example.com/page/'
         await fixLinks({rootElement, docUrl})
-        const base = document.createElement('base')
-        base.href = docUrl
-        // XXX insertAdjacentElement is not yet implemented in jsdom. This test is a placeholder
-        // until a better solution arises.
-        expect(rootElement.querySelector('head').insertAdjacentElement)
-            .toBeCalledWith('afterbegin', base)
+        expect(rootElement.querySelector('base').href).toBe(docUrl)
     })
 
     test('should do nothing for absolute URLs', async () => {
