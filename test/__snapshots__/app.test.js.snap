@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`App Test should test against the freeze dried page 1`] = `
+"<html><head><meta http-equiv=\\"Content-Security-Policy\\" content=\\"default-src 'none'; img-src data:; style-src data: 'unsafe-inline'; font-src data:\\"><base href=\\"https://example.com\\">
+    <title>Example Domain</title>
+
+    <meta charset=\\"utf-8\\">
+    <meta http-equiv=\\"Content-type\\" content=\\"text/html; charset=utf-8\\">
+    <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1\\">
+    <style type=\\"text/css\\">�PNG
+
+���
+IHDR����������:~�U���
+IDATx�cb����67|�����IEND�B\`�</style>
+    <style type=\\"text/css\\">
+    body {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg==)
+        background-color: #f0f0f2;
+        margin: 0;
+        padding: 0;
+        font-family: \\"Open Sans\\", \\"Helvetica Neue\\", Helvetica, Arial, sans-serif;
+        
+    }
+    div {
+        width: 600px;
+        margin: 5em auto;
+        padding: 50px;
+        background-color: #fff;
+        border-radius: 1em;
+    }
+    a:link, a:visited {
+        color: #38488f;
+        text-decoration: none;
+    }
+    @media (max-width: 700px) {
+        body {
+            background-color: #fff;
+        }
+        div {
+            width: auto;
+            margin: 0 auto;
+            border-radius: 0;
+            padding: 1em;
+        }
+    }
+    </style>
+
+        
+    
+</head>
+
+<body>
+<div>
+    <h1 href=\\"javascript:\\">Example Domain</h1>
+    <img src=\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg==\\" data-original-src=\\"https://example.com/public/image/background.png\\">
+    <p style=\\"color:red\\">This domain is established to be used for illustrative examples in documents. You may use this
+    domain in examples without prior coordination or asking for permission.</p>
+    <p style=\\"color:blue\\"><a href=\\"http://www.iana.org/domains/example\\">More information...</a></p>
+    <div>Button</div>
+    <a href=\\"otherpage#home\\">Link</a>
+    <div style=\\"background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg==)\\">
+    </div>
+</div>
+
+</body></html>"
+`;
