@@ -22,4 +22,13 @@ describe('App Test', () => {
         const html = await freezeDry(doc, docUrl)
         expect(html).toMatchSnapshot()
     })
+
+    test.skip('should do nothing to an already freeze dried page', async () => {
+        fetch.mockResponse(imageBlob)
+        const freezeDriedPage = require('./__snapshots__/app.test.js.snap')['App Test should test against the freeze dried page 1']
+        const docUrl = 'https://example.com'
+        const doc = parser.parseFromString(freezeDriedPage, 'text/html')
+        const html = await freezeDry(doc, docUrl)
+        expect(html).toBe(freezeDriedPage)
+    })
 })
