@@ -2,9 +2,15 @@ import whenAllSettled from 'when-all-settled'
 import { urlToDataUrl } from './common'
 
 
-// Finds all url(...) occurrances in a string of CSS, then fetches and inlines
-// them as data URLs.
-// Returns the processed (and possibly much larger) string of CSS.
+/**
+* Finds all url(...) occurrances in a string of CSS, then fetches and inlines
+* them as data URLs.
+* Returns the processed (and possibly much larger) string of CSS.
+* 
+* @param {string} stylesheetText - text of a stylesheet
+* @param {string} stylesheetUrl - URL of the stylesheet
+* @returns {string} stylesheetText - text of stylesheet with data URLs
+*/
 async function inlineStylesheetContents({stylesheetText, stylesheetUrl}) {
     const cssFindUrlsPattern = /url\s*\(\s*('|")?\s*([^"')]+?)\s*\1\s*\)/ig
     const cssExtractUrlPattern = /url\s*\(\s*('|")?\s*([^"')]+?)\s*\1\s*\)/i
@@ -25,8 +31,13 @@ async function inlineStylesheetContents({stylesheetText, stylesheetUrl}) {
     return stylesheetText
 }
 
-// In every <link rel="stylesheet"> tag, inline the stylesheet as a data URL,
-// and inline every URL within that stylesheet.
+/**
+* In every <link rel="stylesheet"> tag, inline the stylesheet as a data URL,
+* and inline every URL within that stylesheet.
+* 
+* @param {HTMLElement} rootElement - root document for the function
+* @param {string} docUrl - document url of the page
+*/
 async function inlineLinkedStylesheets({rootElement, docUrl}) {
     const querySelector = 'link[rel*="stylesheet"][href]'
     const linkElements = Array.from(rootElement.querySelectorAll(querySelector))
@@ -60,7 +71,12 @@ async function inlineLinkedStylesheets({rootElement, docUrl}) {
     await whenAllSettled(jobs)
 }
 
-// In every <style>...</style> block, inline any URLs it contains.
+/**
+* In every <style>...</style> block, inline any URLs it contains.
+* 
+* @param {HTMLElement} rootElement - root document for the function
+* @param {string} docUrl - document url of the page
+*/
 async function inlineStyleTagContents({rootElement, docUrl}) {
     const querySelector = 'style[type="text/css"],style:not([type])'
     const styleElements = Array.from(rootElement.querySelectorAll(querySelector))
@@ -75,7 +91,12 @@ async function inlineStyleTagContents({rootElement, docUrl}) {
     await whenAllSettled(jobs)
 }
 
-// In every <sometag style="..."> inline style, inline any URLs it contains.
+/**
+* In every <sometag style="..."> inline style, inline any URLs it contains.
+* 
+* @param {HTMLElement} rootElement - root document for the function
+* @param {string} docUrl - document url of the page
+*/
 async function inlineInlineStyleContents({rootElement, docUrl}) {
     const querySelector = '*[style]'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
@@ -90,6 +111,12 @@ async function inlineInlineStyleContents({rootElement, docUrl}) {
     await whenAllSettled(jobs)
 }
 
+/*
+* Freeze dry all the components of an inline stylesheet
+* 
+* @param {HTMLElement} rootElement - root document for the function
+* @param {string} docUrl - document url of the page
+*/
 export default async function inlineStyles({rootElement, docUrl}) {
     const jobs = [
         inlineLinkedStylesheets({rootElement, docUrl}),

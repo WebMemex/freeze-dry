@@ -6,7 +6,13 @@ import inlineImages from './inline-images'
 import setContentSecurityPolicy from './set-content-security-policy'
 import fixLinks from './fix-links'
 
-
+/**
+* Freeze dry a HTML Document
+* 
+* @param {Document} document - HTML document to be freeze dried
+* @param {string} docUrl - document url of the page
+* @returns {string} html - freeze dried string of the document
+*/
 export default async function freezeDry (
     document = window.document,
     docUrl = document.URL,

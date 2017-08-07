@@ -1,4 +1,9 @@
-// Puts the given CSP directives into a <meta> tag of the given document.
+/**
+* Puts the given CSP directives into a <meta> tag of the given document.
+* 
+* @param {HTMLElement} doc - document for the function
+* @param {string} policyDirectives - policy directives for the page
+*/
 export default function setContentSecurityPolicy({doc, policyDirectives}) {
     // Ensure a head element exists.
     if (!doc.head) {

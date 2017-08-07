@@ -1,13 +1,21 @@
 import { removeNode } from './common.js'
 
 
-// Removes all <script> elements in rootElement.
+/**
+* Removes all <script> elements in rootElement.
+* 
+* @param {HTMLElement} rootElement - root document for the function
+*/
 export function removeScriptElements({rootElement}) {
     const scripts = Array.from(rootElement.querySelectorAll('script'))
     scripts.forEach(removeNode)
 }
 
-// Removes event handlers (onclick, onload, etcetera) from rootElement and all elements it contains.
+/**
+* Removes event handlers (onclick, onload, etcetera) from rootElement and all elements it contains.
+* 
+* @param {HTMLElement} rootElement - root document for the function
+*/
 export function removeEventHandlers({rootElement}) {
     const elements = Array.from(rootElement.querySelectorAll('*'))
     elements.forEach(element => {
@@ -20,7 +28,11 @@ export function removeEventHandlers({rootElement}) {
     })
 }
 
-// Disables all links with a 'javascript:' href.
+/**
+* Disables all links with a 'javascript:' href.
+* 
+* @param {HTMLElement} rootElement - root document for the function
+*/
 export function removeJavascriptHrefs({rootElement}) {
     const elements = Array.from(rootElement.querySelectorAll('*[href^="javascript:"]'))
     elements.forEach(element => {
@@ -30,7 +42,11 @@ export function removeJavascriptHrefs({rootElement}) {
     })
 }
 
-// Tries to remove all kinds of scripts contained in the given rootElement.
+/**
+* Tries to remove all kinds of scripts contained in the given rootElement.
+* 
+* @param {HTMLElement} rootElement - root document for the function
+*/
 export default async function removeScripts({rootElement}) {
     removeScriptElements({rootElement})
     removeEventHandlers({rootElement})
