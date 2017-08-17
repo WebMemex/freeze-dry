@@ -35,7 +35,7 @@ async function inlineStylesheetContents({stylesheetText, stylesheetUrl}) {
 * In every <link rel="stylesheet"> tag, inline the stylesheet as a data URL,
 * and inline every URL within that stylesheet.
 * 
-* @param {HTMLElement} rootElement - root document for the function
+* @param {HTMLElement} rootElement - root of the tree of elements to be processed
 * @param {string} docUrl - document url of the page
 */
 async function inlineLinkedStylesheets({rootElement, docUrl}) {
@@ -74,7 +74,7 @@ async function inlineLinkedStylesheets({rootElement, docUrl}) {
 /**
 * In every <style>...</style> block, inline any URLs it contains.
 * 
-* @param {HTMLElement} rootElement - root document for the function
+* @param {HTMLElement} rootElement - root of the tree of elements to be processed
 * @param {string} docUrl - document url of the page
 */
 async function inlineStyleTagContents({rootElement, docUrl}) {
@@ -94,7 +94,7 @@ async function inlineStyleTagContents({rootElement, docUrl}) {
 /**
 * In every <sometag style="..."> inline style, inline any URLs it contains.
 * 
-* @param {HTMLElement} rootElement - root document for the function
+* @param {HTMLElement} rootElement - root of the tree of elements to be processed
 * @param {string} docUrl - document url of the page
 */
 async function inlineInlineStyleContents({rootElement, docUrl}) {
@@ -114,7 +114,7 @@ async function inlineInlineStyleContents({rootElement, docUrl}) {
 /*
 * Freeze dry all the components of an inline stylesheet
 * 
-* @param {HTMLElement} rootElement - root document for the function
+* @param {HTMLElement} rootElement - root of the tree of elements to be processed
 * @param {string} docUrl - document url of the page
 */
 export default async function inlineStyles({rootElement, docUrl}) {

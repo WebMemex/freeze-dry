@@ -13,7 +13,8 @@ export function removeNode(node) {
 /**
 * Fetch the data from the URL and convert it into a data URL
 * 
-* @param {URL} url - URL of the data to be fetched
+* @param {string} url - URL of the data to be fetched
+*
 * @returns {string} dataUrl - containing the dataUrl of the fetched data
 */
 export async function urlToDataUrl(url) {
@@ -31,11 +32,11 @@ export async function urlToDataUrl(url) {
 * their contents, and replace the URL with the content encoded as a data URL.
 * The elements argument can be a query selector string if rootElement is given.
 * 
-* @param {string} elements - selector for the elements
-* @param {string} attributes - selector for the attributes in the elements
+* @param {string/Array} elements - string selector for the elements / array of elements
+* @param {string/Array} attributes - single or multiple string selectors for the attributes in the elements
 * @param(optional) {function} attrToUrls - get the url from the attribute 
 * @param(optional) {boolean} fixIntegrity - 
-* @param {HTMLElement} rootElement - root document for the function
+* @param {HTMLElement} rootElement - root of the tree of elements to be processed
 * @param {string} docUrl - document url of the page
 */
 export async function inlineUrlsInAttributes({
