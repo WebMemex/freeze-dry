@@ -3,7 +3,7 @@ import { urlToDataUrl } from './common'
 
 
 /**
-* Finds all url(...) occurrances in a string of CSS, then fetches and inlines
+* Finds all url(...) occurrences in a string of CSS, then fetches and inlines
 * them as data URLs.
 * Returns the processed (and possibly much larger) string of CSS.
 * 
