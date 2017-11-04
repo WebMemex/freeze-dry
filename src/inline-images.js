@@ -22,7 +22,7 @@ const attributesToInline = [
         attrToUrls: getUrlsFromSrcset,
     },
     {
-        elements: 'link[rel*=icon]',
+        elements: 'link[rel~=icon]',
         attributes: 'href',
         fixIntegrity: true,
     },
