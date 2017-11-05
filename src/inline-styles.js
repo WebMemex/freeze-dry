@@ -28,7 +28,7 @@ async function inlineStylesheetContents({stylesheetText, stylesheetUrl}) {
 // In every <link rel="stylesheet"> tag, inline the stylesheet as a data URL,
 // and inline every URL within that stylesheet.
 async function inlineLinkedStylesheets({rootElement, docUrl}) {
-    const querySelector = 'link[rel*="stylesheet"][href]'
+    const querySelector = 'link[rel~="stylesheet"][href]'
     const linkElements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = linkElements.map(async linkEl => {
         const stylesheetUrl = new URL(linkEl.getAttribute('href'), docUrl)
