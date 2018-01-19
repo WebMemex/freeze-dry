@@ -1,0 +1,12 @@
+# Table of Content
+* [Introduction](/Readme.md)
+* [Guides](/docs/guides.md)
+* [API](/docs/api)
+	* [common](/docs/api/common.md)
+	* [fix-links](/docs/api/fix-links.md)
+	* [index](/docs/api/index.md)
+	* [inline-images](/docs/api/inline-images.md)
+	* [inline-styles](/docs/api/inline-styles.md)
+	* [remove-noscripts](/docs/api/remove-noscripts.md)
+	* [remove-scripts](/docs/api/remove-scripts.md)
+	* [set-content-security-policy](/docs/api/set-content-security-policy.md)
