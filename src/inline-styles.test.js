@@ -37,11 +37,8 @@ describe('inlineStyles', () => {
             .toBe(`div{background-image: url(${imageDataUrl});}`)
     })
 
-    test('should convert the url in <style> to dataUrls', async () => {
-        const styleSheet = 'div{background-image: url("public/image/background.jpeg");}'
-        fetch.mockResponseOnce(new Blob([styleSheet]))
-        const styleSheetAsDataUrl = `data:text/plain;charset=utf-8;base64,aHR0cHM6Ly9leGFtcGxlLmNvbS9wdWJsaWMvaW1hZ2UvYmFja2dyb3VuZC5qcGVn`
-        const spy = jest.spyOn(common, 'urlToDataUrl').mockReturnValue(styleSheetAsDataUrl)
+    test('should convert urls in <style> contents to dataUrls', async () => {
+        const spy = jest.spyOn(common, 'urlToDataUrl').mockReturnValue(imageDataUrl)
         const doc = parser.parseFromString(
             `<html>
                 <head>
@@ -58,7 +55,7 @@ describe('inlineStyles', () => {
         await inlineStyles({rootElement: doc.documentElement, docUrl})
         expect(spy).toHaveBeenCalled()
         expect(doc.querySelector('style').innerHTML.trim())
-            .toBe(`div{background-image: url(${styleSheetAsDataUrl});}`)
+            .toBe(`div{background-image: url(${imageDataUrl});}`)
         spy.mockRestore()
     })
 
