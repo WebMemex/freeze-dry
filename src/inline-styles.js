@@ -1,5 +1,5 @@
 import whenAllSettled from 'when-all-settled'
-import { fetchSubresource, urlToDataUrl } from './common'
+import { fetchSubresource, urlToDataUrl, stringToDataUrl } from './common'
 
 
 // Finds all url(...) occurrances in a string of CSS, then fetches and inlines
@@ -45,17 +45,11 @@ async function inlineLinkedStylesheets({rootElement, docUrl}) {
         } catch (err) {
             stylesheetText = '/* Oops! Freeze-dry failed to save this stylesheet. */'
         }
-        const styleEl = rootElement.ownerDocument.createElement('style')
-        styleEl.innerHTML = stylesheetText
-
-        // Type is practically always text/css, the default, but copy it anyway.
-        const type = linkEl.getAttribute('type')
-        if (type) {
-            styleEl.setAttribute('type', type)
-        }
-
-        // Replace the <link /> element with the inlined <style>...</style>.
-        linkEl.parentNode.replaceChild(styleEl, linkEl)
+        // Remove the link's integrity hash, if any, as we may have changed the content.
+        linkEl.removeAttribute('integrity')
+        // Inline the new stylesheet into the link element.
+        const dataUrl = await stringToDataUrl(stylesheetText, 'text/css')
+        linkEl.setAttribute('href', dataUrl)
     })
     await whenAllSettled(jobs)
 }
