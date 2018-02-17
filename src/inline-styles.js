@@ -1,5 +1,5 @@
 import whenAllSettled from 'when-all-settled'
-import { urlToDataUrl } from './common'
+import { fetchSubresource, urlToDataUrl } from './common'
 
 
 // Finds all url(...) occurrances in a string of CSS, then fetches and inlines
@@ -35,7 +35,7 @@ async function inlineLinkedStylesheets({rootElement, docUrl}) {
         let stylesheetText
         try {
             // Fetch the stylesheet itself.
-            const response = await fetch(stylesheetUrl, {cache: 'force-cache'})
+            const response = await fetchSubresource(stylesheetUrl)
             stylesheetText = await response.text()
             // Fetch and replace URLs inside the stylesheet.
             stylesheetText = await inlineStylesheetContents({

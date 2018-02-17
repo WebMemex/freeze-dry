@@ -6,9 +6,19 @@ export function removeNode(node) {
     node.parentNode.removeChild(node)
 }
 
+export async function fetchSubresource(url) {
+    // TODO investigate whether we should supply origin, credentials, perhaps
+    // use content.fetch (in Firefox extensions), etcetera.
+    const response = await self.fetch(url, {
+        cache: 'force-cache',
+        redirect: 'follow',
+    })
+    return response
+}
+
 export async function urlToDataUrl(url) {
     try {
-        const response = await fetch(url, {cache: 'force-cache'})
+        const response = await fetchSubresource(url)
         const dataUrl = await responseToDataUrl(response)
         return dataUrl
     } catch (err) {
