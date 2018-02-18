@@ -60,7 +60,7 @@ describe('inlineUrlsInAttributes', () => {
         imageBlob = await dataURLToBlob(imageDataUrl)
     })
 
-    test('should change the URL in <img> tag to a dataUrl', async () => {
+    test('should convert the specified attribute to a dataUrl', async () => {
         fetch.mockResponseOnce(imageBlob)
         const doc = parser.parseFromString(
             '<html><body><img src="public/image/background.png" alt="background" /></body></html>',
@@ -70,18 +70,6 @@ describe('inlineUrlsInAttributes', () => {
         await inlineUrlsInAttributes({elements: 'img', attributes: 'src', rootElement, docUrl})
         expect(rootElement.querySelector('img').getAttribute('data-original-src')).toBe('public/image/background.png')
         expect(rootElement.querySelector('img').getAttribute('src')).toBe(imageDataUrl)
-    })
-
-    test('should change the URL in the <link> tag to a dataUrl', async () => {
-        fetch.mockResponseOnce(imageBlob)
-        const doc = parser.parseFromString(
-            '<html><head><link rel="icon" href="public/image/favicon.ico"></head></html>',
-            'text/html'
-        )
-        const rootElement = doc.documentElement
-        await inlineUrlsInAttributes({elements: 'link', attributes: 'href', rootElement, docUrl})
-        expect(rootElement.querySelector('link').getAttribute('data-original-href')).toBe('public/image/favicon.ico')
-        expect(rootElement.querySelector('link').getAttribute('href')).toBe(imageDataUrl)
     })
 
     test('should remove the attribute integrity from the tag', async () => {
