@@ -6,6 +6,9 @@ import { dataURLToBlob } from 'blob-util'
 
 
 const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg=='
+const styleSheet = 'div{background-image: url("public/image/background.jpeg");}'
+// The same stylesheet, with the image above inlined as data URL, then altogether encoded as data URL.
+const styleSheetAsDataUrl = 'data:text/css;base64,ZGl2e2JhY2tncm91bmQtaW1hZ2U6IHVybCgiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFBRUFBQUFCQ0FBQUFBQTZmcHRWQUFBQUNrbEVRVlI0bkdOaUFBQUFCZ0FETmpkOHFBQUFBQUJKUlU1RXJrSmdnZz09Iik7fQ=='
 
 beforeEach(() => {
     jest.resetAllMocks()
@@ -13,18 +16,15 @@ beforeEach(() => {
 
 describe('inlineStyles', () => {
     const parser = new DOMParser()
-    let imageBlob
     let urlToDataUrlSpy
 
     beforeAll(async () => {
-        imageBlob = await dataURLToBlob(imageDataUrl)
         urlToDataUrlSpy = jest.spyOn(common, 'urlToDataUrl')
     })
 
-    test('should return <style> tag with the fetched stylesheet', async () => {
-        const styleSheet = 'div{background-image: url("public/image/background.jpeg");}'
-        fetch.mockResponseOnce(new Blob([styleSheet]))
-        fetch.mockResponseOnce(imageBlob)
+    test('should convert the href of a <link rel="stylesheet"> to a data URL', async () => {
+        fetch.mockResponseOnce(new Blob([styleSheet], {type: 'text/css'}))
+        urlToDataUrlSpy.mockReturnValue(imageDataUrl)
         const doc = parser.parseFromString(
             `<html>
                 <head>
@@ -39,8 +39,8 @@ describe('inlineStyles', () => {
         )
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
-        expect(doc.querySelector('style').innerHTML)
-            .toBe(`div{background-image: url("${imageDataUrl}");}`)
+        expect(doc.querySelector('link').getAttribute('href'))
+            .toBe(styleSheetAsDataUrl)
     })
 
     test('should convert urls in <style> contents to dataUrls', async () => {
