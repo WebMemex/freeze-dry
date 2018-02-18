@@ -40,7 +40,7 @@ describe('inlineStyles', () => {
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
         expect(doc.querySelector('style').innerHTML)
-            .toBe(`div{background-image: url(${imageDataUrl});}`)
+            .toBe(`div{background-image: url("${imageDataUrl}");}`)
     })
 
     test('should convert urls in <style> contents to dataUrls', async () => {
@@ -61,7 +61,7 @@ describe('inlineStyles', () => {
         await inlineStyles({rootElement: doc.documentElement, docUrl})
         expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('style').innerHTML.trim())
-            .toBe(`div{background-image: url(${imageDataUrl});}`)
+            .toBe(`div{background-image: url("${imageDataUrl}");}`)
     })
 
     test('should convert the urls in a style attribute to data URLs', async () => {
@@ -74,6 +74,6 @@ describe('inlineStyles', () => {
         await inlineStyles({rootElement: doc.documentElement, docUrl})
         expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('div').getAttribute('style'))
-            .toBe(`background-image: url(${imageDataUrl});`)
+            .toBe(`background-image: url("${imageDataUrl}");`)
     })
 })
