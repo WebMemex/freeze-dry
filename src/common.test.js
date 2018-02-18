@@ -5,6 +5,7 @@ import * as responseToDataUrl from 'response-to-data-url'
 
 import {
     removeNode,
+    fetchSubresource,
     stringToDataUrl,
     urlToDataUrl,
     inlineUrlsInAttributes,
@@ -12,6 +13,11 @@ import {
 
 
 const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg=='
+let imageBlob
+
+beforeAll(async () => {
+    imageBlob = await dataURLToBlob(imageDataUrl)
+})
 
 beforeEach(() => {
     jest.resetAllMocks()
@@ -26,6 +32,24 @@ describe('removeNode', () => {
         )
         removeNode(doc.querySelector('head'))
         expect(doc.querySelector('head')).toBeNull()
+    })
+})
+
+describe('fetchSubresource', () => {
+    test('should call global fetch() with configuration', async () => {
+        const url = 'https://example.com/image.png'
+        const response = await fetchSubresource(url)
+        expect(fetch).toHaveBeenCalledWith(url, expect.objectContaining({
+            // Keeping it flexible, not checking each option and value.
+            redirect: expect.any(String),
+        }))
+    })
+
+    test('should return response from fetch', async () => {
+        const mockResponse = new Response()
+        fetch.mockReturnValue(mockResponse)
+        const response = await fetchSubresource('some://url')
+        expect(response).toBe(mockResponse)
     })
 })
 
@@ -86,11 +110,6 @@ describe('urlToDataUrl', () => {
 describe('inlineUrlsInAttributes', () => {
     const docUrl = 'https://example.com/page'
     const parser = new DOMParser()
-    let imageBlob
-
-    beforeAll(async () => {
-        imageBlob = await dataURLToBlob(imageDataUrl)
-    })
 
     test('should convert the specified attribute to a dataUrl', async () => {
         fetch.mockResponse(imageBlob)
