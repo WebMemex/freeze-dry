@@ -3,7 +3,12 @@
 import { dataURLToBlob } from 'blob-util'
 import * as responseToDataUrl from 'response-to-data-url'
 
-import { inlineUrlsInAttributes, urlToDataUrl, removeNode } from './common'
+import {
+    removeNode,
+    stringToDataUrl,
+    urlToDataUrl,
+    inlineUrlsInAttributes,
+} from './common'
 
 
 const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg=='
@@ -21,6 +26,26 @@ describe('removeNode', () => {
         )
         removeNode(doc.querySelector('head'))
         expect(doc.querySelector('head')).toBeNull()
+    })
+})
+
+describe('stringToDataUrl', () => {
+    test('should return the string as a base64-encoded data URLs', async () => {
+        const someString = 'Just some arbirtary string.'
+        const someStringAsDataUrl = 'data:text/plain;base64,SnVzdCBzb21lIGFyYmlydGFyeSBzdHJpbmcu'
+
+        const dataUrl = await stringToDataUrl(someString, 'text/plain')
+        expect(dataUrl).toBe(someStringAsDataUrl)
+    })
+
+    test('should default to mime type text/plain', async () => {
+        const dataUrl = await stringToDataUrl('bla bla')
+        expect(dataUrl).toMatch(/^data:text\/plain/)
+    })
+
+    test('should keep the given mime type', async () => {
+        const dataUrl = await stringToDataUrl('bla bla', 'text/html')
+        expect(dataUrl).toMatch(/^data:text\/html/)
     })
 })
 
