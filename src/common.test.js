@@ -61,12 +61,11 @@ describe('urlToDataUrl', () => {
     })
 
     test('should return a dataUrl given a URL', async () => {
-        const someDataUrl = 'data:text/html,<h1>bananas</h1>'
         responseToDataUrlSpy.mockImplementation(async () => {
-            return someDataUrl
+            return imageDataUrl
         })
         const dataUrl = await urlToDataUrl('https://example.com/page')
-        expect(dataUrl).toBe(someDataUrl)
+        expect(dataUrl).toBe(imageDataUrl)
     })
 
     test('should return a "about:invalid" upon failure', async () => {
