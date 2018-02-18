@@ -7,12 +7,18 @@ import { dataURLToBlob } from 'blob-util'
 
 const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg=='
 
+beforeEach(() => {
+    jest.resetAllMocks()
+})
+
 describe('inlineStyles', () => {
     const parser = new DOMParser()
     let imageBlob
+    let urlToDataUrlSpy
 
     beforeAll(async () => {
         imageBlob = await dataURLToBlob(imageDataUrl)
+        urlToDataUrlSpy = jest.spyOn(common, 'urlToDataUrl')
     })
 
     test('should return <style> tag with the fetched stylesheet', async () => {
@@ -38,7 +44,7 @@ describe('inlineStyles', () => {
     })
 
     test('should convert urls in <style> contents to dataUrls', async () => {
-        const spy = jest.spyOn(common, 'urlToDataUrl').mockReturnValue(imageDataUrl)
+        urlToDataUrlSpy.mockReturnValue(imageDataUrl)
         const doc = parser.parseFromString(
             `<html>
                 <head>
@@ -53,23 +59,21 @@ describe('inlineStyles', () => {
         )
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
-        expect(spy).toHaveBeenCalled()
+        expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('style').innerHTML.trim())
             .toBe(`div{background-image: url(${imageDataUrl});}`)
-        spy.mockRestore()
     })
 
     test('should convert the urls in a style attribute to data URLs', async () => {
-        const spy = jest.spyOn(common, 'urlToDataUrl').mockReturnValue(imageDataUrl)
+        urlToDataUrlSpy.mockReturnValue(imageDataUrl)
         const doc = parser.parseFromString(
             '<html><div style="background-image: url(\'public/image/background.jpeg\');"></div></html>',
             'text/html'
         )
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
-        expect(spy).toHaveBeenCalled()
+        expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('div').getAttribute('style'))
             .toBe(`background-image: url(${imageDataUrl});`)
-        spy.mockRestore()
     })
 })

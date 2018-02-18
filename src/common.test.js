@@ -9,7 +9,7 @@ import { inlineUrlsInAttributes, urlToDataUrl, removeNode } from './common'
 const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg=='
 
 beforeEach(() => {
-    fetch.resetMocks()
+    jest.resetAllMocks()
 })
 
 describe('removeNode', () => {
@@ -25,27 +25,35 @@ describe('removeNode', () => {
 })
 
 describe('urlToDataUrl', () => {
+    let responseToDataUrlSpy
+
+    beforeAll(() => {
+        responseToDataUrlSpy = jest.spyOn(responseToDataUrl, 'default')
+    })
+
+    afterAll(() => {
+        responseToDataUrlSpy.mockRestore()
+    })
+
     test('should return a dataUrl given a URL', async () => {
         const someDataUrl = 'data:text/html,<h1>bananas</h1>'
-        const spy = jest.spyOn(responseToDataUrl, 'default').mockImplementation(async () => {
+        responseToDataUrlSpy.mockImplementation(async () => {
             return someDataUrl
         })
         const dataUrl = await urlToDataUrl('https://example.com/page')
         expect(dataUrl).toBe(someDataUrl)
-        spy.mockRestore()
     })
 
     test('should return a "about:invalid" upon failure', async () => {
-        const spy = jest.spyOn(responseToDataUrl, 'default').mockImplementation(async () => {
+        responseToDataUrlSpy.mockImplementation(async () => {
             throw new Error('mock error')
         })
         const dataUrl = await urlToDataUrl('http://example.com')
         expect(dataUrl).toBe('about:invalid')
-        spy.mockRestore()
     })
 
     test('should return a "about:invalid" when fetching fails', async () => {
-        fetch.mockRejectOnce()
+        fetch.mockReject()
         const dataUrl = await urlToDataUrl('http://example.com')
         expect(dataUrl).toBe('about:invalid')
     })
@@ -61,7 +69,7 @@ describe('inlineUrlsInAttributes', () => {
     })
 
     test('should convert the specified attribute to a dataUrl', async () => {
-        fetch.mockResponseOnce(imageBlob)
+        fetch.mockResponse(imageBlob)
         const doc = parser.parseFromString(
             '<html><body><img src="public/image/background.png" alt="background" /></body></html>',
             'text/html'
@@ -73,7 +81,7 @@ describe('inlineUrlsInAttributes', () => {
     })
 
     test('should remove the integrity attribute from the tag when requested', async () => {
-        fetch.mockResponseOnce(new Blob(['body {color: blue;}'], {type: 'text/css'}))
+        fetch.mockResponse(new Blob(['body {color: blue;}'], {type: 'text/css'}))
         const doc = parser.parseFromString(
             `<html>
                 <head>
