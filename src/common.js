@@ -1,5 +1,6 @@
 import responseToDataUrl from 'response-to-data-url'
 import whenAllSettled from 'when-all-settled'
+import { blobToDataURL } from 'blob-util'
 
 
 export function removeNode(node) {
@@ -16,19 +17,10 @@ export async function fetchSubresource(url) {
     return response
 }
 
-async function blobToDataUrl(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result)
-        reader.onerror = () => reject(reader.error)
-        reader.readAsDataURL(blob)
-    })
-}
-
 export async function stringToDataUrl(string, type='text/plain') {
     // Using self.btoa is faster but fails for unicode strings.
     const blob = new Blob([string], {type})
-    const dataUrl = await blobToDataUrl(blob)
+    const dataUrl = await blobToDataURL(blob)
     return dataUrl
 }
 
