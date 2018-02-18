@@ -72,14 +72,15 @@ describe('inlineUrlsInAttributes', () => {
         expect(rootElement.querySelector('img').getAttribute('src')).toBe(imageDataUrl)
     })
 
-    test('should remove the attribute integrity from the tag', async () => {
+    test('should remove the integrity attribute from the tag when requested', async () => {
+        fetch.mockResponseOnce(new Blob(['body {color: blue;}'], {type: 'text/css'}))
         const doc = parser.parseFromString(
             `<html>
                 <head>
                     <link
-                        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"
+                        href="https://example.com/style.css"
                         rel="stylesheet"
-                        integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc="
+                        integrity="sha256-tyOenI/NYVBQ/s8utU625f5ThA88VvIio7IrLMqtdTw="
                     >
                 </head>
             </html>`,
