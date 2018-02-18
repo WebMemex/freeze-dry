@@ -6,19 +6,25 @@ import { dataURLToBlob } from 'blob-util'
 
 
 const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg=='
+const styleSheet = 'div{background-image: url("public/image/background.jpeg");}'
+// The same stylesheet, with the image above inlined as data URL, then altogether encoded as data URL.
+const styleSheetAsDataUrl = 'data:text/css;base64,ZGl2e2JhY2tncm91bmQtaW1hZ2U6IHVybCgiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFBRUFBQUFCQ0FBQUFBQTZmcHRWQUFBQUNrbEVRVlI0bkdOaUFBQUFCZ0FETmpkOHFBQUFBQUJKUlU1RXJrSmdnZz09Iik7fQ=='
+
+beforeEach(() => {
+    jest.resetAllMocks()
+})
 
 describe('inlineStyles', () => {
     const parser = new DOMParser()
-    let imageBlob
+    let urlToDataUrlSpy
 
     beforeAll(async () => {
-        imageBlob = await dataURLToBlob(imageDataUrl)
+        urlToDataUrlSpy = jest.spyOn(common, 'urlToDataUrl')
     })
 
-    test('should return <style> tag with the fetched stylesheet', async () => {
-        const styleSheet = 'div{background-image: url("public/image/background.jpeg");}'
-        fetch.mockResponseOnce(new Blob([styleSheet]))
-        fetch.mockResponseOnce(imageBlob)
+    test('should convert the href of a <link rel="stylesheet"> to a data URL', async () => {
+        fetch.mockResponseOnce(new Blob([styleSheet], {type: 'text/css'}))
+        urlToDataUrlSpy.mockReturnValue(imageDataUrl)
         const doc = parser.parseFromString(
             `<html>
                 <head>
@@ -33,15 +39,12 @@ describe('inlineStyles', () => {
         )
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
-        expect(doc.querySelector('style').innerHTML)
-            .toBe(`div{background-image: url(${imageDataUrl});}`)
+        expect(doc.querySelector('link').getAttribute('href'))
+            .toBe(styleSheetAsDataUrl)
     })
 
-    test('should convert the url in <style> to dataUrls', async () => {
-        const styleSheet = 'div{background-image: url("public/image/background.jpeg");}'
-        fetch.mockResponseOnce(new Blob([styleSheet]))
-        const styleSheetAsDataUrl = `data:text/plain;charset=utf-8;base64,aHR0cHM6Ly9leGFtcGxlLmNvbS9wdWJsaWMvaW1hZ2UvYmFja2dyb3VuZC5qcGVn`
-        const spy = jest.spyOn(common, 'urlToDataUrl').mockReturnValue(styleSheetAsDataUrl)
+    test('should convert urls in <style> contents to dataUrls', async () => {
+        urlToDataUrlSpy.mockReturnValue(imageDataUrl)
         const doc = parser.parseFromString(
             `<html>
                 <head>
@@ -56,23 +59,21 @@ describe('inlineStyles', () => {
         )
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
-        expect(spy).toHaveBeenCalled()
+        expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('style').innerHTML.trim())
-            .toBe(`div{background-image: url(${styleSheetAsDataUrl});}`)
-        spy.mockRestore()
+            .toBe(`div{background-image: url("${imageDataUrl}");}`)
     })
 
     test('should convert the urls in a style attribute to data URLs', async () => {
-        const spy = jest.spyOn(common, 'urlToDataUrl').mockReturnValue(imageDataUrl)
+        urlToDataUrlSpy.mockReturnValue(imageDataUrl)
         const doc = parser.parseFromString(
             '<html><div style="background-image: url(\'public/image/background.jpeg\');"></div></html>',
             'text/html'
         )
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
-        expect(spy).toHaveBeenCalled()
+        expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('div').getAttribute('style'))
-            .toBe(`background-image: url(${imageDataUrl});`)
-        spy.mockRestore()
+            .toBe(`background-image: url("${imageDataUrl}");`)
     })
 })

@@ -9,7 +9,7 @@ import { inlineUrlsInAttributes, urlToDataUrl, removeNode } from './common'
 const imageDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAABgADNjd8qAAAAABJRU5ErkJggg=='
 
 beforeEach(() => {
-    fetch.resetMocks()
+    jest.resetAllMocks()
 })
 
 describe('removeNode', () => {
@@ -25,27 +25,35 @@ describe('removeNode', () => {
 })
 
 describe('urlToDataUrl', () => {
+    let responseToDataUrlSpy
+
+    beforeAll(() => {
+        responseToDataUrlSpy = jest.spyOn(responseToDataUrl, 'default')
+    })
+
+    afterAll(() => {
+        responseToDataUrlSpy.mockRestore()
+    })
+
     test('should return a dataUrl given a URL', async () => {
         const someDataUrl = 'data:text/html,<h1>bananas</h1>'
-        const spy = jest.spyOn(responseToDataUrl, 'default').mockImplementation(async () => {
+        responseToDataUrlSpy.mockImplementation(async () => {
             return someDataUrl
         })
         const dataUrl = await urlToDataUrl('https://example.com/page')
         expect(dataUrl).toBe(someDataUrl)
-        spy.mockRestore()
     })
 
     test('should return a "about:invalid" upon failure', async () => {
-        const spy = jest.spyOn(responseToDataUrl, 'default').mockImplementation(async () => {
+        responseToDataUrlSpy.mockImplementation(async () => {
             throw new Error('mock error')
         })
         const dataUrl = await urlToDataUrl('http://example.com')
         expect(dataUrl).toBe('about:invalid')
-        spy.mockRestore()
     })
 
     test('should return a "about:invalid" when fetching fails', async () => {
-        fetch.mockRejectOnce()
+        fetch.mockReject()
         const dataUrl = await urlToDataUrl('http://example.com')
         expect(dataUrl).toBe('about:invalid')
     })
@@ -60,8 +68,8 @@ describe('inlineUrlsInAttributes', () => {
         imageBlob = await dataURLToBlob(imageDataUrl)
     })
 
-    test('should change the URL in <img> tag to a dataUrl', async () => {
-        fetch.mockResponseOnce(imageBlob)
+    test('should convert the specified attribute to a dataUrl', async () => {
+        fetch.mockResponse(imageBlob)
         const doc = parser.parseFromString(
             '<html><body><img src="public/image/background.png" alt="background" /></body></html>',
             'text/html'
@@ -72,26 +80,15 @@ describe('inlineUrlsInAttributes', () => {
         expect(rootElement.querySelector('img').getAttribute('src')).toBe(imageDataUrl)
     })
 
-    test('should change the URL in the <link> tag to a dataUrl', async () => {
-        fetch.mockResponseOnce(imageBlob)
-        const doc = parser.parseFromString(
-            '<html><head><link rel="icon" href="public/image/favicon.ico"></head></html>',
-            'text/html'
-        )
-        const rootElement = doc.documentElement
-        await inlineUrlsInAttributes({elements: 'link', attributes: 'href', rootElement, docUrl})
-        expect(rootElement.querySelector('link').getAttribute('data-original-href')).toBe('public/image/favicon.ico')
-        expect(rootElement.querySelector('link').getAttribute('href')).toBe(imageDataUrl)
-    })
-
-    test('should remove the attribute integrity from the tag', async () => {
+    test('should remove the integrity attribute from the tag when requested', async () => {
+        fetch.mockResponse(new Blob(['body {color: blue;}'], {type: 'text/css'}))
         const doc = parser.parseFromString(
             `<html>
                 <head>
                     <link
-                        href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"
+                        href="https://example.com/style.css"
                         rel="stylesheet"
-                        integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc="
+                        integrity="sha256-tyOenI/NYVBQ/s8utU625f5ThA88VvIio7IrLMqtdTw="
                     >
                 </head>
             </html>`,
