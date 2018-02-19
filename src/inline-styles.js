@@ -18,7 +18,7 @@ async function inlineStylesheetContents({stylesheetText, stylesheetUrl}) {
             ? new URL(match[2], stylesheetUrl)
             : undefined
     })
-    const dataUrls = await Promise.all(urls.map(urlToDataUrl))
+    const dataUrls = await Promise.all(urls.map(url => urlToDataUrl(url)))
     dataUrls.forEach((dataUrl, i) => {
         stylesheetText = stylesheetText.replace(cssUrls[i], `url("${dataUrl}")`)
     })
