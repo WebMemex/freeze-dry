@@ -28,19 +28,16 @@ describe('inlineStyles', () => {
         const doc = parser.parseFromString(
             `<html>
                 <head>
-                    <link
-                        rel="stylesheet"
-                        type="text/css"
-                        href="https://example.com/theme.css"
-                    >
+                    <link rel="stylesheet" type="text/css" href="theme.css">
                 </head>
             </html>`,
             'text/html'
         )
         const docUrl = 'https://example.com'
         await inlineStyles({rootElement: doc.documentElement, docUrl})
-        expect(doc.querySelector('link').getAttribute('href'))
-            .toBe(styleSheetAsDataUrl)
+        const link = doc.querySelector('link')
+        expect(link.getAttribute('href')).toBe(styleSheetAsDataUrl)
+        expect(link.getAttribute('data-original-href')).toBe('theme.css')
     })
 
     test('should convert urls in <style> contents to dataUrls', async () => {

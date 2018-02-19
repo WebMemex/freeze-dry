@@ -31,25 +31,28 @@ async function inlineLinkedStylesheets({rootElement, docUrl}) {
     const querySelector = 'link[rel~="stylesheet"][href]'
     const linkElements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = linkElements.map(async linkEl => {
-        const stylesheetUrl = new URL(linkEl.getAttribute('href'), docUrl)
-        let stylesheetText
+        const href = linkEl.getAttribute('href')
+        const stylesheetUrl = new URL(href, docUrl)
+        let newHref
         try {
             // Fetch the stylesheet itself.
             const response = await fetchSubresource(stylesheetUrl)
-            stylesheetText = await response.text()
+            const stylesheetText = await response.text()
             // Fetch and replace URLs inside the stylesheet.
-            stylesheetText = await inlineStylesheetContents({
+            const newStylesheetText = await inlineStylesheetContents({
                 stylesheetText,
                 stylesheetUrl,
             })
+            newHref = await stringToDataUrl(newStylesheetText, 'text/css')
         } catch (err) {
-            stylesheetText = '/* Oops! Freeze-dry failed to save this stylesheet. */'
+            newHref = 'about:invalid'
         }
         // Remove the link's integrity hash, if any, as we may have changed the content.
         linkEl.removeAttribute('integrity')
-        // Inline the new stylesheet into the link element.
-        const dataUrl = await stringToDataUrl(stylesheetText, 'text/css')
-        linkEl.setAttribute('href', dataUrl)
+        // Remember the original reference to the stylesheet
+        linkEl.setAttribute('data-original-href', href)
+        // Inline the stylesheet into the link element.
+        linkEl.setAttribute('href', newHref)
     })
     await whenAllSettled(jobs)
 }
