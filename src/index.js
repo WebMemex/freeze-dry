@@ -1,4 +1,6 @@
 import whenAllSettled from 'when-all-settled'
+import doctypeToString from 'doctype-to-string'
+
 import inlineStyles from './inline-styles'
 import removeScripts from './remove-scripts'
 import removeNoscripts from './remove-noscripts'
@@ -11,6 +13,9 @@ export default async function freezeDry (
     document = window.document,
     docUrl = document.URL,
 ) {
+    // Read the <!DOCTYPE ...> declaration, if any.
+    const doctype = doctypeToString(document.doctype)
+
     // Clone the document's root element into a new (invisible) doc.
     let doc = document.implementation.createHTMLDocument()
     const rootElement = doc.importNode(
@@ -39,7 +44,7 @@ export default async function freezeDry (
     ]
     await whenAllSettled(jobs)
 
-    // Read the resulting DOM as a string
-    const html = rootElement.outerHTML
+    // Return the resulting DOM as a string
+    const html = doctype + rootElement.outerHTML
     return html
 }
