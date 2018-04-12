@@ -16,14 +16,10 @@ export default async function freezeDry (
     // Read the <!DOCTYPE ...> declaration, if any.
     const doctype = doctypeToString(document.doctype)
 
-    // Clone the document's root element into a new (invisible) doc.
-    let doc = document.implementation.createHTMLDocument()
-    const rootElement = doc.importNode(
-        document.documentElement,
-        true /* deep copy */
-    )
-    doc.replaceChild(rootElement, doc.documentElement)
+    // Clone the document
+    const doc = document.cloneNode(/* deep = */ true)
 
+    const rootElement = doc.documentElement
     const jobs = [
         // Removing scripts should be superfluous when setting the CSP; but it helps to protect
         // pre-CSP viewers, it saves space, and reduces error messages in the console.
