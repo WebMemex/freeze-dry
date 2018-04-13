@@ -30,9 +30,8 @@ describe('freezeDry', () => {
         expect(removeNoscripts.default).toHaveBeenCalled()
     })
 
-    test('should return the HTML document as a string', async () => {
-        // XXX We depend on the default empty document provided by jest.
+    test('should return a string', async () => {
         const html = await freezeDry()
-        expect(html).toBe('<html><head></head><body></body></html>')
+        expect(typeof html).toBe('string')
     })
 })
