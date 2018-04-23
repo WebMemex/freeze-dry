@@ -11,6 +11,7 @@ import fixLinks from './fix-links'
 
 export default async function freezeDry (
     document = window.document,
+    docUrl = document.URL,
 ) {
     // Clone the document
     const doc = document.cloneNode(/* deep = */ true)
@@ -20,9 +21,9 @@ export default async function freezeDry (
         // Removing scripts should be superfluous when setting the CSP; but it helps to protect
         // pre-CSP viewers, it saves space, and reduces error messages in the console.
         removeScripts({rootElement}),
-        inlineStyles({rootElement}),
-        inlineImages({rootElement}),
-        fixLinks({rootElement}),
+        inlineStyles({rootElement, docUrl}),
+        inlineImages({rootElement, docUrl}),
+        fixLinks({rootElement, docUrl}),
         setContentSecurityPolicy({
             doc,
             policyDirectives: [

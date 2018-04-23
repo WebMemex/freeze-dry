@@ -5,7 +5,7 @@ import { fetchSubresource, urlToDataUrl, stringToDataUrl } from './common'
 // Finds all url(...) occurrances in a string of CSS, then fetches and inlines
 // them as data URLs.
 // Returns the processed (and possibly much larger) string of CSS.
-async function inlineStylesheetContents({stylesheetText, baseURI}) {
+async function inlineStylesheetContents({stylesheetText, stylesheetUrl}) {
     const cssFindUrlsPattern = /url\s*\(\s*('|")?\s*([^"')]+?)\s*\1\s*\)/ig
     const cssExtractUrlPattern = /url\s*\(\s*('|")?\s*([^"')]+?)\s*\1\s*\)/i
     const cssUrls = stylesheetText.match(cssFindUrlsPattern)
@@ -15,7 +15,7 @@ async function inlineStylesheetContents({stylesheetText, baseURI}) {
     const urls = cssUrls.map(urlString => {
         const match = urlString.match(cssExtractUrlPattern)
         return match
-            ? new URL(match[2], baseURI)
+            ? new URL(match[2], stylesheetUrl)
             : undefined
     })
     const dataUrls = await Promise.all(urls.map(url => urlToDataUrl(url)))
@@ -27,12 +27,12 @@ async function inlineStylesheetContents({stylesheetText, baseURI}) {
 
 // In every <link rel="stylesheet"> tag, inline the stylesheet as a data URL,
 // and inline every URL within that stylesheet.
-async function inlineLinkedStylesheets({rootElement}) {
+async function inlineLinkedStylesheets({rootElement, docUrl}) {
     const querySelector = 'link[rel~="stylesheet"][href]'
     const linkElements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = linkElements.map(async linkEl => {
         const href = linkEl.getAttribute('href')
-        const stylesheetUrl = new URL(href, linkEl.baseURI)
+        const stylesheetUrl = new URL(href, docUrl)
         let newHref
         try {
             // Fetch the stylesheet itself.
@@ -41,7 +41,7 @@ async function inlineLinkedStylesheets({rootElement}) {
             // Fetch and replace URLs inside the stylesheet.
             const newStylesheetText = await inlineStylesheetContents({
                 stylesheetText,
-                baseURI: stylesheetUrl,
+                stylesheetUrl,
             })
             newHref = await stringToDataUrl(newStylesheetText, 'text/css')
         } catch (err) {
@@ -58,14 +58,14 @@ async function inlineLinkedStylesheets({rootElement}) {
 }
 
 // In every <style>...</style> block, inline any URLs it contains.
-async function inlineStyleTagContents({rootElement}) {
+async function inlineStyleTagContents({rootElement, docUrl}) {
     const querySelector = 'style[type="text/css"],style:not([type])'
     const styleElements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = styleElements.map(async styleEl => {
         let stylesheetText = styleEl.innerHTML
         stylesheetText = await inlineStylesheetContents({
             stylesheetText,
-            baseURI: styleEl.baseURI,
+            stylesheetUrl: docUrl,
         })
         styleEl.innerHTML = stylesheetText
     })
@@ -73,25 +73,25 @@ async function inlineStyleTagContents({rootElement}) {
 }
 
 // In every <sometag style="..."> inline style, inline any URLs it contains.
-async function inlineInlineStyleContents({rootElement}) {
+async function inlineInlineStyleContents({rootElement, docUrl}) {
     const querySelector = '*[style]'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = elements.map(async element => {
         let inlineStyleText = element.getAttribute('style')
         inlineStyleText = await inlineStylesheetContents({
             stylesheetText: inlineStyleText,
-            baseURI: element.baseURI,
+            stylesheetUrl: docUrl,
         })
         element.setAttribute('style', inlineStyleText)
     })
     await whenAllSettled(jobs)
 }
 
-export default async function inlineStyles({rootElement}) {
+export default async function inlineStyles({rootElement, docUrl}) {
     const jobs = [
-        inlineLinkedStylesheets({rootElement}),
-        inlineStyleTagContents({rootElement}),
-        inlineInlineStyleContents({rootElement}),
+        inlineLinkedStylesheets({rootElement, docUrl}),
+        inlineStyleTagContents({rootElement, docUrl}),
+        inlineInlineStyleContents({rootElement, docUrl}),
     ]
     await whenAllSettled(jobs)
 }

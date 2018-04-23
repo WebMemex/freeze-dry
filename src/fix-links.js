@@ -1,14 +1,14 @@
-export default async function fixLinks({rootElement}) {
+export default async function fixLinks({rootElement, docUrl}) {
     const head = rootElement.querySelector('head')
     if (head) {
         const base = head.ownerDocument.createElement('base')
-        base.href = rootElement.baseURI
+        base.href = docUrl
         head.insertAdjacentElement('afterbegin', base)
     } else {
         const links = Array.from(rootElement.querySelectorAll('*[href]'))
         links.forEach(link => {
             const href = link.getAttribute('href')
-            const absoluteUrl = new URL(href, link.baseURI)
+            const absoluteUrl = new URL(href, docUrl)
             if (href !== absoluteUrl) {
                 link.setAttribute('href', absoluteUrl)
             }

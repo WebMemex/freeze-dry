@@ -11,8 +11,8 @@ static, self-contained snapshot of the page.
 ```
 const html = await freezeDry()
 
-// Instead of defaulting to window.document, you can pass a Document object.
-const htmlString = await freezeDry(document)
+// Instead of taking window.document, you can pass a Document object, and possibly its URL.
+const htmlString = await freezeDry(document, url)
 ```
 
 
