@@ -11,8 +11,7 @@ describe('removeScripts', () => {
             'text/html'
         )
         const rootElement = doc.documentElement
-        const docUrl = 'about:blank'
-        await removeScripts({rootElement, docUrl})
+        await removeScripts({rootElement})
         expect(rootElement.getElementsByTagName('script').length).toBe(0)
     })
 
@@ -23,8 +22,7 @@ describe('removeScripts', () => {
             'text/html'
         )
         const rootElement = doc.documentElement
-        const docUrl = 'about:blank'
-        await removeScripts({rootElement, docUrl})
+        await removeScripts({rootElement})
         expect(rootElement.querySelector('div').attributes.length).toBe(0)
     })
 })

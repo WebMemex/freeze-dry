@@ -44,7 +44,7 @@ export async function inlineUrlsInAttributes({
     attrToUrls = (value, attribute) => [value],
     fixIntegrity = false,
     rootElement,
-    docUrl,
+    baseURI,
 }) {
     attributes = Array.isArray(attributes) ? attributes : [attributes]
     if (typeof elements === 'string') {
@@ -63,7 +63,7 @@ export async function inlineUrlsInAttributes({
 
             // Fetch (hopefully from cache) the resource for each URL.
             const dataUrlPs = urls.map(async url => {
-                const absoluteUrl = new URL(url, docUrl)
+                const absoluteUrl = new URL(url, baseURI || element.baseURI)
                 const dataUrl = await urlToDataUrl(absoluteUrl)
                 return dataUrl
             })
