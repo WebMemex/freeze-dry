@@ -108,7 +108,7 @@ describe('urlToDataUrl', () => {
 })
 
 describe('inlineUrlsInAttributes', () => {
-    const docUrl = 'https://example.com/page'
+    const baseURI = 'https://example.com/test/page'
     const parser = new DOMParser()
 
     test('should convert the specified attribute to a dataUrl', async () => {
@@ -118,7 +118,7 @@ describe('inlineUrlsInAttributes', () => {
             'text/html'
         )
         const rootElement = doc.documentElement
-        await inlineUrlsInAttributes({elements: 'img', attributes: 'src', rootElement, docUrl})
+        await inlineUrlsInAttributes({elements: 'img', attributes: 'src', rootElement, baseURI})
         expect(rootElement.querySelector('img').getAttribute('data-original-src')).toBe('public/image/background.png')
         expect(rootElement.querySelector('img').getAttribute('src')).toBe(imageDataUrl)
     })
@@ -138,7 +138,7 @@ describe('inlineUrlsInAttributes', () => {
             'text/html'
         )
         const rootElement = doc.documentElement
-        await inlineUrlsInAttributes({elements: 'link', attributes: 'href', fixIntegrity: true, rootElement, docUrl})
+        await inlineUrlsInAttributes({elements: 'link', attributes: 'href', fixIntegrity: true, rootElement, baseURI})
         expect(rootElement.querySelector('link').getAttribute('integrity')).toBeNull()
     })
 })

@@ -28,9 +28,9 @@ const attributesToInline = [
     },
 ]
 
-export default async function inlineImages({rootElement}) {
+export default async function inlineImages({rootElement, baseURI}) {
     const jobs = attributesToInline.map(options =>
-        inlineUrlsInAttributes({...options, rootElement})
+        inlineUrlsInAttributes({...options, rootElement, baseURI})
     )
     await whenAllSettled(jobs)
 }

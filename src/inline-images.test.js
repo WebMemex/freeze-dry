@@ -20,7 +20,7 @@ describe('inlineImages', () => {
         common.inlineUrlsInAttributes = jest.fn()
         const doc = window.document.implementation.createHTMLDocument()
         const rootElement = doc.documentElement
-        await inlineImages({rootElement, docUrl: 'about:blank'})
+        await inlineImages({rootElement})
         expect(common.inlineUrlsInAttributes).toHaveBeenCalledTimes(3)
     })
 })

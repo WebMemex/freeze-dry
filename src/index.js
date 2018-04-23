@@ -7,22 +7,31 @@ import removeNoscripts from './remove-noscripts'
 import inlineImages from './inline-images'
 import setContentSecurityPolicy from './set-content-security-policy'
 import fixLinks from './fix-links'
+import getBaseURI from './util/get-base-uri'
 
 
 export default async function freezeDry (
     document = window.document,
+    docUrl,
 ) {
     // Clone the document
     const doc = document.cloneNode(/* deep = */ true)
+
+    // If docUrl was specified to override document.URL, and there is no <base href="..."> tag, use
+    // docUrl as the base URI for expanding all relative URLs.
+    // XXX If baseURI gets set, xml:base attributes will be ignored; might this affect some SVGs?
+    const baseURI = docUrl !== undefined
+        ? getBaseURI(doc, docUrl)
+        : undefined // functions will read the correct value from <node>.baseURI.
 
     const rootElement = doc.documentElement
     const jobs = [
         // Removing scripts should be superfluous when setting the CSP; but it helps to protect
         // pre-CSP viewers, it saves space, and reduces error messages in the console.
         removeScripts({rootElement}),
-        inlineStyles({rootElement}),
-        inlineImages({rootElement}),
-        fixLinks({rootElement}),
+        inlineStyles({rootElement, baseURI}),
+        inlineImages({rootElement, baseURI}),
+        fixLinks({rootElement, baseURI}),
         setContentSecurityPolicy({
             doc,
             policyDirectives: [

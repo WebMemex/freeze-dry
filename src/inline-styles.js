@@ -27,12 +27,12 @@ async function inlineStylesheetContents({stylesheetText, baseURI}) {
 
 // In every <link rel="stylesheet"> tag, inline the stylesheet as a data URL,
 // and inline every URL within that stylesheet.
-async function inlineLinkedStylesheets({rootElement}) {
+async function inlineLinkedStylesheets({rootElement, baseURI}) {
     const querySelector = 'link[rel~="stylesheet"][href]'
     const linkElements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = linkElements.map(async linkEl => {
         const href = linkEl.getAttribute('href')
-        const stylesheetUrl = new URL(href, linkEl.baseURI)
+        const stylesheetUrl = new URL(href, baseURI || linkEl.baseURI)
         let newHref
         try {
             // Fetch the stylesheet itself.
@@ -58,14 +58,14 @@ async function inlineLinkedStylesheets({rootElement}) {
 }
 
 // In every <style>...</style> block, inline any URLs it contains.
-async function inlineStyleTagContents({rootElement}) {
+async function inlineStyleTagContents({rootElement, baseURI}) {
     const querySelector = 'style[type="text/css"],style:not([type])'
     const styleElements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = styleElements.map(async styleEl => {
         let stylesheetText = styleEl.innerHTML
         stylesheetText = await inlineStylesheetContents({
             stylesheetText,
-            baseURI: styleEl.baseURI,
+            baseURI: baseURI || styleEl.baseURI,
         })
         styleEl.innerHTML = stylesheetText
     })
@@ -73,25 +73,25 @@ async function inlineStyleTagContents({rootElement}) {
 }
 
 // In every <sometag style="..."> inline style, inline any URLs it contains.
-async function inlineInlineStyleContents({rootElement}) {
+async function inlineInlineStyleContents({rootElement, baseURI}) {
     const querySelector = '*[style]'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
     const jobs = elements.map(async element => {
         let inlineStyleText = element.getAttribute('style')
         inlineStyleText = await inlineStylesheetContents({
             stylesheetText: inlineStyleText,
-            baseURI: element.baseURI,
+            baseURI: baseURI || element.baseURI,
         })
         element.setAttribute('style', inlineStyleText)
     })
     await whenAllSettled(jobs)
 }
 
-export default async function inlineStyles({rootElement}) {
+export default async function inlineStyles({rootElement, baseURI}) {
     const jobs = [
-        inlineLinkedStylesheets({rootElement}),
-        inlineStyleTagContents({rootElement}),
-        inlineInlineStyleContents({rootElement}),
+        inlineLinkedStylesheets({rootElement, baseURI}),
+        inlineStyleTagContents({rootElement, baseURI}),
+        inlineInlineStyleContents({rootElement, baseURI}),
     ]
     await whenAllSettled(jobs)
 }

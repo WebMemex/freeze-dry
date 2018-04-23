@@ -1,5 +1,0 @@
-{
-  "setupFiles": [
-    "./setupJest.js"
-  ]
-}

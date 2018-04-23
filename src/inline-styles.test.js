@@ -15,6 +15,7 @@ beforeEach(() => {
 })
 
 describe('inlineStyles', () => {
+    const baseURI = 'https://example.com/test/page'
     const parser = new DOMParser()
     let urlToDataUrlSpy
 
@@ -33,8 +34,7 @@ describe('inlineStyles', () => {
             </html>`,
             'text/html'
         )
-        const docUrl = 'https://example.com'
-        await inlineStyles({rootElement: doc.documentElement, docUrl})
+        await inlineStyles({rootElement: doc.documentElement, baseURI})
         const link = doc.querySelector('link')
         expect(link.getAttribute('href')).toBe(styleSheetAsDataUrl)
         expect(link.getAttribute('data-original-href')).toBe('theme.css')
@@ -54,8 +54,7 @@ describe('inlineStyles', () => {
             </html>`,
             'text/html'
         )
-        const docUrl = 'https://example.com'
-        await inlineStyles({rootElement: doc.documentElement, docUrl})
+        await inlineStyles({rootElement: doc.documentElement, baseURI})
         expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('style').innerHTML.trim())
             .toBe(`div{background-image: url("${imageDataUrl}");}`)
@@ -67,8 +66,7 @@ describe('inlineStyles', () => {
             '<html><div style="background-image: url(\'public/image/background.jpeg\');"></div></html>',
             'text/html'
         )
-        const docUrl = 'https://example.com'
-        await inlineStyles({rootElement: doc.documentElement, docUrl})
+        await inlineStyles({rootElement: doc.documentElement, baseURI})
         expect(urlToDataUrlSpy).toHaveBeenCalled()
         expect(doc.querySelector('div').getAttribute('style'))
             .toBe(`background-image: url("${imageDataUrl}");`)
