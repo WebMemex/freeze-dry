@@ -7,6 +7,7 @@ import removeNoscripts from './remove-noscripts'
 import inlineImages from './inline-images'
 import setContentSecurityPolicy from './set-content-security-policy'
 import fixLinks from './fix-links'
+import getBaseURI from './util/get-base-uri'
 
 
 export default async function freezeDry (
@@ -19,8 +20,8 @@ export default async function freezeDry (
     // If docUrl was specified to override document.URL, and there is no <base href="..."> tag, use
     // docUrl as the base URI for expanding all relative URLs.
     // XXX If baseURI gets set, xml:base attributes will be ignored; might this affect some SVGs?
-    const baseURI = (docUrl && !doc.querySelector('base[href]'))
-        ? docUrl
+    const baseURI = docUrl !== undefined
+        ? getBaseURI(doc, docUrl)
         : undefined // functions will read the correct value from <node>.baseURI.
 
     const rootElement = doc.documentElement
