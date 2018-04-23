@@ -16,7 +16,7 @@
     "watch": "babel src -d lib --ignore '*.test.*' -w",
     "prepublish": "npm run build",
     "postinstall": "postinstall-build lib",
-    "test": "jest --verbose --config=.jest-config.json"
+    "test": "jest --verbose"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
@@ -36,5 +36,10 @@
     "postinstall-build": "^3.0.1",
     "response-to-data-url": "^0.1.0",
     "when-all-settled": "^0.1.1"
+  },
+  "jest": {
+    "setupFiles": [
+      "./setupJest.js"
+    ]
   }
 }
