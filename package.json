@@ -40,6 +40,7 @@
   "jest": {
     "setupFiles": [
       "./setupJest.js"
-    ]
+    ],
+    "testURL": "https://example.com/test/page"
   }
 }
