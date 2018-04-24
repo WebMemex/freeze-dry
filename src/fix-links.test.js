@@ -4,16 +4,6 @@ import fixLinks from './fix-links'
 
 
 describe('fixLinks', () => {
-    test('should insert the <base> element into <head>', async () => {
-        const doc = window.document.implementation.createHTMLDocument()
-        const baseURI = 'https://example.com/test/page'
-        const rootElement = doc.documentElement
-        await fixLinks({rootElement, baseURI})
-        const baseEl = rootElement.querySelector('base')
-        expect(baseEl).not.toBeNull()
-        expect(baseEl.href).toBe(baseURI)
-    })
-
     test('should do nothing for absolute URLs', async () => {
         const rootElement = window.document.createElement('div')
         rootElement.innerHTML = '<a href="https://example.com/#home">Link</a>'
