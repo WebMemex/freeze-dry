@@ -13,6 +13,14 @@ describe('fixLinks', () => {
         // note: window.document.URL is configured to be https://example.com/test/page
     })
 
+    test('should not alter within-documents URLs', async () => {
+        const rootElement = window.document.createElement('div')
+        rootElement.innerHTML = '<a href="#section4">Link</a>'
+        await fixLinks({rootElement})
+        expect(rootElement.querySelector('*[href]').getAttribute('href'))
+            .toBe('#section4')
+    })
+
     test('should take baseURI into account', async () => {
         const rootElement = window.document.createElement('div')
         rootElement.innerHTML = '<a href="otherpage#home">Link</a>'
