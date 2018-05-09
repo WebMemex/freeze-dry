@@ -1,5 +1,43 @@
 // A list of html attributes that can contain a URL, and tools to extract the URLs.
 
+const _splitByRegex = regex => value => {
+    const urls = []
+    let remainder = value
+    let remainderIndex = 0
+    while (remainder.length > 0) {
+        const match = remainder.match(regex)
+        // No check for match===null needed; the regexes given below produce a match on any string.
+        const leadingWhitespace = match[1]
+        const url = match[2]
+        if (url.length > 0) { // I suppose we can simply omit empty (= invalid?) tokens..
+            urls.push({
+                url,
+                index: remainderIndex + leadingWhitespace.length,
+            })
+        }
+        remainder = remainder.slice(match[0].length,)
+        remainderIndex += match[0].length
+    }
+    return urls
+}
+
+// Split by whitespace, return values and their indices
+// E.g. 'aaa bbb' => [{ url: 'aaa', index: 0 }, { url: 'bbb', index: 4 }]
+const splitByWhitespace = _splitByRegex(/^(\s*)([^]*?)(\s*)(\s|$)/)
+
+// Split string by commas, strip whitespace, and return the index of every found url.
+// E.g. splitByComma('aaa, bbb') === [{ url: 'aaa', index: 0 }, { url: 'bbb', index: 5 }]
+const splitByComma = _splitByRegex(/^(\s*)([^]*?)(\s*)(,|$)/)
+
+// Split by commas, then split each token by whitespace and only keep the first piece.
+// E.g. 'aaa bbb, ccc' => [{ url: 'aaa', index: 0 }, { url: 'ccc', index: 9 }]
+// Used for parsing srcset: <img srcset="http://image 2x, http://other-image 1.5x" ...>
+const splitByCommaPickFirstTokens = _splitByRegex(/^(\s*)(\S*)([^]*?)(,|$)/)
+
+// XXX Only exported for tests
+export { splitByComma, splitByWhitespace }
+
+
 // Default properties for the attributes listed below.
 const defaultItem = {
     // attribute: (required)
@@ -27,7 +65,7 @@ const html40 = {
         ...defaultItem,
         attribute: 'archive',
         element: ['applet'],
-        parse: value => value.split(',').map(item => ({ url: item.trim() })), // TODO add index
+        parse: splitByComma,
         isResource: true,
         // TODO relativeTo: codebase attribute
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-archive-APPLET
@@ -36,7 +74,7 @@ const html40 = {
         ...defaultItem,
         attribute: 'archive',
         element: ['object'],
-        parse: value => value.trim().split(/\s+/).map(url => ({ url })), // TODO add index
+        parse: splitByWhitespace,
         isResource: true,
         // TODO relativeTo: codebase attribute
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-archive-OBJECT
@@ -185,14 +223,8 @@ const html52 = {
         ...defaultItem,
         attribute: 'srcset',
         element: ['img', 'source'],
-        parse: value => {
-            // Example: <img srcset="http://image 2x, http://other-image 1.5x" ...>
-            const URLs = value.split(',').map(item => ({
-                url: item.trim().split(/\s+/)[0],
-                // TODO add index
-            }))
-            return URLs
-        },
+        // Example: <img srcset="http://image 2x, http://other-image 1.5x" ...>
+        parse: splitByCommaPickFirstTokens,
         isResource: true,
     },
 
@@ -213,14 +245,8 @@ const whatwg = {
         ...defaultItem,
         attribute: 'itemprop',
         parse: value => {
-            return value
-                .trim()
-                .split(/\s+/)
-                .filter(token => token.includes(':')) // a token without a colon is a property name.
-                .map(url => ({
-                    url,
-                    // TODO add index
-                }))
+            return splitByWhitespace(value)
+                .filter(({ url }) => url.includes(':')) // tokens without colon are property names.
         },
         // TODO relativeTo: always absolute
     },
@@ -230,10 +256,7 @@ const whatwg = {
         // Can only contain absolute urls.
         ...defaultItem,
         attribute: 'itemtype',
-        parse: value => value.trim().split(/\s+/).map(url => ({
-            url,
-            // TODO add index
-        })),
+        parse: splitByWhitespace,
         // TODO relativeTo: always absolute
     },
     itemid: {
