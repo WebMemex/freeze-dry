@@ -123,14 +123,17 @@ const html40 = {
     },
     meta_refresh_content: {
         ...defaultItem,
-        attribute: 'refresh',
+        attribute: 'content',
         element: ['meta[http-equiv=refresh i]'],
         parse: value => {
             // Example: <meta http-equiv="refresh" content="2; url=http://www.example.com">
-            const match = value.match(/(\s*\d+\s*;\s*url\s*=\s*)(.+?)\s*/)
-            if (!match) return [] // A normal refresh, staying on the same page.
+            // Note: there seem to be various syntax 'variations', we probably do not support all.
+            // See for a discussion: http://www.otsukare.info/2015/03/26/refresh-http-header
+            // See also: https://html.spec.whatwg.org/multipage/semantics.html#attr-meta-http-equiv-refresh
+            const match = value.match(/^(\s*[\d\.]+\s*[;,]?\s*url\s*=\s*('|")?)(\S+)\2/i)
+            if (!match) return [] // Probably a normal refresh that stays on the same page.
             return [{
-                url: match[2],
+                url: match[3],
                 index: match[1].length,
             }]
         },
