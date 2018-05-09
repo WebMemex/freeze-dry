@@ -1,4 +1,4 @@
-// A list of html attributes that can contain a URL.
+// A list of html attributes that can contain a URL, and tools to extract the URLs.
 
 // Default properties for the attributes listed below.
 const defaultItem = {
@@ -203,14 +203,6 @@ const whatwg = {
     ...html52,
     longdesc: undefined,
 
-    // More link types that declare external resources.
-    // The preloading-related links might be nice to archive if we start supporting scripts: we
-    // could hardcode their URL:value combination into an injected fetch replacement function.
-    // Preloading relation types: modulepreload, preconnect, prefetch, preload, prerender
-    // Another type: dns-prefetch; Seems even further off, does not actually load any resource.
-    // Also, rel=pingback is listed as an external resource link. No idea why.
-    // See https://html.spec.whatwg.org/multipage/links.html#linkTypes
-
     itemprop: {
         // Microdata's itemprop can contain absolute URLs, used as identifiers.
         ...defaultItem,
@@ -249,11 +241,20 @@ const whatwg = {
     },
 }
 
-// Note to self: A few possibly interesting link relation types to external resources.
-// (hand-picked from <http://microformats.org/wiki/index.php?title=existing-rel-values&oldid=66721>)
-// apple-touch-icon / apple-touch-icon-precomposed / apple-touch-startup-image
-// enclosure (similar to prefetch etc?)
-// pgpkey / publickey
+// Notes to self about link types that declare external resources.
+// Regarding link types in the WHATWG spec:
+//   The preloading-related links might be nice to archive if we start supporting scripts: we
+//   could hardcode their URL:value combination into an injected fetch replacement function.
+//   Preloading relation types: modulepreload, preconnect, prefetch, preload, prerender
+//   Another type: dns-prefetch; Seems even further off, does not actually load any resource.
+//   Also, rel=pingback is listed as an external resource link. No idea why.
+//   See https://html.spec.whatwg.org/multipage/links.html#linkTypes
+// Other:
+//   A few other possibly interesting link relation types to external resources.
+//   (hand-picked from <http://microformats.org/wiki/index.php?title=existing-rel-values&oldid=66721>)
+//   apple-touch-icon / apple-touch-icon-precomposed / apple-touch-startup-image
+//   enclosure (similar to prefetch etc?)
+//   pgpkey / publickey
 
 
 export { html40, html52, whatwg }
