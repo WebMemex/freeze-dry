@@ -112,7 +112,7 @@ const html40 = {
 
     // Some attributes that are not listed as Type=%URI in
     // <https://www.w3.org/TR/REC-html40/index/attributes.html>, but seem to belong here.
-    value: {
+    param_ref_value: {
         ...defaultItem,
         attribute: 'value',
         element: ['param[valuetype=ref i]'],
@@ -121,7 +121,7 @@ const html40 = {
         // Note: not listed as Type=%URI in https://www.w3.org/TR/REC-html40/index/attributes.html
         // (as it contains only a URI if the valuetype equals "ref")
     },
-    meta_refresh: {
+    meta_refresh_content: {
         ...defaultItem,
         attribute: 'refresh',
         element: ['meta[http-equiv=refresh i]'],
@@ -194,7 +194,7 @@ const html52 = {
     },
 
     // Not listed in the attributes index, but seems to belong here.
-    meta_refresh: html40.meta_refresh,
+    meta_refresh_content: html40.meta_refresh_content,
 }
 
 // WHATWG as of 2018-04-20
