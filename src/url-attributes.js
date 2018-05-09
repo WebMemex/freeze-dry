@@ -7,7 +7,8 @@ const defaultItem = {
     // Default is to expect a single URL (+ possibly whitespace).
     parse: value => {
         const url = value.trim()
-        const index = value.indexOf(url) // TODO counting leading whitespaces would be quicker
+        if (url.length === 0) return []
+        const index = value.indexOf(url[0]) // probably 0; otherwise the number of leading spaces.
         return [ { url, index } ]
     },
     isResource: false,
