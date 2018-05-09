@@ -209,6 +209,7 @@ const whatwg = {
 
     itemprop: {
         // Microdata's itemprop can contain absolute URLs, used as identifiers.
+        // See https://html.spec.whatwg.org/multipage/microdata.html#names:-the-itemprop-attribute
         ...defaultItem,
         attribute: 'itemprop',
         parse: value => {
@@ -221,6 +222,7 @@ const whatwg = {
                     // TODO add index
                 }))
         },
+        // TODO relativeTo: always absolute
     },
     itemtype: {
         // "Except if otherwise specified by that specification, the URLs given as the item types
@@ -232,6 +234,7 @@ const whatwg = {
             url,
             // TODO add index
         })),
+        // TODO relativeTo: always absolute
     },
     itemid: {
         ...defaultItem,
