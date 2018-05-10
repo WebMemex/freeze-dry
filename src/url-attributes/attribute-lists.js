@@ -5,8 +5,15 @@ import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './
 
 // Default properties for the attributes listed below.
 const defaultItem = {
-    // attribute: (required)
-    element: '*',
+    // The name of the attribute
+    // attribute: (no default value, required)
+
+    // The elements this attribute can appear on, as an array of CSS Selectors
+    element: ['*'],
+
+    // Parser for the attribute value, returns an array of zero, one, or multiple URLs.
+    // Each url is an object { url, index }, to help replacing the url on the right spot.
+    // (to e.g. replace the correct 5 in <meta http-equiv="refresh" content="5; url=5">)
     parse: value => {
         // Default is to expect a single URL (+ possibly whitespace).
         const url = value.trim()
@@ -14,8 +21,15 @@ const defaultItem = {
         const index = value.indexOf(url[0]) // probably 0; otherwise the number of leading spaces.
         return [ { url, index } ]
     },
+
+    // Whether the attribute's URL refers to an "external resource"; i.e. something that is to be
+    // considered "part of"/"transcluded into" the current document, rather than just referred to.
+    // Might be slightly subjective in some cases.
     isResource: false,
-    // TODO relativeTo: node.baseURI
+
+    // Specifies the base URL to be used for interpreting extracted relative URLs.
+    // TODO implement in some way.
+    // relativeTo: node.baseURI
 }
 
 // HTML 4.0
