@@ -9,7 +9,7 @@ const defaultItem = {
     // attribute: (no default value, required)
 
     // The elements this attribute can appear on, as an array of CSS Selectors
-    element: ['*'],
+    elements: ['*'],
 
     // Parser for the attribute value, returns an array of zero, one, or multiple URLs.
     // Each url is an object { url, index }, to help replacing the url on the right spot.
@@ -38,12 +38,12 @@ export const html40 = {
     action: {
         ...defaultItem,
         attribute: 'action',
-        element: ['form'],
+        elements: ['form'],
     },
     archive_applet: {
         ...defaultItem,
         attribute: 'archive',
-        element: ['applet'],
+        elements: ['applet'],
         parse: splitByComma,
         isResource: true,
         // TODO relativeTo: codebase attribute
@@ -52,7 +52,7 @@ export const html40 = {
     archive_object: {
         ...defaultItem,
         attribute: 'archive',
-        element: ['object'],
+        elements: ['object'],
         parse: splitByWhitespace,
         isResource: true,
         // TODO relativeTo: codebase attribute
@@ -61,30 +61,30 @@ export const html40 = {
     background: {
         ...defaultItem,
         attribute: 'background',
-        element: ['body'],
+        elements: ['body'],
         isResource: true,
     },
     cite: {
         ...defaultItem,
         attribute: 'cite',
-        element: ['blockquote', 'q', 'del', 'ins'],
+        elements: ['blockquote', 'q', 'del', 'ins'],
     },
     classid: {
         ...defaultItem,
         attribute: 'classid',
-        element: ['object'],
+        elements: ['object'],
         isResource: true, // I guess?
         // TODO relativeTo: codebase attribute
     },
     codebase: {
         ...defaultItem,
         attribute: 'codebase',
-        element: ['object', 'applet'],
+        elements: ['object', 'applet'],
     },
     data: {
         ...defaultItem,
         attribute: 'data',
-        element: ['object'],
+        elements: ['object'],
         isResource: true,
         // TODO relativeTo: codebase attribute
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-data
@@ -92,7 +92,7 @@ export const html40 = {
     href: {
         ...defaultItem,
         attribute: 'href',
-        element: ['a', 'area', 'base', 'link'],
+        elements: ['a', 'area', 'base', 'link'],
         // Note: some links are resources, see below.
     },
     _resourceLinks: {
@@ -100,31 +100,31 @@ export const html40 = {
         // Note: overlaps with href above.
         ...defaultItem,
         attribute: 'href',
-        element: ['link[rel~=icon i]', 'link[rel~=stylesheet i]'],
+        elements: ['link[rel~=icon i]', 'link[rel~=stylesheet i]'],
         isResource: true,
     },
     longdesc: {
         ...defaultItem,
         attribute: 'longdesc',
-        element: ['img', 'frame', 'iframe'],
+        elements: ['img', 'frame', 'iframe'],
         isResource: true,
     },
     profile: {
         ...defaultItem,
         attribute: 'profile',
-        element: ['head'],
+        elements: ['head'],
     },
     src: {
         ...defaultItem,
         attribute: 'src',
-        element: ['script', 'input', 'frame', 'iframe', 'img'],
+        elements: ['script', 'input', 'frame', 'iframe', 'img'],
         isResource: true,
     },
     // It seems usemap can only contain within-document URIs; hence omitting it from this list.
     // usemap: {
     //     ...defaultItem,
     //     attribute: 'usemap',
-    //     element: ['img', 'input', 'object'],
+    //     elements: ['img', 'input', 'object'],
     // },
 
     // Some attributes that are not listed as Type=%URI in
@@ -132,7 +132,7 @@ export const html40 = {
     param_ref_value: {
         ...defaultItem,
         attribute: 'value',
-        element: ['param[valuetype=ref i]'],
+        elements: ['param[valuetype=ref i]'],
         // Note: "The URI must be passed to the object as is, i.e., unresolved."
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-valuetype
         // Note: not listed as Type=%URI in https://www.w3.org/TR/REC-html40/index/attributes.html
@@ -141,7 +141,7 @@ export const html40 = {
     meta_refresh_content: {
         ...defaultItem,
         attribute: 'content',
-        element: ['meta[http-equiv=refresh i]'],
+        elements: ['meta[http-equiv=refresh i]'],
         parse: value => {
             // Example: <meta http-equiv="refresh" content="2; url=http://www.example.com">
             // Note: there seem to be various syntax 'variations', we probably do not support all.
@@ -165,25 +165,25 @@ export const html52 = {
     data: {
         ...defaultItem,
         attribute: 'data',
-        element: ['object'],
+        elements: ['object'],
         isResource: true,
     },
     formaction: {
         ...defaultItem,
         attribute: 'formaction',
-        element: ['button', 'input'],
+        elements: ['button', 'input'],
     },
     href: html40.href,
     // See https://www.w3.org/TR/2017/REC-html52-20171214/links.html#sec-link-types
     _resourceLinks: html40._resourceLinks,
     longdesc: {
         ...html40.longdesc, // minus frame/iframe
-        element: ['img'],
+        elements: ['img'],
     },
     manifest: {
         ...defaultItem,
         attribute: 'manifest',
-        element: ['html'],
+        elements: ['html'],
         isResource: true,
         // TODO relativeTo: document.URL (should not be influenced by a <base href>)
         // (manifest is deprecated anyhow)
@@ -191,17 +191,17 @@ export const html52 = {
     poster: {
         ...defaultItem,
         attribute: 'poster',
-        element: ['video'],
+        elements: ['video'],
         isResource: true,
     },
     src: {
         ...html40.src, // minus <frame>, plus some new elements.
-        element: ['audio', 'embed', 'iframe', 'img', 'input', 'script', 'source', 'track', 'video'],
+        elements: ['audio', 'embed', 'iframe', 'img', 'input', 'script', 'source', 'track', 'video'],
     },
     srcset: {
         ...defaultItem,
         attribute: 'srcset',
-        element: ['img', 'source'],
+        elements: ['img', 'source'],
         // Example: <img srcset="http://image 2x, http://other-image 1.5x" ...>
         parse: splitByCommaPickFirstTokens,
         isResource: true,
@@ -246,7 +246,7 @@ export const whatwg = {
     ping: {
         ...defaultItem,
         attribute: 'ping',
-        element: ['a', 'area'],
+        elements: ['a', 'area'],
     },
 }
 
