@@ -1,49 +1,14 @@
-// A list of html attributes that can contain a URL, and tools to extract the URLs.
+// Lists of html attributes that can contain a URL.
 
-const _splitByRegex = regex => value => {
-    const urls = []
-    let remainder = value
-    let remainderIndex = 0
-    while (remainder.length > 0) {
-        const match = remainder.match(regex)
-        // No check for match===null needed; the regexes given below produce a match on any string.
-        const leadingWhitespace = match[1]
-        const url = match[2]
-        if (url.length > 0) { // I suppose we can simply omit empty (= invalid?) tokens..
-            urls.push({
-                url,
-                index: remainderIndex + leadingWhitespace.length,
-            })
-        }
-        remainder = remainder.slice(match[0].length,)
-        remainderIndex += match[0].length
-    }
-    return urls
-}
-
-// Split by whitespace, return values and their indices
-// E.g. 'aaa bbb' => [{ url: 'aaa', index: 0 }, { url: 'bbb', index: 4 }]
-const splitByWhitespace = _splitByRegex(/^(\s*)([^]*?)(\s*)(\s|$)/)
-
-// Split string by commas, strip whitespace, and return the index of every found url.
-// E.g. splitByComma('aaa, bbb') === [{ url: 'aaa', index: 0 }, { url: 'bbb', index: 5 }]
-const splitByComma = _splitByRegex(/^(\s*)([^]*?)(\s*)(,|$)/)
-
-// Split by commas, then split each token by whitespace and only keep the first piece.
-// E.g. 'aaa bbb, ccc' => [{ url: 'aaa', index: 0 }, { url: 'ccc', index: 9 }]
-// Used for parsing srcset: <img srcset="http://image 2x, http://other-image 1.5x" ...>
-const splitByCommaPickFirstTokens = _splitByRegex(/^(\s*)(\S*)([^]*?)(,|$)/)
-
-// XXX Only exported for tests
-export { splitByComma, splitByWhitespace }
+import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './util'
 
 
 // Default properties for the attributes listed below.
 const defaultItem = {
     // attribute: (required)
     element: '*',
-    // Default is to expect a single URL (+ possibly whitespace).
     parse: value => {
+        // Default is to expect a single URL (+ possibly whitespace).
         const url = value.trim()
         if (url.length === 0) return []
         const index = value.indexOf(url[0]) // probably 0; otherwise the number of leading spaces.
@@ -55,7 +20,7 @@ const defaultItem = {
 
 // HTML 4.0
 // Mostly derived from https://www.w3.org/TR/REC-html40/index/attributes.html
-const html40 = {
+export const html40 = {
     action: {
         ...defaultItem,
         attribute: 'action',
@@ -180,7 +145,7 @@ const html40 = {
 
 // HTML 5.2.
 // Derived from https://www.w3.org/TR/2017/REC-html52-20171214/fullindex.html#attributes-table
-const html52 = {
+export const html52 = {
     action: html40.action,
     cite: html40.cite,
     data: {
@@ -234,7 +199,7 @@ const html52 = {
 
 // WHATWG as of 2018-04-20
 // https://html.spec.whatwg.org/multipage/indices.html#attributes-3 of 2018-04-20
-const whatwg = {
+export const whatwg = {
     // Includes all of HTML 5.2 except longdesc
     ...html52,
     longdesc: undefined,
@@ -285,6 +250,3 @@ const whatwg = {
 //   apple-touch-icon / apple-touch-icon-precomposed / apple-touch-startup-image
 //   enclosure (similar to prefetch etc?)
 //   pgpkey / publickey
-
-
-export { html40, html52, whatwg }
