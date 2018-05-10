@@ -1,17 +1,7 @@
+import multisplice from 'multisplice'
+
 import { html52 } from './url-attributes/attribute-lists'
 
-export function replaceStrings(string, replacements) { // exported merely for tests
-    // Note: replacements must already have been sorted by .index
-    let position = 0
-    let pieces = []
-    for (const { index, length, value } of replacements) {
-        pieces.push(string.slice(position, index))
-        pieces.push(value)
-        position = index + length
-    }
-    pieces.push(string.slice(position,))
-    return pieces.join('')
-}
 
 export default async function fixLinks({rootElement, baseURI}) {
     // TODO use merger of all specs?
@@ -37,12 +27,11 @@ export default async function fixLinks({rootElement, baseURI}) {
                 }
                 return new URL(url, baseURI || element.baseURI).href
             }
-            const stringReplacements = extractedUrls.map(({ url, index }) => ({
-                index,
-                length: url.length,
-                value: makeAbsolute(url),
-            }))
-            let newAttributeValue = replaceStrings(attributeValue, stringReplacements)
+            const splicer = multisplice(attributeValue)
+            extractedUrls.forEach(({ url, index }) => {
+                splicer.splice(index, index + url.length, makeAbsolute(url))
+            })
+            const newAttributeValue = splicer.toString()
 
             // Replace it with the new value.
             if (newAttributeValue !== attributeValue) {

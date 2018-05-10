@@ -1,18 +1,7 @@
 /* eslint-env jest */
 
-import fixLinks, { replaceStrings } from './fix-links'
+import fixLinks from './fix-links'
 
-describe('replaceStrings', () => {
-    test('should work', () => {
-        const string = 'fluffy clouds in a deep blue sky.'
-        const replacements = [
-            { index: 7, length: 6, value: 'fish' },
-            { index: 29, length: 3, value: 'sea' },
-        ]
-        const newString = replaceStrings(string, replacements)
-        expect(newString).toBe('fluffy fish in a deep blue sea.')
-    })
-})
 
 describe('fixLinks', () => {
     test('should make relative URLs absolute', async () => {
