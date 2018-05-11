@@ -27,9 +27,33 @@ const defaultItem = {
     // Might be slightly subjective in some cases.
     isResource: false,
 
-    // Specifies the base URL to be used for interpreting extracted relative URLs.
-    // TODO implement in some way.
-    // relativeTo: node.baseURI
+    // Turn the extracted (possibly) relative URL into an absolute URL.
+    makeAbsolute(
+        url,
+        element,
+        // We allow the caller to override the document's URL and baseURI.
+        baseURI = element.baseURI,
+        documentURL = element.ownerDocument.URL,
+    ) {
+        // Normally, the URL is simply relative to the document's base URL.
+        return new URL(url, baseURI).href
+    }
+}
+
+// Helper for URL attributes that are defined to be relative to the element's 'codebase' attribute.
+const makeAbsoluteUsingCodebase = (url, element, ...etc) => {
+    // Read the value of the codebase attribute, and turn it into an absolute URL.
+    const codebaseValue = element.getAttribute('codebase')
+    if (codebaseValue) {
+        const [ codebaseUrlLocation ] = html40.codebase.parse(codebaseValue)
+        if (codebaseUrlLocation) {
+            const codebaseUrl = codebaseUrlLocation.url
+            const codebaseAbsoluteUrl = html40.codebase.makeAbsolute(codebaseUrl, element, ...etc)
+            return new URL(url, codebaseAbsoluteUrl).href
+        }
+    }
+    // If there is no (valid) codebase attribute, interpret relative URLs as usual.
+    return defaultItem.makeAbsolute(url, element, ...etc)
 }
 
 // HTML 4.0
@@ -46,7 +70,7 @@ export const html40 = {
         elements: ['applet'],
         parse: splitByComma,
         isResource: true,
-        // TODO relativeTo: codebase attribute
+        makeAbsolute: makeAbsoluteUsingCodebase,
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-archive-APPLET
     },
     archive_object: {
@@ -55,7 +79,7 @@ export const html40 = {
         elements: ['object'],
         parse: splitByWhitespace,
         isResource: true,
-        // TODO relativeTo: codebase attribute
+        makeAbsolute: makeAbsoluteUsingCodebase,
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-archive-OBJECT
     },
     background: {
@@ -74,7 +98,7 @@ export const html40 = {
         attribute: 'classid',
         elements: ['object'],
         isResource: true, // I guess?
-        // TODO relativeTo: codebase attribute
+        makeAbsolute: makeAbsoluteUsingCodebase,
     },
     codebase: {
         ...defaultItem,
@@ -86,7 +110,7 @@ export const html40 = {
         attribute: 'data',
         elements: ['object'],
         isResource: true,
-        // TODO relativeTo: codebase attribute
+        makeAbsolute: makeAbsoluteUsingCodebase,
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-data
     },
     href: {
@@ -163,10 +187,8 @@ export const html52 = {
     action: html40.action,
     cite: html40.cite,
     data: {
-        ...defaultItem,
-        attribute: 'data',
-        elements: ['object'],
-        isResource: true,
+        ...html40.data,
+        makeAbsolute: defaultItem.makeAbsolute, // html5 drops the codebase attribute
     },
     formaction: {
         ...defaultItem,
@@ -181,12 +203,15 @@ export const html52 = {
         elements: ['img'],
     },
     manifest: {
+        // Note: manifest is deprecated.
         ...defaultItem,
         attribute: 'manifest',
         elements: ['html'],
         isResource: true,
-        // TODO relativeTo: document.URL (should not be influenced by a <base href>)
-        // (manifest is deprecated anyhow)
+        makeAbsolute(url, element, _, documentURL = element.ownerDocument.URL) {
+            // The manifest is not influenced by a <base href="..."> tag.
+            return new URL(url, documentURL).href
+        }
     },
     poster: {
         ...defaultItem,
@@ -227,21 +252,22 @@ export const whatwg = {
             return splitByWhitespace(value)
                 .filter(({ url }) => url.includes(':')) // tokens without colon are property names.
         },
-        // TODO relativeTo: always absolute
+        // Can only contain absolute urls.
+        makeAbsolute: url => url,
     },
     itemtype: {
-        // "Except if otherwise specified by that specification, the URLs given as the item types
-        // should not be automatically dereferenced."
-        // Can only contain absolute urls.
+        // Note: "Except if otherwise specified by that specification, the URLs given as the item
+        // types should not be automatically dereferenced."
+        // See https://html.spec.whatwg.org/multipage/microdata.html#attr-itemtype
         ...defaultItem,
         attribute: 'itemtype',
         parse: splitByWhitespace,
-        // TODO relativeTo: always absolute
+        // May only contain absolute urls.
+        makeAbsolute: url => url,
     },
     itemid: {
         ...defaultItem,
         attribute: 'itemid',
-        // can be relative URL
     },
     ping: {
         ...defaultItem,
