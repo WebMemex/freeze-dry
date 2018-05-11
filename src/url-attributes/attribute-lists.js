@@ -168,15 +168,23 @@ export const html40 = {
         elements: ['meta[http-equiv=refresh i]'],
         parse: value => {
             // Example: <meta http-equiv="refresh" content="2; url=http://www.example.com">
-            // Note: there seem to be various syntax 'variations', we probably do not support all.
-            // See for a discussion: http://www.otsukare.info/2015/03/26/refresh-http-header
-            // See also: https://html.spec.whatwg.org/multipage/semantics.html#attr-meta-http-equiv-refresh
-            const match = value.match(/^(\s*[\d\.]+\s*[;,]?\s*url\s*=\s*('|")?)(\S+)\2/i)
+            // To match many historical syntax variations, we try to follow whatwg's algorithm.
+            // See <https://html.spec.whatwg.org/multipage/semantics.html#shared-declarative-refresh-steps>
+            const match = value.match(/^(\s*[\d\.]+\s*[;,\s]\s*(?:url\s*=\s*)?('|")?\s*)(.+)/i)
+
             if (!match) return [] // Probably a normal refresh that stays on the same page.
-            return [{
-                url: match[3],
-                index: match[1].length,
-            }]
+
+            // If the URL was preceded by a quote, truncate it at the next quote.
+            const quote = match[2]
+            let url = match[3]
+            if (quote && url.includes(quote)) {
+                url = url.slice(0, url.indexOf(quote))
+            }
+
+            const index = match[1].length
+            url = url.trim()
+            // (note that index remains correct, as the regex removes whitespace left of the url)
+            return [{ url, index }]
         },
     }
 }
