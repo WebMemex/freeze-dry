@@ -1,4 +1,4 @@
-import { splitByWhitespace, splitByComma } from './util'
+import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './util'
 
 
 describe('splitByWhitespace', () => {
@@ -67,6 +67,33 @@ describe('splitByComma', () => {
         expect(splitByComma('aaa,, , ddd')).toEqual([
             { url: 'aaa', index: 0 },
             { url: 'ddd', index: 8 },
+        ])
+    })
+})
+
+describe('splitByCommaPickFirstTokens', () => {
+    test('should work for a basic case', () => {
+        expect(splitByCommaPickFirstTokens('aaa bbb, ccc ddd eee, fff')).toEqual([
+            { url: 'aaa', index: 0 },
+            { url: 'ccc', index: 9 },
+            { url: 'fff', index: 22 },
+        ])
+    })
+
+    test('should handle any whitespace', () => {
+        expect(splitByCommaPickFirstTokens(' \naaa\tbbb,\nccc\n ddd \teee ,\t fff\t')).toEqual([
+            { url: 'aaa', index: 2 },
+            { url: 'ccc', index: 11 },
+            { url: 'fff', index: 28 },
+        ])
+    })
+
+    test('should work for a single token', () => {
+        expect(splitByCommaPickFirstTokens('aaa')).toEqual([
+            { url: 'aaa', index: 0 },
+        ])
+        expect(splitByCommaPickFirstTokens(' aaa ')).toEqual([
+            { url: 'aaa', index: 1 },
         ])
     })
 })
