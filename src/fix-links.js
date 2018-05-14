@@ -1,11 +1,10 @@
 import multisplice from 'multisplice'
 
-import { html52 } from './url-attributes/attribute-lists'
+import urlAttributes from './url-attributes/attribute-lists'
 
 
 export default async function fixLinks({rootElement, baseURI, docUrl}) {
-    // TODO use merger of all specs?
-    const attributeInfos = Object.values(html52)
+    const attributeInfos = Object.values(urlAttributes)
 
     for (const attributeInfo of attributeInfos) {
         const { attribute, elements: elementNames, parse, makeAbsolute } = attributeInfo

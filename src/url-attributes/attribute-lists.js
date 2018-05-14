@@ -1,6 +1,9 @@
 // Lists of html attributes that can contain a URL.
 
-import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './util'
+import {
+    splitByWhitespace, splitByComma, splitByCommaPickFirstTokens,
+    mergeWith, omit, uniq,
+} from './util'
 
 
 // Default properties for the attributes listed below.
@@ -248,8 +251,7 @@ export const html52 = {
 // https://html.spec.whatwg.org/multipage/indices.html#attributes-3 of 2018-04-20
 export const whatwg = {
     // Includes all of HTML 5.2 except longdesc
-    ...html52,
-    longdesc: undefined,
+    ...omit('longdesc')(html52),
 
     itemprop: {
         // Microdata's itemprop can contain absolute URLs, used as identifiers.
@@ -298,3 +300,13 @@ export const whatwg = {
 //   apple-touch-icon / apple-touch-icon-precomposed / apple-touch-startup-image
 //   enclosure (similar to prefetch etc?)
 //   pgpkey / publickey
+
+
+// Helper for combining two object's element lists.
+const mergeAttributeInfos = (info1, info2) => (info1 === info2 ? info1 : {
+    ...info1, ...info2,
+    elements: uniq(info1.elements.concat(info2.elements))
+})
+
+// Export the union of all attributes.
+export default mergeWith(mergeAttributeInfos)(whatwg, html52, html40)
