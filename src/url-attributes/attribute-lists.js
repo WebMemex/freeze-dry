@@ -1,9 +1,7 @@
 // Lists of html attributes that can contain a URL.
 
-import {
-    splitByWhitespace, splitByComma, splitByCommaPickFirstTokens,
-    mergeWith, omit, uniq,
-} from './util'
+import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-url-list'
+import { mergeWith, omit, uniq } from './util'
 
 
 // Default properties for the attributes listed below.
