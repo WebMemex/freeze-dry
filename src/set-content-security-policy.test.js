@@ -30,4 +30,15 @@ describe('setContentSecurityPolicy', () => {
         expect(doc.querySelectorAll('meta').length).toBe(1)
         expect(doc.querySelector('meta').content).toBe(cspString)
     })
+
+    test('should remove URL-containing attributes coming before the CSP', () => {
+        const doc = window.document.implementation.createHTMLDocument()
+        doc.documentElement.setAttribute('manifest', '/manifest.appcache')
+        doc.head.setAttribute('profile', 'http://some-profile-uri-whatever-that-means')
+
+        setContentSecurityPolicy({doc, policyDirectives})
+
+        expect(doc.documentElement.hasAttribute('manifest')).toBe(false)
+        expect(doc.head.hasAttribute('profile')).toBe(false)
+    })
 })

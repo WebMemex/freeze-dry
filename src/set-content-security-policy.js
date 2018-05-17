@@ -18,4 +18,12 @@ export default function setContentSecurityPolicy({doc, policyDirectives}) {
     metaEl.setAttribute('http-equiv', 'Content-Security-Policy')
     metaEl.setAttribute('content', csp)
     doc.head.insertAdjacentElement('afterbegin', metaEl)
+
+    // Should we remove any resource references that come before the CSP?
+    // TODO Investigate; for now, removing possibly resolved urls in <html> and <head>.
+    // Remove <html>'s manifest attribute (HTML 5). Something we would probably want to do anyhow.
+    doc.documentElement.removeAttribute('manifest')
+    // Remove <head>'s profile attribute (HTML 4). I would be surprised if any browsers resolve
+    // this URL, but staying on the safe side for now (possibly at the cost of metadata semantics).
+    doc.head.removeAttribute('profile')
 }
