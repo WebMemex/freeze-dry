@@ -25,25 +25,32 @@ export default async function freezeDry (
         : undefined // functions will read the correct value from <node>.baseURI.
 
     const rootElement = doc.documentElement
-    const jobs = [
-        // Removing scripts should be superfluous when setting the CSP; but it helps to protect
-        // pre-CSP viewers, it saves space, and reduces error messages in the console.
-        removeScripts({rootElement}),
+
+    // Make all relative URLs absolute.
+    fixLinks({rootElement, baseURI})
+
+    // Inline subresources
+    const asyncJobs = [
         inlineStyles({rootElement, baseURI}),
         inlineImages({rootElement, baseURI}),
-        fixLinks({rootElement, baseURI}),
-        setContentSecurityPolicy({
-            doc,
-            policyDirectives: [
-                "default-src 'none'", // Block any connectivity from media we did not deal with.
-                "img-src data:", // Allow inlined images.
-                "style-src data: 'unsafe-inline'", // Allow inlined styles.
-                "font-src data:", // Allow inlined fonts.
-            ],
-        }),
-        removeNoscripts({rootElement}), // Because our CSP might cause <noscript> content to show.
     ]
-    await whenAllSettled(jobs)
+    await whenAllSettled(asyncJobs)
+
+    // Removing scripts should be superfluous when setting the CSP; but it helps to protect
+    // pre-CSP viewers, it saves space, and reduces error messages in the console.
+    removeScripts({rootElement})
+
+    removeNoscripts({rootElement}) // Because our CSP might cause <noscript> content to show.
+
+    setContentSecurityPolicy({
+        doc,
+        policyDirectives: [
+            "default-src 'none'", // Block any connectivity from media we did not deal with.
+            "img-src data:", // Allow inlined images.
+            "style-src data: 'unsafe-inline'", // Allow inlined styles.
+            "font-src data:", // Allow inlined fonts.
+        ],
+    })
 
     // Return the resulting DOM as a string
     const html = documentOuterHTML(doc)
