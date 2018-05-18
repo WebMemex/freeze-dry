@@ -76,8 +76,13 @@ export async function inlineUrlsInAttributes({
             }
             if (newValue !== value) {
                 element.setAttribute(attribute, newValue)
-                // Add the original attribute value (the original URL)
-                element.setAttribute(`data-original-${attribute}`, value)
+
+                // Remember the original attribute value (the original URL)
+                const originalAttribute = `data-original-${attribute}`
+                if (!element.hasAttribute(originalAttribute)) {
+                    // (if already set, we presume fixLinks did this, and leave it as is)
+                    element.setAttribute(originalAttribute, value)
+                }
             }
             if (fixIntegrity) {
                 // Don't bother recomputing the hash, just remove the check.
