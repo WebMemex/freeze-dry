@@ -13,6 +13,22 @@ describe('fixLinks', () => {
         // note: window.document.URL is configured to be https://example.com/test/page
     })
 
+    test('should work on various URL-containing attributes', async () => {
+        // Testing just a few attributes here.
+        const rootElement = window.document.createElement('div')
+        rootElement.innerHTML = `
+            <meta http-equiv="refresh" content="0; url=redirection">
+            <img src="image" srcset="4x 2x, 2x 4x"><!--indeed a confusing srcset-->
+        `
+        await fixLinks({rootElement})
+        expect(rootElement.querySelector('meta').getAttribute('content'))
+            .toBe('0; url=https://example.com/test/redirection')
+        expect(rootElement.querySelector('img').getAttribute('src'))
+            .toBe('https://example.com/test/image')
+        expect(rootElement.querySelector('img').getAttribute('srcset'))
+            .toBe('https://example.com/test/4x 2x, https://example.com/test/2x 4x')
+    })
+
     test('should not alter within-documents URLs', async () => {
         const rootElement = window.document.createElement('div')
         rootElement.innerHTML = '<a href="#section4">Link</a>'
