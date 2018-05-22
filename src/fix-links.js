@@ -3,7 +3,7 @@ import multisplice from 'multisplice'
 import urlAttributes from './url-attributes/attribute-lists'
 
 
-export default async function fixLinks({rootElement, baseURI, docUrl}) {
+export default function fixLinks({rootElement, baseURI, docUrl}) {
     const attributeInfos = Object.values(urlAttributes)
 
     for (const attributeInfo of attributeInfos) {

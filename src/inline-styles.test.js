@@ -19,7 +19,7 @@ describe('inlineStyles', () => {
     const parser = new DOMParser()
     let urlToDataUrlSpy
 
-    beforeAll(async () => {
+    beforeAll(() => {
         urlToDataUrlSpy = jest.spyOn(common, 'urlToDataUrl')
     })
 

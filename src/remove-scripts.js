@@ -31,7 +31,7 @@ export function removeJavascriptHrefs({rootElement}) {
 }
 
 // Tries to remove all kinds of scripts contained in the given rootElement.
-export default async function removeScripts({rootElement}) {
+export default function removeScripts({rootElement}) {
     removeScriptElements({rootElement})
     removeEventHandlers({rootElement})
     removeJavascriptHrefs({rootElement})
