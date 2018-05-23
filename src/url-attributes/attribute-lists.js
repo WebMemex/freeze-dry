@@ -28,6 +28,10 @@ const defaultItem = {
     // Might be slightly subjective in some cases.
     isResource: false,
 
+    // How the resource is used; corresponds to what is now called the 'destination' in the WHATWG
+    // fetch spec (https://fetch.spec.whatwg.org/#concept-request-destination as of 2018-05-17)
+    resourceType: undefined,
+
     // Turn the extracted (possibly) relative URL into an absolute URL.
     makeAbsolute(
         url,
@@ -38,7 +42,7 @@ const defaultItem = {
     ) {
         // Normally, the URL is simply relative to the document's base URL.
         return new URL(url, baseURI).href
-    }
+    },
 }
 
 // Helper for URL attributes that are defined to be relative to the element's 'codebase' attribute.
@@ -65,21 +69,23 @@ export const html40 = {
         attribute: 'action',
         elements: ['form'],
     },
-    archive_applet: {
+    applet_archive: {
         ...defaultItem,
         attribute: 'archive',
         elements: ['applet'],
         parse: splitByComma,
         isResource: true,
+        // resourceType? No idea.
         makeAbsolute: makeAbsoluteUsingCodebase,
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-archive-APPLET
     },
-    archive_object: {
+    object_archive: {
         ...defaultItem,
         attribute: 'archive',
         elements: ['object'],
         parse: splitByWhitespace,
         isResource: true,
+        // resourceType? No idea.
         makeAbsolute: makeAbsoluteUsingCodebase,
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-archive-OBJECT
     },
@@ -88,6 +94,7 @@ export const html40 = {
         attribute: 'background',
         elements: ['body'],
         isResource: true,
+        resourceType: 'image',
     },
     cite: {
         ...defaultItem,
@@ -99,6 +106,7 @@ export const html40 = {
         attribute: 'classid',
         elements: ['object'],
         isResource: true, // I guess?
+        // resourceType? No idea.
         makeAbsolute: makeAbsoluteUsingCodebase,
     },
     codebase: {
@@ -111,6 +119,7 @@ export const html40 = {
         attribute: 'data',
         elements: ['object'],
         isResource: true,
+        resourceType: 'object',
         makeAbsolute: makeAbsoluteUsingCodebase,
         // See https://www.w3.org/TR/REC-html40/struct/objects.html#adef-data
     },
@@ -120,30 +129,52 @@ export const html40 = {
         elements: ['a', 'area', 'base', 'link'],
         // Note: some links are resources, see below.
     },
-    _resourceLinks: {
-        // Links can be external resources, depending on their relation type.
+    link_icon_href: {
         // Note: overlaps with href above.
         ...defaultItem,
         attribute: 'href',
-        elements: ['link[rel~=icon i]', 'link[rel~=stylesheet i]'],
+        elements: ['link[rel~=icon i]'],
         isResource: true,
+        resourceType: 'image',
+    },
+    link_stylesheet_href: {
+        // Note: overlaps with href above.
+        ...defaultItem,
+        attribute: 'href',
+        elements: ['link[rel~=stylesheet i]'],
+        isResource: true,
+        resourceType: 'style',
     },
     longdesc: {
         ...defaultItem,
         attribute: 'longdesc',
         elements: ['img', 'frame', 'iframe'],
-        isResource: true,
     },
     profile: {
         ...defaultItem,
         attribute: 'profile',
         elements: ['head'],
     },
-    src: {
+    img_src: {
         ...defaultItem,
         attribute: 'src',
-        elements: ['script', 'input', 'frame', 'iframe', 'img'],
+        elements: ['img', 'input[type=image i]'],
         isResource: true,
+        resourceType: 'image',
+    },
+    frame_src: {
+        ...defaultItem,
+        attribute: 'src',
+        elements: ['frame', 'iframe'],
+        isResource: true,
+        resourceType: 'document',
+    },
+    script_src: {
+        ...defaultItem,
+        attribute: 'src',
+        elements: ['script'],
+        isResource: true,
+        resourceType: 'script',
     },
     // It seems usemap can only contain within-document URIs; hence omitting it from this list.
     // usemap: {
@@ -206,7 +237,8 @@ export const html52 = {
     },
     href: html40.href,
     // See https://www.w3.org/TR/2017/REC-html52-20171214/links.html#sec-link-types
-    _resourceLinks: html40._resourceLinks,
+    link_icon_href: html40.link_icon_href,
+    link_stylesheet_href: html40.link_stylesheet_href,
     longdesc: {
         ...html40.longdesc, // minus frame/iframe
         elements: ['img'],
@@ -217,28 +249,63 @@ export const html52 = {
         attribute: 'manifest',
         elements: ['html'],
         isResource: true,
+        // resourceType? Maybe 'manifest'? Confusion with <link rel=manifest>
         makeAbsolute(url, element, _, documentURL = element.ownerDocument.URL) {
             // The manifest is not influenced by a <base href="..."> tag.
             return new URL(url, documentURL).href
-        }
+        },
     },
     poster: {
         ...defaultItem,
         attribute: 'poster',
         elements: ['video'],
         isResource: true,
+        resourceType: 'image',
     },
-    src: {
-        ...html40.src, // minus <frame>, plus some new elements.
-        elements: ['audio', 'embed', 'iframe', 'img', 'input', 'script', 'source', 'track', 'video'],
+    audio_src: {
+        ...defaultItem,
+        attribute: 'src',
+        elements: ['audio', 'audio>source'],
+        isResource: true,
+        resourceType: 'audio',
+    },
+    embed_src: {
+        ...defaultItem,
+        attribute: 'src',
+        elements: ['embed'],
+        isResource: true,
+        resourceType: 'embed',
+    },
+    frame_src: {
+        ...html40.frame_src, // minus the <frame> element
+        elements: ['iframe']
+    },
+    img_src: html40.img_src,
+    script_src: html40.script_src,
+    track_src: {
+        ...defaultItem,
+        attribute: 'src',
+        elements: ['track'],
+        isResource: true,
+        resourceType: 'track',
+    },
+    video_src: {
+        ...defaultItem,
+        attribute: 'src',
+        elements: ['video', 'video>source'],
+        isResource: true,
+        resourceType: 'video',
     },
     srcset: {
         ...defaultItem,
         attribute: 'srcset',
-        elements: ['img', 'source'],
+        elements: ['img', 'picture>source'],
         // Example: <img srcset="http://image 2x, http://other-image 1.5x" ...>
+        // TODO implement more sophisticated srcset parsing.
+        // See https://html.spec.whatwg.org/multipage/images.html#parsing-a-srcset-attribute
         parse: splitByCommaPickFirstTokens,
         isResource: true,
+        resourceType: 'image',
     },
 
     // Not listed in the attributes index, but seems to belong here.
