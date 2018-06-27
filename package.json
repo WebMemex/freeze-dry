@@ -31,6 +31,7 @@
     "jest-fetch-mock": "=1.2.0"
   },
   "dependencies": {
+    "babel-runtime": "^6.26.0",
     "blob-util": "^1.3.0",
     "document-outerhtml": "^0.1.0",
     "multisplice": "^1.0.0",
