@@ -1,5 +1,19 @@
 # Changelog for freeze-dry
 
+## 0.2.0 (2018-07-19)
+
+Near-complete rewrite.
+- Separate the process into steps of (1) capturing DOM state, (2) crawling subresources,
+  (3) tweaking the DOM and (4) compiling everything into a single string. Designed with
+  future extensibility, configurability & code reusability in mind.
+- Now also capture content inside iframes, recursively.
+- Add integration test with an example page.
+- Add explanations in Readme files.
+- Add inline documentation that vaguely resembles jsdoc.
+
+## 0.1.3 (2018-06-27)
+- Fix missing dependency
+
 ## 0.1.2 (2018-05-18)
 
 - Stop adding a `<base href="...">` tag; make URLs absolute instead (except for within-document
