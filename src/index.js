@@ -1,58 +1,29 @@
-import whenAllSettled from 'when-all-settled'
-import documentOuterHTML from 'document-outerhtml'
+import captureDom from './capture-dom'
+import crawlSubresourcesOfDom from './crawl-subresources'
+import dryResources from './dry-resources'
+import createSingleFile from './create-single-file'
 
-import inlineStyles from './inline-styles'
-import removeScripts from './remove-scripts'
-import removeNoscripts from './remove-noscripts'
-import inlineImages from './inline-images'
-import setContentSecurityPolicy from './set-content-security-policy'
-import fixLinks from './fix-links'
-import getBaseURI from './util/get-base-uri'
+/**
+ * Freeze dry an HTML Document
+ * @param {Document} [doc=window.document] - HTML Document to be freeze-dried. Remains unmodified.
+ * @param {Object} [options]
+ * @param {string} [options.docUrl] - URL to override doc.URL.
+ * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
+ */
+export default async function freezeDry(doc = window.document, { docUrl } = {} ) {
+    // Step 1: Capture the DOM (as well as DOMs inside frames).
+    const resource = captureDom(doc, { docUrl })
 
+    // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
-export default async function freezeDry (
-    document = window.document,
-    docUrl,
-) {
-    // Clone the document
-    const doc = document.cloneNode(/* deep = */ true)
+    // Step 2: Fetch subresources, recursively.
+    await crawlSubresourcesOfDom(resource)
 
-    // If docUrl was specified to override document.URL, and there is no <base href="..."> tag, use
-    // docUrl as the base URI for expanding all relative URLs.
-    // XXX If baseURI gets set, xml:base attributes will be ignored; might this affect some SVGs?
-    const baseURI = docUrl !== undefined
-        ? getBaseURI(doc, docUrl)
-        : undefined // functions will read the correct value from <node>.baseURI.
+    // Step 3: "Dry" the resources to make them static and context-free.
+    dryResources(resource)
 
-    const rootElement = doc.documentElement
+    // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
+    const html = await createSingleFile(resource)
 
-    // Make all relative URLs absolute.
-    fixLinks({rootElement, baseURI})
-
-    // Inline subresources
-    const asyncJobs = [
-        inlineStyles({rootElement, baseURI}),
-        inlineImages({rootElement, baseURI}),
-    ]
-    await whenAllSettled(asyncJobs)
-
-    // Removing scripts should be superfluous when setting the CSP; but it helps to protect
-    // pre-CSP viewers, it saves space, and reduces error messages in the console.
-    removeScripts({rootElement})
-
-    removeNoscripts({rootElement}) // Because our CSP might cause <noscript> content to show.
-
-    setContentSecurityPolicy({
-        doc,
-        policyDirectives: [
-            "default-src 'none'", // Block any connectivity from media we did not deal with.
-            "img-src data:", // Allow inlined images.
-            "style-src data: 'unsafe-inline'", // Allow inlined styles.
-            "font-src data:", // Allow inlined fonts.
-        ],
-    })
-
-    // Return the resulting DOM as a string
-    const html = documentOuterHTML(doc)
     return html
 }

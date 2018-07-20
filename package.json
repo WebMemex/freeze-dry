@@ -15,7 +15,6 @@
     "build": "babel src -d lib --ignore '*.test.*'",
     "watch": "babel src -d lib --ignore '*.test.*' -w",
     "prepublish": "npm run build",
-    "postinstall": "postinstall-build lib",
     "test": "jest --verbose"
   },
   "devDependencies": {
@@ -28,21 +27,20 @@
     "babel-preset-stage-1": "^6.24.1",
     "jest": "^20.0.4",
     "jest-cli": "^20.0.4",
-    "jest-fetch-mock": "=1.2.0"
+    "jest-fetch-mock": "=1.2.0",
+    "jsdom": "^11.11.0"
   },
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "blob-util": "^1.3.0",
     "document-outerhtml": "^0.1.0",
-    "multisplice": "^1.0.0",
-    "postinstall-build": "^3.0.1",
-    "response-to-data-url": "^0.1.0",
+    "domnode-at-path": "^1.0.0",
+    "memoize-weak": "^1.0.2",
+    "mutable-proxy": "^0.1.7",
+    "path-to-domnode": "^1.0.1",
     "when-all-settled": "^0.1.1"
   },
   "jest": {
-    "setupFiles": [
-      "./setupJest.js"
-    ],
     "testURL": "https://example.com/test/page"
   }
 }

@@ -1,27 +1,29 @@
 # Freeze-dry: web page conservation
 
 Freeze-dry stores a web page as it is shown in the browser. It takes the DOM, and returns it as an
-HTML string, after having and inlined external resources such as images (as `data:` URLs) and
-stylesheets. It removes any scripts and prevents connectivity, so the resulting HTML document is a
-static, self-contained snapshot of the page.
+HTML string, after having and inlined external resources such as images and stylesheets (as `data:`
+URLs).
 
+It also ensures the snapshot is static and completely offline: all scripts are removed, and any
+attempt at internet connectivity is blocked by adding a content security policy. The resulting HTML
+document is a static, self-contained snapshot of the page.
+
+For more details about how this exactly works, see [src/Readme.md](src/Readme.md).
 
 ## Usage
 
-```
-const html = await freezeDry()
+    const html = await freezeDry(document)
 
-// Instead of defaulting to `window.document`, you can pass a Document object.
-// The document's URL can optionally be specified to influence the expansion of relative URLs.
-const htmlString = await freezeDry(document, url)
-```
+`document` can be omitted, in which case it will default to `window.document`.
+
+Optionally, the document's URL can be overridden. This will influence the expansion of relative
+URLs, and is useful for cases where the document was constructed dynamically (e.g. using
+[DOMParser][]).
+
+    const html = await freezeDry(document, { docUrl: 'https://example.com/page' })
+
+Note that the resulting string can easily be several megabytes when pages contain images, videos,
+fonts, etcetera.
 
 
-## Why no scripts?
-
-It would be great to keep the interactive features of a page, so that for example a zoomable plot or
-drop-down menu would still function. We can however not store the current state of the scripts, and
-if we simply execute them again in the snapshotted page, in a different environment, they might
-mess up completely. Not running scripts gives a predictable result.
-
-Note that simple interactivity defined in CSS stylesheets will still work.
+[DOMParser]: https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
