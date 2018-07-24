@@ -39,7 +39,7 @@ export function extractLinksFromCss({ get, set, baseUrl }) {
     return links
 }
 
-export function parseUrlsFromStylesheet(stylesheetText) {
+function parseUrlsFromStylesheet(stylesheetText) {
     // TODO replace regex-based extractor with actual CSS parser.
     const cssExtractUrlPattern = /(url\s*\(\s*('|")?\s*)([^"')]+?)\s*\2\s*\)/i
     // TODO capture @import and @font-face statements
