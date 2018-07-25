@@ -1,5 +1,6 @@
 import whenAllSettled from 'when-all-settled'
 import documentOuterHTML from 'document-outerhtml'
+import postcss from 'postcss'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links'
 
@@ -77,21 +78,16 @@ async function crawlFrame(link) {
 async function crawlStylesheet(link) {
     const response = await fetchSubresource(link.absoluteTarget)
     const stylesheetUrl = response.url // may differ from link.absoluteTarget in case of redirects.
+    const stylesheetText = await response.text()
 
-    // stylesheetText is mutable, as it will be updated when we change its links.
-    let stylesheetText = await response.text()
+    const parsedCss = postcss.parse(stylesheetText)
 
-    // Create a live&editable view on the links in the stylesheet.
-    const links = extractLinksFromCss({
-        get: () => stylesheetText,
-        set: newValue => { stylesheetText = newValue },
-        baseUrl: stylesheetUrl,
-    })
+    const links = extractLinksFromCss(parsedCss, stylesheetUrl)
 
     const stylesheetResource = {
         url: stylesheetUrl,
         get blob() { return new Blob([this.string], { type: 'text/css' }) },
-        get string() { return stylesheetText },
+        get string() { return parsedCss.toResult().css },
         links,
     }
 

@@ -1,6 +1,6 @@
 import getBaseUrl from './get-base-url'
 import { syncingParsedView } from './parse-tools'
-import { extractLinksFromCss } from './from-css'
+import { extractLinksFromCssSynced } from './from-css'
 import urlAttributes from './url-attributes'
 import { flatMap } from './util'
 
@@ -58,8 +58,7 @@ function linksInAttribute({ element, attributeInfo, baseUrl, docUrl }) {
         get target() { return tokenView.token },
         set target(newUrl) { tokenView.token = newUrl },
         get absoluteTarget() {
-            const target = tokenView.token
-            return makeAbsolute(target, element, baseUrl, docUrl)
+            return makeAbsolute(this.target, element, baseUrl, docUrl)
         },
 
         get from() {
@@ -86,7 +85,7 @@ function extractLinksFromStyleAttributes({ rootElement, baseUrl }) {
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
     const links = flatMap(elements, element => {
         // Extract the links from the CSS using a live&editable view on the attribute value.
-        const cssLinks = extractLinksFromCss({
+        const cssLinks = extractLinksFromCssSynced({
             get: () => element.getAttribute('style'),
             set: newValue => { element.setAttribute('style', newValue) },
             baseUrl: baseUrl || element.baseURI,
@@ -117,7 +116,7 @@ function extractLinksFromStyleTags({ rootElement, baseUrl }) {
 
     const links = flatMap(elements, element => {
         // Extract the links from the CSS using a live&editable view on the content.
-        const cssLinks = extractLinksFromCss({
+        const cssLinks = extractLinksFromCssSynced({
             get: () => element.textContent,
             set: newValue => { element.textContent = newValue },
             baseUrl: baseUrl || element.baseURI,
