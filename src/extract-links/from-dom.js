@@ -2,7 +2,7 @@ import getBaseUrl from './get-base-url'
 import { syncingParsedView } from './parse-tools'
 import { extractLinksFromCss } from './from-css'
 import urlAttributes from './url-attributes'
-import { assignProperties, flatMap } from './util'
+import { flatMap } from './util'
 
 /**
  * Extracts links from an HTML Document.
@@ -94,15 +94,16 @@ function extractLinksFromStyleAttributes({ rootElement, baseUrl }) {
 
         // Tweak the links to describe the 'from' info from the DOM's perspective.
         const links = cssLinks.map(link =>
-            assignProperties(link, {
-                get from() {
-                    return {
+            // Use javascript's prototype inheritance, overriding the `from` property descriptor.
+            Object.create(link, {
+                from: {
+                    get: () => ({
                         get element() { return element },
                         get attribute() { return 'style' },
                         get rangeWithinAttribute() { return link.from.range },
-                    }
+                    }),
                 },
-            }),
+            })
         )
 
         return links // links in the style attribute of *this* element
@@ -124,14 +125,15 @@ function extractLinksFromStyleTags({ rootElement, baseUrl }) {
 
         // Tweak the links to describe the 'from' info from the DOM's perspective.
         const links = cssLinks.map(link =>
-            assignProperties(link, {
-                get from() {
-                    return {
+            // Use javascript's prototype inheritance, overriding the `from` property descriptor.
+            Object.create(link, {
+                from: {
+                    get: () => ({
                         get element() { return element },
                         get rangeWithinTextContent() { return link.from.range },
-                    }
+                    }),
                 },
-            }),
+            })
         )
 
         return links // links in this style element
