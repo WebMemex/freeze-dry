@@ -105,9 +105,9 @@ function extractLinksFromStyleAttributes({ rootElement, baseUrl }) {
             }),
         )
 
-        return links // links in the style attribute of this element
+        return links // links in the style attribute of *this* element
     })
-    return links // links in all style attributes of all elements
+    return links // links in the style attributes of *all* elements
 }
 
 function extractLinksFromStyleTags({ rootElement, baseUrl }) {

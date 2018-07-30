@@ -7,7 +7,8 @@ import mutableProxyFactory from 'mutable-proxy'
 
 /**
  * Allows manipulating tokens within a string.
- * @param {string => Object[]} parse - given a string, must return an array of objects { token, index, note? }
+ * @param {string => Object[]} parse - given a string, must return an array of objects { token,
+ * index, note? }
  * @=>
  * @param {string} value - the string to be parsed.
  * @returns {Object[]} tokens - the array of { token, index, note? } objects as returned by
