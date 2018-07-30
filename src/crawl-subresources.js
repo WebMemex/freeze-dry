@@ -78,16 +78,24 @@ async function crawlFrame(link) {
 async function crawlStylesheet(link) {
     const response = await fetchSubresource(link.absoluteTarget)
     const stylesheetUrl = response.url // may differ from link.absoluteTarget in case of redirects.
-    const stylesheetText = await response.text()
+    const originalStylesheetText = await response.text()
 
-    const parsedCss = postcss.parse(stylesheetText)
-
-    const links = extractLinksFromCss(parsedCss, stylesheetUrl)
+    let links
+    let getCurrentStylesheetText
+    try {
+        const parsedCss = postcss.parse(originalStylesheetText)
+        links = extractLinksFromCss(parsedCss, stylesheetUrl)
+        getCurrentStylesheetText = () => parsedCss.toResult().css
+    } catch (err) {
+        // CSS is corrupt. Pretend there are no links.
+        links = []
+        getCurrentStylesheetText = () => originalStylesheetText
+    }
 
     const stylesheetResource = {
         url: stylesheetUrl,
         get blob() { return new Blob([this.string], { type: 'text/css' }) },
-        get string() { return parsedCss.toResult().css },
+        get string() { return getCurrentStylesheetText() },
         links,
     }
 

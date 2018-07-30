@@ -135,13 +135,21 @@ export function extractLinksFromCssSynced({ get: getCssString, set: setCssString
     let currentParsedCss
     const links = deepSyncingProxy({
         get: () => {
-            currentParsedCss = getParsedCss()
-            return memoizedExtractLinksFromCss(currentParsedCss, baseUrl)
+            try {
+                currentParsedCss = getParsedCss()
+                return memoizedExtractLinksFromCss(currentParsedCss, baseUrl)
+            } catch (err) {
+                // Corrupt CSS is treated as containing no links at all.
+                currentParsedCss = null
+                return []
+            }
         },
         set: links => {
             // No need to use the given argument; any of links setters will have already updated the
             // AST (i.e. currentParsedCss), so that is the thing we have to sync now.
-            setParsedCss(currentParsedCss)
+            if (currentParsedCss !== null) {
+                setParsedCss(currentParsedCss)
+            }
         },
     })
     return links

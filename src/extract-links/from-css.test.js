@@ -214,4 +214,12 @@ describe('extractLinksFromCssSynced', () => {
         expect(links[0].target).toEqual('other.png')
         expect(cssString).toEqual(`p { background-image: url('other.png'); }`)
     })
+
+    test('should simply pretend corrupt CSS contains no links', () => {
+        cssString = `p { bla url(blub); }`
+
+        expect(links).toHaveLength(0)
+        // ..and should not accidentally change the string either.
+        expect(cssString).toEqual(`p { bla url(blub); }`)
+    })
 })
