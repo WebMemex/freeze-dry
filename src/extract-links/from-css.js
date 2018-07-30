@@ -44,6 +44,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                 get subresourceType() { return 'style' },
                 get from() {
                     // TODO combine atRule.source.start.{line|column} with urlNode.sourceIndex
+                    // But.. those numbers are not updated when the AST is mutated. Hopeless.
                     // (if urlNode.type === 'string', offset by 1 to account for the quote)
                     return {}
                 },
@@ -88,6 +89,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                     get subresourceType() { return subresourceType },
                     get from() {
                         // TODO combine decl.source.start.{line|column} with urlNode.sourceIndex
+                        // But.. those numbers are not updated when the AST is mutated. Hopeless.
                         // (if urlNode.type === 'string', offset by 1 to account for the quote)
                         return {}
                     },

@@ -94,8 +94,7 @@ value. Except for `target`, all properties are read-only.
   - if defined in text (only possible inside a `<style>` tag):
     `{ element, rangeWithinTextContent: [ start, end ] }`
 
-  For links in a CSS stylesheet (i.e. using `extractLinksFromCss`(`Synced`)):
-  - `{ range: [ start, end ] }`
+  **The `from` attribute is currently not giving the position of links inside CSS**
 
   As usual, range ends are exclusive; so `start - end === link.target.length` holds.
   </details>
