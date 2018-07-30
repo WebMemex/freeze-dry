@@ -10,7 +10,7 @@ import { extractLinksFromDom, extractLinksFromCss } from './extract-links'
  * @returns nothing; subresources are stored in the links of the given resource.
  */
 async function crawlSubresourcesOfDom(resource) {
-    const supportedSubresourceTypes = ['image', 'document', 'style', 'video']
+    const supportedSubresourceTypes = ['image', 'document', 'style', 'video', 'font']
 
     // TODO Avoid fetching all resolutions&formats of the same image/video?
     const linksToCrawl = resource.links
@@ -28,6 +28,7 @@ async function crawlSubresource(link) {
         document: crawlFrame,
         style: crawlStylesheet,
         video: crawlLeafSubresource, // Videos cannot have subresources (afaik; maybe they can?)
+        font: crawlLeafSubresource, // Fonts cannot have subresources (afaik; maybe they can?)
     }
     const crawler = crawlers[link.subresourceType]
     if (crawler === undefined) {
