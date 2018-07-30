@@ -192,6 +192,22 @@ describe('extractLinksFromCssSynced', () => {
         expect(firstLink.target).toEqual('newUrl.png')
     })
 
+    test('should throw when accessing a removed link', () => {
+        cssString = `
+            div { background-image: url('newUrl.png'); }
+            p { background-image: url('background.png'); }
+        `
+
+        const secondLink = links[1]
+
+        cssString = `
+            div { background-image: url('newUrl.png'); }
+        `
+
+        expect(links).toHaveLength(1)
+        expect(() => secondLink.target).toThrow(TypeError)
+    })
+
     test('should update the CSS string', () => {
         links[0].target = 'other.png'
 
