@@ -1,68 +1,158 @@
-import { syncingParsedView } from './parse-tools.js'
+import valuesParser from 'postcss-values-parser'
+import postcss from 'postcss'
+import memoizeOne from 'memoize-one'
+
+import { deepSyncingProxy, transformingCache } from './parse-tools'
 
 /**
  * Extract links from a stylesheet.
- * @param options
- * @param {() => string} options.get - getter to obtain the current content of the stylesheet.
- * @param {string => void} options.set - setter that is called, whenever a link is modified, with
- * the new value of the whole stylesheet.
- * @param {string} options.baseUrl - the absolute URL for interpreting any relative URLs in the
- * stylesheet.
+ * @param {Object} parsedCss - An AST as produced by postcss.parse()
+ * @param {string} baseUrl - the absolute URL for interpreting any relative URLs in the stylesheet.
  * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
  * inside the stylesheet.
  */
-export function extractLinksFromCss({ get, set, baseUrl }) {
-    const parsedStylesheetView = syncingParsedView({
-        parse: parseUrlsFromStylesheet,
-        get,
-        set,
+export function extractLinksFromCss(parsedCss, baseUrl) {
+    const links = []
+
+    // Grab all @import urls
+    parsedCss.walkAtRules('import', atRule => {
+        const valueAst = valuesParser(atRule.params).parse()
+
+        let urlNode
+        const firstNode = valueAst.nodes[0].nodes[0]
+        if (firstNode.type === 'string') {
+            urlNode = firstNode
+        }
+        else if (firstNode.type === 'func' && firstNode.value === 'url') {
+            const argument = firstNode.nodes[1] // nodes[0] is the opening parenthesis.
+            if (argument.type === 'string' || argument.type === 'word') {
+                urlNode = argument // For either type, argument.value is our URL.
+            }
+        }
+
+        if (urlNode) {
+            links.push({
+                get target() { return urlNode.value },
+                set target(newUrl) {
+                    urlNode.value = newUrl
+                    atRule.params = valueAst.toString()
+                },
+                get absoluteTarget() {
+                    return new URL(this.target, baseUrl).href
+                },
+                get isSubresource() { return true },
+                get subresourceType() { return 'style' },
+                get from() {
+                    // TODO combine atRule.source.start.{line|column} with urlNode.sourceIndex
+                    // But.. those numbers are not updated when the AST is mutated. Hopeless.
+                    // (if urlNode.type === 'string', offset by 1 to account for the quote)
+                    return {}
+                },
+            })
+        }
     })
 
-    const links = parsedStylesheetView.map(tokenView => ({
-        get target() { return tokenView.token },
-        set target(newUrl) { tokenView.token = newUrl },
-        get absoluteTarget() {
-            const target = tokenView.token
-            return new URL(target, baseUrl).href
-        },
-        get isSubresource() { return tokenView.note.isSubresource },
-        get subresourceType() { return tokenView.note.subresourceType },
+    // Grab every url(...) inside a property value; also gets those within @font-face.
+    parsedCss.walkDecls(decl => {
+        // TODO Possible future optimisation: only parse props known to allow a URL.
+        const valueAst = valuesParser(decl.value).parse()
+        valueAst.walk(functionNode => { // walkFunctionNodes seems broken? Testing manually then.
+            if (functionNode.type !== 'func') return
+            if (functionNode.value !== 'url') return
 
-        get from() {
-            const index = tokenView.index
-            return {
-                range: [index, index + tokenView.token.length],
+            let subresourceType
+            if (
+                decl.prop === 'src'
+                && decl.parent.type === 'atrule'
+                && decl.parent.name === 'font-face'
+            ) {
+                subresourceType = 'font'
+            } else {
+                // As far as I know, all other props that can contain a url specify an image.
+                subresourceType = 'image'
             }
-        },
-    }))
+
+            const argument = functionNode.nodes[1] // nodes[0] is the opening parenthesis.
+            if (argument.type === 'string' || argument.type === 'word') {
+                const urlNode = argument // For either type, argument.value is our URL.
+
+                links.push({
+                    get target() { return urlNode.value },
+                    set target(newUrl) {
+                        urlNode.value = newUrl
+                        decl.value = valueAst.toString()
+                    },
+                    get absoluteTarget() {
+                        return new URL(this.target, baseUrl).href
+                    },
+                    get isSubresource() { return true },
+                    get subresourceType() { return subresourceType },
+                    get from() {
+                        // TODO combine decl.source.start.{line|column} with urlNode.sourceIndex
+                        // But.. those numbers are not updated when the AST is mutated. Hopeless.
+                        // (if urlNode.type === 'string', offset by 1 to account for the quote)
+                        return {}
+                    },
+                })
+            }
+        })
+    })
 
     return links
 }
 
-export function parseUrlsFromStylesheet(stylesheetText) {
-    // TODO replace regex-based extractor with actual CSS parser.
-    const cssExtractUrlPattern = /(url\s*\(\s*('|")?\s*)([^"')]+?)\s*\2\s*\)/i
-    // TODO capture @import and @font-face statements
+/**
+ * Create a live&editable view on the links in a stylesheet.
+ * @param options
+ * @param {() => string} options.get - getter to obtain the current content of the stylesheet. This
+ * may be called many times, so keep it light; e.g. just reading a variable or style attribute.
+ * @param {string => void} options.set - setter that is called, whenever a link is modified, with
+ * the new value of the whole stylesheet.
+ * @param {string} options.baseUrl - the absolute URL for interpreting any relative URLs in the
+ * stylesheet.
+ */
+export function extractLinksFromCssSynced({ get: getCssString, set: setCssString, baseUrl }) {
+    // We run two steps: string to AST to links; each getter is cached. Changes to links will
+    // update the AST automatically, but we do have to write back the AST to the string.
+    // cssString <===|===> parsedCss <------|===> links
+    //            set|get             mutate|get
 
-    const urls = []
-    let remainder = stylesheetText
-    let remainderIndex = 0
-    while (remainder.length > 0) {
-        const match = remainder.match(cssExtractUrlPattern)
-        if (!match) break
+    // Wrap get and set so we can get and set the AST directly, without reparsing when unnecessary.
+    const { get: getParsedCss, set: setParsedCss } = transformingCache({
+        get: getCssString,
+        set: setCssString,
+        transform: cssString => postcss.parse(cssString),
+        untransform: parsedCss => parsedCss.toResult().css,
+    })
 
-        const url = match[3]
-        urls.push({
-            token: url,
-            index: remainderIndex + match.index + match[1].length,
-            note: {
-                isSubresource: true, // each URL in a stylesheet defines a subresource
-                subresourceType: 'image', // or 'font' or 'style' (for @import)
-            },
-        })
-        const charactersSeen = match.index + match[0].length
-        remainder = remainder.slice(charactersSeen, )
-        remainderIndex += charactersSeen
-    }
-    return urls
+    // Memoise, such that when we get the AST from cache, we get the extracted links from cache too.
+    const memoizedExtractLinksFromCss = memoizeOne(extractLinksFromCss)
+
+    // Make a proxy so that `links` is always up-to-date and its modifications are written back.
+    // For the curious: note that wrapping {get,set}parsedCss in a deepSyncingProxy would not work:
+    // access to its members would be wrapped, but a method like walkAtRules would not wrap the
+    // arguments to its callback, so operations performed on them would not be noticed. Therefore,
+    // we manually remember currentParsedCss and set() it whenever (any member of) the links object
+    // has been operated on.
+    let currentParsedCss
+    const links = deepSyncingProxy({
+        get: () => {
+            try {
+                currentParsedCss = getParsedCss()
+                return memoizedExtractLinksFromCss(currentParsedCss, baseUrl)
+            } catch (err) {
+                // Corrupt CSS is treated as containing no links at all.
+                currentParsedCss = null
+                return []
+            }
+        },
+        set: links => {
+            // No need to use the given argument; any of links setters will have already updated the
+            // AST (i.e. currentParsedCss), so that is the thing we have to sync now.
+            if (currentParsedCss !== null) {
+                setParsedCss(currentParsedCss)
+            }
+        },
+    })
+    return links
 }

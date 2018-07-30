@@ -105,6 +105,33 @@ describe('deepSyncingProxy', () => {
         expect(innerProxy.v).toEqual(3)
         expect(currentObject.t.u.v).toEqual(3)
     })
+
+    test('should throw a TypeError when accessing a member object that has disappeared', () => {
+        currentObject = { t: { u: { v: 2 } } }
+        const proxy = deepSyncingProxy({ get: getCurrentObject, set: setCurrentObject })
+
+        const innerProxy = proxy.t.u
+
+        currentObject = { t: { u: null } }
+        expect(() => innerProxy.v).toThrow(
+            TypeError('Expected get().t.u to be an object, but get().t.u is null.')
+        )
+
+        currentObject = { t: { u: 98 } } // A primitive value cannot be proxied either.
+        expect(() => innerProxy.v).toThrow(
+            TypeError('Expected get().t.u to be an object, but get().t.u is 98.')
+        )
+
+        currentObject = {}
+        expect(() => innerProxy.v).toThrow(
+            TypeError('Expected get().t.u to be an object, but get().t is undefined.')
+        )
+
+        currentObject = null
+        expect(() => innerProxy.v).toThrow(
+            TypeError('Expected get().t.u to be an object, but get() is null.')
+        )
+    })
 })
 
 describe('transformingCache', () => {

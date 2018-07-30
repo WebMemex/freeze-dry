@@ -27,14 +27,42 @@ Usage example: (assume the document just contains `<a href="/page"><img src="img
 
 ### For a stylesheet
 
-    extractLinksFromCss({ set, get, baseUrl })
+To manipulate the links inside a stylesheet, we want a representation of the stylesheet that permits
+mutation. Multiple approaches are supported:
 
-Stylesheets are taken in their string form (using [CSSOM] is a future possibility). However, because Javascript strings are immutable but we do want to have the same features as with links in the DOM, you do not pass the stylesheet as a string. Rather, you pass a getter and setter, that will access or replace the stylesheet string. Also, you should pass a `baseUrl` for interpreting any relative links the stylesheet may contain.
+1. Passing the AST (Abstract Syntax Tree) produced by [postcss][] as the object we work on.
+2. Passing a getter and a setter of the stylesheet string.
+3. *(possibly in the future: a [CSSOM][] CSSStylesheet or CSSStyleDeclaration)*
+
+In either case, you should pass a `baseUrl` for interpreting any relative links the stylesheet may
+contain.
+
+#### Using [postcss]
+
+    extractLinksFromCss(parsedCss, baseUrl)
+
+Where `parsedCss` is a postcss Root node.
+
+Example usage:
+
+    const parsedCss = postcss.parse(`body { background: url('bg.png'); }`)
+    const links = extractLinksFromCss(parsedCss, baseUrl)
+
+    links[0].target = 'other.png'
+    // parsedCss.toResult().css === `body { background: url('other.png'); }`
+
+#### Syncing with a string
+
+    extractLinksFromCssSynced({ get, set, baseUrl })
+
+Note this is form interally runs `extractLinksFromCss`. And in its turn, this form is used by
+`extractLinksFromDom` in order to extract links found within a `<style>` tag or `style` element
+attribute.
 
 Example usage:
 
     let stylesheetString = `body { background: url('bg.png'); }`
-    const links = extractLinksFromCss({
+    const links = extractLinksFromCssSynced({
         get: () => stylesheetString,
         set: newValue => { stylesheetString = newValue },
         baseUrl: stylesheetUrl,
@@ -45,11 +73,14 @@ Example usage:
 
 ## Properties of a link
 
-The properties of link are 'live' views on the link in the document, always reflecting the current value. Except for `target`, all properties are read-only.
+The properties of link are 'live' views on the link in the document, always reflecting the current
+value. Except for `target`, all properties are read-only.
 
-- `target`: the link's target URL. This is the exact value as it appears in the document, and may thus be a relative URL. This property can be written to, which will modify the document.
+- `target`: the link's target URL. This is the exact value as it appears in the document, and may
+  thus be a relative URL. This property can be written to, which will modify the document.
 
-- `absoluteTarget`: the link's target URL as an absolute URL. This takes into account factors like the <base href="..."> tag, so usually you may prefer to use `absoluteTarget` rather than `target`.
+- `absoluteTarget`: the link's target URL as an absolute URL. This takes into account factors like
+  the <base href="..."> tag, so usually you may prefer to use `absoluteTarget` rather than `target`.
 
 - `from`: information needed to find the link in the DOM or stylesheet, for scenarios where one
   needs to do more than just reading or modifying the link target.
@@ -63,8 +94,7 @@ The properties of link are 'live' views on the link in the document, always refl
   - if defined in text (only possible inside a `<style>` tag):
     `{ element, rangeWithinTextContent: [ start, end ] }`
 
-  For links in a CSS stylesheet (i.e. using `extractLinksFromCss`):
-  - `{ range: [ start, end ] }`
+  **The `from` attribute is currently not giving the position of links inside CSS**
 
   As usual, range ends are exclusive; so `start - end === link.target.length` holds.
   </details>
@@ -114,4 +144,5 @@ the `srcset`. In any case, we would have to run extractLinksFromDom again to get
 
 [WHATWG fetch spec]: https://fetch.spec.whatwg.org/#concept-request-destination (as of 2018-05-17)
 [attribute lists]: url-attributes/attribute-lists.js
+[postcss]: https://postcss.org/
 [CSSOM]: https://www.w3.org/TR/cssom-1/

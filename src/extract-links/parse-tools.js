@@ -163,9 +163,20 @@ export const deepSyncingProxy = ({ get, set }) => {
             // Update the root object.
             getRootObject()
             // Walk to the corresponding object within the root object.
-            const target = path === ''
-                ? rootObject
-                : path.slice(1).split('.').reduce((obj, property) => obj[property], rootObject)
+            let target = rootObject
+            if (!isNonNullObject(target)) throw new TypeError(
+                `Expected get()${path} to be an object, but get() is ${target}.`
+            )
+            const properties = path.split('.').slice(1)
+            for (const i in properties) {
+                target = target[properties[i]]
+                if (!isNonNullObject(target)) {
+                    const pathSoFar = '.' + properties.slice(0, i+1).join('.')
+                    throw new TypeError(
+                        `Expected get()${path} to be an object, but get()${pathSoFar} is ${target}.`
+                    )
+                }
+            }
             // Swap this proxy's target to the found object (we can leave other proxies outdated).
             setTarget(target)
         }
@@ -176,6 +187,10 @@ export const deepSyncingProxy = ({ get, set }) => {
     // (changing e.g. from a normal object to an Array causes trouble)
     const initialRootObject = get()
     return deepProxy(createProxy)(initialRootObject)
+}
+
+function isNonNullObject(value) {
+    return (typeof value === 'object' && value !== null)
 }
 
 /**

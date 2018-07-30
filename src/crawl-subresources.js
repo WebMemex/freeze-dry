@@ -1,5 +1,6 @@
 import whenAllSettled from 'when-all-settled'
 import documentOuterHTML from 'document-outerhtml'
+import postcss from 'postcss'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links'
 
@@ -9,7 +10,7 @@ import { extractLinksFromDom, extractLinksFromCss } from './extract-links'
  * @returns nothing; subresources are stored in the links of the given resource.
  */
 async function crawlSubresourcesOfDom(resource) {
-    const supportedSubresourceTypes = ['image', 'document', 'style', 'video']
+    const supportedSubresourceTypes = ['image', 'document', 'style', 'video', 'font']
 
     // TODO Avoid fetching all resolutions&formats of the same image/video?
     const linksToCrawl = resource.links
@@ -27,6 +28,7 @@ async function crawlSubresource(link) {
         document: crawlFrame,
         style: crawlStylesheet,
         video: crawlLeafSubresource, // Videos cannot have subresources (afaik; maybe they can?)
+        font: crawlLeafSubresource, // Fonts cannot have subresources (afaik; maybe they can?)
     }
     const crawler = crawlers[link.subresourceType]
     if (crawler === undefined) {
@@ -77,21 +79,24 @@ async function crawlFrame(link) {
 async function crawlStylesheet(link) {
     const response = await fetchSubresource(link.absoluteTarget)
     const stylesheetUrl = response.url // may differ from link.absoluteTarget in case of redirects.
+    const originalStylesheetText = await response.text()
 
-    // stylesheetText is mutable, as it will be updated when we change its links.
-    let stylesheetText = await response.text()
-
-    // Create a live&editable view on the links in the stylesheet.
-    const links = extractLinksFromCss({
-        get: () => stylesheetText,
-        set: newValue => { stylesheetText = newValue },
-        baseUrl: stylesheetUrl,
-    })
+    let links
+    let getCurrentStylesheetText
+    try {
+        const parsedCss = postcss.parse(originalStylesheetText)
+        links = extractLinksFromCss(parsedCss, stylesheetUrl)
+        getCurrentStylesheetText = () => parsedCss.toResult().css
+    } catch (err) {
+        // CSS is corrupt. Pretend there are no links.
+        links = []
+        getCurrentStylesheetText = () => originalStylesheetText
+    }
 
     const stylesheetResource = {
         url: stylesheetUrl,
         get blob() { return new Blob([this.string], { type: 'text/css' }) },
-        get string() { return stylesheetText },
+        get string() { return getCurrentStylesheetText() },
         links,
     }
 

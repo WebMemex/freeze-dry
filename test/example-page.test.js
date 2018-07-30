@@ -56,6 +56,7 @@ function mockFetch(url) {
         'html': 'text/html',
         'css': 'text/css',
         'png': 'image/png',
+        'woff': 'font/woff',
     }
 
     if (url.startsWith(websiteOrigin)) {
