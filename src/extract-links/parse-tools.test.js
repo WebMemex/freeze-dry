@@ -106,6 +106,28 @@ describe('deepSyncingProxy', () => {
         expect(currentObject.t.u.v).toEqual(3)
     })
 
+    test('by default, should not run set() after non-mutating operations', () => {
+        currentObject = { t: { u: { v: 2 } } }
+        const proxy = deepSyncingProxy({ get: getCurrentObject, set: setCurrentObject })
+
+        const v = proxy.t.u.v
+
+        expect(setCurrentObject).not.toHaveBeenCalled()
+    })
+
+    test('with alwaysSet === true, should run set() also after non-mutating operations', () => {
+        currentObject = { t: { u: { v: 2 } } }
+        const proxy = deepSyncingProxy({
+            get: getCurrentObject,
+            set: setCurrentObject,
+            alwaysSet: true,
+        })
+
+        const v = proxy.t.u
+
+        expect(setCurrentObject).toHaveBeenCalled()
+    })
+
     test('should throw a TypeError when accessing a member object that has disappeared', () => {
         currentObject = { t: { u: { v: 2 } } }
         const proxy = deepSyncingProxy({ get: getCurrentObject, set: setCurrentObject })

@@ -148,7 +148,7 @@ export const syncingProxy = ({ get, set }) => {
  * object or any of its members (or members' members, etc.).
  * @returns {Proxy} The proxy.
  */
-export const deepSyncingProxy = ({ get, set }) => {
+export const deepSyncingProxy = ({ get, set, alwaysSet = false }) => {
     let rootObject
     // We will reload the whole object before any operation on any (sub)object.
     const getRootObject = () => { rootObject = get() }
@@ -180,7 +180,14 @@ export const deepSyncingProxy = ({ get, set }) => {
             // Swap this proxy's target to the found object (we can leave other proxies outdated).
             setTarget(target)
         }
-        return makeListenerProxy(refreshProxyTarget, writeBack)(proxy)
+        const writeBackIfMutating = (method, args) => {
+            // If the operation would have mutated a normal object, trigger a set()-sync
+            if (modifyingOperations.includes(method)) {
+                writeBack()
+            }
+        }
+        const afterHook = alwaysSet ? writeBack : writeBackIfMutating
+        return makeListenerProxy(refreshProxyTarget, afterHook)(proxy)
     }
 
     // Get the current object to ensure the proxy's initial target has correct property descriptors.
@@ -193,13 +200,18 @@ function isNonNullObject(value) {
     return (typeof value === 'object' && value !== null)
 }
 
+// Operations which modify an object (if not performing tricks with getters or Proxies)
+// (XXX hand-picked from the Reflect.* methods, potentially misguided)
+const modifyingOperations = [
+    'set', 'delete', 'defineProperty', 'deleteProperty', 'preventExtensions', 'setPrototypeOf',
+]
+
 /**
  * A proxy to the object, that runs the given hooks before and after every operation on the object.
  * @param {(method: string, args[]) => void} before - is run before any operation on the object.
  * Gets passed the name of the method that will be invoked, and its arguments.
  * @param {(method: string, args[]) => void} after - is run after any operation on the object.
  * Gets passed the name of the method that will be invoked, and its arguments.
- * @TODO make an option to run after() only after mutating operations.
  * @=>
  * @param {Object} object - the object to be proxied.
  * @returns {Proxy} The proxy to the given object.
