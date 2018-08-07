@@ -1,6 +1,7 @@
 import fs from 'fs'
 import jsdom from 'jsdom/lib/old-api'
 import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Request, ...
+import { dataURLToBlob } from 'blob-util'
 
 import freezeDry from '../src'
 
@@ -11,6 +12,16 @@ test('Freeze-dry an example page as expected', async () => {
     const result = await freezeDryExamplePage()
 
     expect(result).toMatchSnapshot() // compares to (or creates) snapshot in __snapshots__ folder
+})
+
+test('Freeze-dry should be idempotent', async () => {
+    const dryHtml = await freezeDryExamplePage()
+    const docUrl = 'https://url.should.be/irrelevant'
+    const dryDoc = await makeDom(dryHtml, docUrl)
+
+    const extraDryHtml = await freezeDry(dryDoc)
+
+    expect(extraDryHtml).toEqual(dryHtml)
 })
 
 async function freezeDryExamplePage() {
@@ -76,5 +87,13 @@ async function mockFetch(url) {
         response.url = url
         return response
     }
+
+    if (url.startsWith('data:')) {
+        const blob = await dataURLToBlob(url)
+        const response = new Response(blob, { status: 200 })
+        response.url = url
+        return response
+    }
+
     throw new Error(`Trying to fetch unknown URL: ${url}`)
 }
