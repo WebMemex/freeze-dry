@@ -5,21 +5,34 @@ import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Req
 import freezeDry from '../src'
 
 global.fetch = jestFetchMock
-
-beforeEach(() => {
-    jest.resetAllMocks()
-})
+fetch.mockImplementation(mockFetch)
 
 test('Freeze-dry an example page as expected', async () => {
-    fetch.mockImplementation(mockFetch)
+    const result = await freezeDryExamplePage()
 
+    expect(result).toMatchSnapshot() // compares to (or creates) snapshot in __snapshots__ folder
+})
+
+async function freezeDryExamplePage() {
     const docUrl = 'https://example.com/main/page.html'
     const docHtml = await (await fetch(docUrl)).text()
 
+    const doc = await makeDom(docHtml, docUrl)
+
+    // Modify the iframe contents; the capture should include the modifications.
+    const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
+    innerDoc.body.appendChild(innerDoc.createElement('hr'))
+
+    const result = await freezeDry(doc)
+
+    return result
+}
+
+async function makeDom(docHtml, docUrl) {
     const doc = jsdom.jsdom(docHtml, {
         url: docUrl,
         async resourceLoader({ url }, callback) {
-            const response = mockFetch(url.href)
+            const response = await mockFetch(url.href)
             const body = await response.text()
             callback(null, body)
             return null
@@ -38,16 +51,11 @@ test('Freeze-dry an example page as expected', async () => {
         }
     })
 
-    // Modify the iframe contents; the capture should include the modifications.
-    const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
-    innerDoc.body.appendChild(innerDoc.createElement('hr'))
-    const result = await freezeDry(doc)
-
-    expect(result).toMatchSnapshot() // compares to (or creates) snapshot in __snapshots__ folder
-})
+    return doc
+}
 
 // A fetch function that reads the subresources from local files.
-function mockFetch(url) {
+async function mockFetch(url) {
     const websiteOrigin = 'https://example.com'
     const basedir = __dirname + '/example-page'
 
