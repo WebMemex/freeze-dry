@@ -16,7 +16,12 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
 
     // Grab all @import urls
     parsedCss.walkAtRules('import', atRule => {
-        const valueAst = valuesParser(atRule.params).parse()
+        let valueAst
+        try {
+            valueAst = valuesParser(atRule.params).parse()
+        } catch (err) {
+            return // We ignore values we cannot parse.
+        }
 
         let urlNode
         const firstNode = valueAst.nodes[0].nodes[0]
@@ -55,7 +60,13 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
     // Grab every url(...) inside a property value; also gets those within @font-face.
     parsedCss.walkDecls(decl => {
         // TODO Possible future optimisation: only parse props known to allow a URL.
-        const valueAst = valuesParser(decl.value).parse()
+        let valueAst
+        try {
+            valueAst = valuesParser(decl.value).parse()
+        } catch (err) {
+            return // We ignore values we cannot parse.
+        }
+
         valueAst.walk(functionNode => { // walkFunctionNodes seems broken? Testing manually then.
             if (functionNode.type !== 'func') return
             if (functionNode.value !== 'url') return
@@ -139,16 +150,16 @@ export function extractLinksFromCssSynced({ get: getCssString, set: setCssString
         get: () => {
             try {
                 currentParsedCss = getParsedCss()
-                return memoizedExtractLinksFromCss(currentParsedCss, baseUrl)
             } catch (err) {
                 // Corrupt CSS is treated as containing no links at all.
                 currentParsedCss = null
                 return []
             }
+            return memoizedExtractLinksFromCss(currentParsedCss, baseUrl)
         },
         set: links => {
-            // No need to use the given argument; any of links setters will have already updated the
-            // AST (i.e. currentParsedCss), so that is the thing we have to sync now.
+            // No need to use the given argument; any of links's setters will have already updated
+            // the AST (i.e. currentParsedCss), so that is the thing we have to sync now.
             if (currentParsedCss !== null) {
                 setParsedCss(currentParsedCss)
             }
