@@ -1,6 +1,7 @@
 import { blobToDataURL } from 'blob-util'
 import whenAllSettled from 'when-all-settled'
 
+import setMementoTags from './set-memento-tags'
 import setContentSecurityPolicy from './set-content-security-policy'
 
 /**
@@ -11,6 +12,9 @@ import setContentSecurityPolicy from './set-content-security-policy'
  */
 export default async function createSingleFile(resource) {
     await deepInlineSubresources(resource, { keepOriginalAttributes: true })
+
+    // Add metadata about the snapshot to the snapshot itself.
+    setMementoTags(resource.doc, { originalUrl: resource.url, datetime: new Date() })
 
     // Set a strict Content Security Policy in a <meta> tag.
     const csp = [
