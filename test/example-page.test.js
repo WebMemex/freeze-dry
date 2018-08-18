@@ -19,7 +19,8 @@ test('Freeze-dry should be idempotent', async () => {
     const docUrl = 'https://url.should.be/irrelevant'
     const dryDoc = await makeDom(dryHtml, docUrl)
 
-    const extraDryHtml = await freezeDry(dryDoc)
+    // Freeze-dry the freeze-dried page. Adding metadata would of course break idempotency.
+    const extraDryHtml = await freezeDry(dryDoc, { addMetadata: false })
 
     expect(extraDryHtml).toEqual(dryHtml)
 })
@@ -34,7 +35,8 @@ async function freezeDryExamplePage() {
     const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
     innerDoc.body.appendChild(innerDoc.createElement('hr'))
 
-    const result = await freezeDry(doc)
+    // Run freeze-dry, while passing a fixed date for reproducability.
+    const result = await freezeDry(doc, { now: new Date(1534615340948) })
 
     return result
 }

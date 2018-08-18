@@ -8,9 +8,16 @@ import createSingleFile from './create-single-file'
  * @param {Document} [doc=window.document] - HTML Document to be freeze-dried. Remains unmodified.
  * @param {Object} [options]
  * @param {string} [options.docUrl] - URL to override doc.URL.
+ * @param {boolean} [options.addMetadata=true] - Whether to note the snapshotting time and the
+ * document's URL in an extra meta and link tag.
+ * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
-export default async function freezeDry(doc = window.document, { docUrl } = {} ) {
+export default async function freezeDry(doc = window.document, {
+    docUrl,
+    addMetadata = true,
+    now = new Date(),
+} = {}) {
     // Step 1: Capture the DOM (as well as DOMs inside frames).
     const resource = captureDom(doc, { docUrl })
 
@@ -23,7 +30,7 @@ export default async function freezeDry(doc = window.document, { docUrl } = {} )
     dryResources(resource)
 
     // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
-    const html = await createSingleFile(resource)
+    const html = await createSingleFile(resource, { addMetadata, snapshotTime: now })
 
     return html
 }

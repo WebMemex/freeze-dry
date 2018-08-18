@@ -10,11 +10,13 @@ import setContentSecurityPolicy from './set-content-security-policy'
  * be mutated.
  * @returns {string} html - the resulting HTML.
  */
-export default async function createSingleFile(resource) {
+export default async function createSingleFile(resource, { addMetadata, snapshotTime }) {
     await deepInlineSubresources(resource, { keepOriginalAttributes: true })
 
-    // Add metadata about the snapshot to the snapshot itself.
-    setMementoTags(resource.doc, { originalUrl: resource.url, datetime: new Date() })
+    if (addMetadata) {
+        // Add metadata about the snapshot to the snapshot itself.
+        setMementoTags(resource.doc, { originalUrl: resource.url, datetime: snapshotTime })
+    }
 
     // Set a strict Content Security Policy in a <meta> tag.
     const csp = [
