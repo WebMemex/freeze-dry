@@ -12,18 +12,31 @@ For more details about how this exactly works, see [src/Readme.md](src/Readme.md
 
 ## Usage
 
-    const html = await freezeDry(document)
+    const html = await freezeDry(document, options)
 
-`document` can be omitted, in which case it will default to `window.document`.
+The `options` object is optional, and even `document` can be omitted, in which case it will default
+to `window.document`. Possible options are:
+- `docUrl` (string): overrides the documents's URL. This will influence the expansion of relative
+  URLs, and is useful for cases where the document was constructed dynamically (e.g. using
+  [DOMParser][]).
+- `addMetadata` (boolean): If true (the default), a `meta` and `link` tag will be added to the
+  returned html, noting the documents URL and time of snapshotting (that is, the current time).
+  <details>
 
-Optionally, the document's URL can be overridden. This will influence the expansion of relative
-URLs, and is useful for cases where the document was constructed dynamically (e.g. using
-[DOMParser][]).
+  The meta data mimics the HTTP headers defined for the [Memento][] protocol. The added headers look
+  like so:
 
-    const html = await freezeDry(document, { docUrl: 'https://example.com/page' })
+      <meta http-equiv="Memento-Datetime" content="Sat, 18 Aug 2018 18:02:20 GMT">
+      <link rel="original" href="https://example.com/main/page.html">
+
+  </details>
+
+- `now` (Date): Overrides the snapshot time (only relevant when `addMetadata` is true). Mainly
+  intended for testing purposes.
 
 Note that the resulting string can easily be several megabytes when pages contain images, videos,
 fonts, etcetera.
 
 
 [DOMParser]: https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
+[Memento]: https://tools.ietf.org/html/rfc7089
