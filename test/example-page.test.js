@@ -9,13 +9,21 @@ global.fetch = jestFetchMock
 fetch.mockImplementation(mockFetch)
 
 test('Freeze-dry an example page as expected', async () => {
-    const result = await freezeDryExamplePage()
+    const doc = await getExampleDoc()
+
+    // Modify the iframe contents; the capture should include the modifications.
+    const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
+    innerDoc.body.appendChild(innerDoc.createElement('hr'))
+
+    // Run freeze-dry, while passing a fixed date for reproducability.
+    const result = await freezeDry(doc, { now: new Date(1534615340948) })
 
     expect(result).toMatchSnapshot() // compares to (or creates) snapshot in __snapshots__ folder
 })
 
 test('Freeze-dry should be idempotent', async () => {
-    const dryHtml = await freezeDryExamplePage()
+    const doc = await getExampleDoc()
+    const dryHtml = await freezeDry(doc, { now: new Date(1534615340948) })
     const docUrl = 'https://url.should.be/irrelevant'
     const dryDoc = await makeDom(dryHtml, docUrl)
 
@@ -25,20 +33,11 @@ test('Freeze-dry should be idempotent', async () => {
     expect(extraDryHtml).toEqual(dryHtml)
 })
 
-async function freezeDryExamplePage() {
+async function getExampleDoc() {
     const docUrl = 'https://example.com/main/page.html'
     const docHtml = await (await fetch(docUrl)).text()
-
     const doc = await makeDom(docHtml, docUrl)
-
-    // Modify the iframe contents; the capture should include the modifications.
-    const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
-    innerDoc.body.appendChild(innerDoc.createElement('hr'))
-
-    // Run freeze-dry, while passing a fixed date for reproducability.
-    const result = await freezeDry(doc, { now: new Date(1534615340948) })
-
-    return result
+    return doc
 }
 
 async function makeDom(docHtml, docUrl) {
