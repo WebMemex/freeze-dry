@@ -16,6 +16,8 @@ For more details about how this exactly works, see [src/Readme.md](src/Readme.md
 
 The `options` object is optional, and even `document` can be omitted, in which case it will default
 to `window.document`. Possible options are:
+- `timeout` (number): Maximum time (in milliseconds) spent on fetching the page's subresources. The
+  resulting HTML will have only succesfully fetched subresources inlined.
 - `docUrl` (string): overrides the documents's URL. This will influence the expansion of relative
   URLs, and is useful for cases where the document was constructed dynamically (e.g. using
   [DOMParser][]).

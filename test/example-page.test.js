@@ -6,7 +6,11 @@ import { dataURLToBlob } from 'blob-util'
 import freezeDry from '../src'
 
 global.fetch = jestFetchMock
-fetch.mockImplementation(mockFetch)
+beforeEach(() => {
+    fetch.mockImplementation(mockFetch)
+})
+
+jest.useFakeTimers()
 
 test('Freeze-dry an example page as expected', async () => {
     const doc = await getExampleDoc()
@@ -31,6 +35,22 @@ test('Freeze-dry should be idempotent', async () => {
     const extraDryHtml = await freezeDry(dryDoc, { addMetadata: false })
 
     expect(extraDryHtml).toEqual(dryHtml)
+})
+
+test('Freeze-dry should return the incomplete result after given timeout', async () => {
+    const doc = await getExampleDoc()
+
+    // Make fetch never resolve
+    fetch.mockImplementation(url => new Promise(resolve => {}))
+
+    const resultP = freezeDry(doc, {
+        now: new Date(1534615340948),
+        timeout: 2000,
+    })
+    jest.runAllTimers() // trigger the timeout directly.
+    const result = await resultP
+
+    expect(result).toMatchSnapshot()
 })
 
 async function getExampleDoc() {
