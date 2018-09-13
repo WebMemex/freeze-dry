@@ -12,12 +12,8 @@ beforeEach(() => {
 
 jest.useFakeTimers()
 
-test('Freeze-dry an example page as expected', async () => {
+test('should freeze-dry an example page as expected', async () => {
     const doc = await getExampleDoc()
-
-    // Modify the iframe contents; the capture should include the modifications.
-    const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
-    innerDoc.body.appendChild(innerDoc.createElement('hr'))
 
     // Run freeze-dry, while passing a fixed date for reproducability.
     const result = await freezeDry(doc, { now: new Date(1534615340948) })
@@ -25,7 +21,21 @@ test('Freeze-dry an example page as expected', async () => {
     expect(result).toMatchSnapshot() // compares to (or creates) snapshot in __snapshots__ folder
 })
 
-test('Freeze-dry should be idempotent', async () => {
+test('should capture current state of documents inside frames', async () => {
+    const doc = await getExampleDoc()
+
+    // Modify the iframe contents; the capture should include the modifications.
+    const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
+    innerDoc.body.appendChild(innerDoc.createElement('hr'))
+
+    const result = await freezeDry(doc, { now: new Date(1534615340948) })
+
+    const dryDoc = await makeDom(result)
+    const dryInnerDoc = dryDoc.querySelector('iframe').contentDocument
+    expect(dryInnerDoc.querySelector('hr')).not.toBeNull()
+})
+
+test('should be idempotent', async () => {
     const doc = await getExampleDoc()
     const dryHtml = await freezeDry(doc, { now: new Date(1534615340948) })
     const docUrl = 'https://url.should.be/irrelevant'
@@ -37,7 +47,7 @@ test('Freeze-dry should be idempotent', async () => {
     expect(extraDryHtml).toEqual(dryHtml)
 })
 
-test('Freeze-dry should return the incomplete result after given timeout', async () => {
+test('should return the incomplete result after given timeout', async () => {
     const doc = await getExampleDoc()
 
     // Make fetch never resolve
@@ -51,6 +61,50 @@ test('Freeze-dry should return the incomplete result after given timeout', async
     const result = await resultP
 
     expect(result).toMatchSnapshot()
+})
+
+test('should use the given docUrl', async () => {
+    const docUrl = 'https://example.com/main/page.html'
+    const docHtml = await (await fetch(docUrl)).text()
+    // This time, we use a DOMParser, and create a Document that lacks a URL.
+    const doc = new DOMParser().parseFromString(docHtml, 'text/html')
+
+    const result = await freezeDry(doc, { docUrl })
+
+    const dryDoc = await makeDom(result)
+    expect(dryDoc.querySelector('a').getAttribute('href'))
+        .toEqual('https://example.com/main/something')
+    expect(dryDoc.querySelector('img').getAttribute('src'))
+        .toMatch(/^data:/)
+})
+
+test('should respect the addMetadata option', async () => {
+    const testWithOption = async addMetadata => {
+        const doc = await getExampleDoc()
+
+        const result = await freezeDry(doc, { addMetadata })
+
+        const dryDoc = await makeDom(result)
+        expect(dryDoc.querySelector('link[rel=original]')).not.toBeNull()
+        expect(dryDoc.querySelector('meta[http-equiv=Memento-Datetime]')).not.toBeNull()
+    }
+    await expect(testWithOption(true)).resolves.toEqual(undefined)
+    await expect(testWithOption(false)).rejects.toEqual(expect.anything())
+    await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
+})
+
+test('should respect the keepOriginalAttributes option', async () => {
+    const testWithOption = async keepOriginalAttributes => {
+        const doc = await getExampleDoc()
+
+        const result = await freezeDry(doc, { keepOriginalAttributes })
+
+        const dryDoc = await makeDom(result)
+        expect(dryDoc.querySelector('img[data-original-src]')).not.toBeNull()
+    }
+    await expect(testWithOption(true)).resolves.toEqual(undefined)
+    await expect(testWithOption(false)).rejects.toEqual(expect.anything())
+    await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
 })
 
 async function getExampleDoc() {

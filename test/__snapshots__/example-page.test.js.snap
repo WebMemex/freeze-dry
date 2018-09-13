@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Freeze-dry an example page as expected 1`] = `
+exports[`should freeze-dry an example page as expected 1`] = `
 "<!DOCTYPE html>
 <html><head><meta http-equiv=\\"Content-Security-Policy\\" content=\\"default-src 'none'; img-src data:; media-src data:; style-src data: 'unsafe-inline'; font-src data:; frame-src data:\\"><meta http-equiv=\\"Memento-Datetime\\" content=\\"Sat, 18 Aug 2018 18:02:20 GMT\\"><link rel=\\"original\\" href=\\"https://example.com/main/page.html\\">
         <link rel=\\"stylesheet\\" href=\\"data:text/css;base64,QGltcG9ydCAnZGF0YTp0ZXh0L2NzcztiYXNlNjQsYUhSdGJDQjdDaUFnSUNCaVlXTnJaM0p2ZFc1a09pQmpiM1psY2lCMWNtd29aR0YwWVRwcGJXRm5aUzl3Ym1jN1ltRnpaVFkwTEdsV1FrOVNkekJMUjJkdlFVRkJRVTVUVldoRlZXZEJRVUZCUlVGQlFVRkNRMEZaUVVGQlFXWkdZMU5LUVVGQlFVUlZiRVZSVmxGSmJWZE9aMkZIUkRSRWQwRkRhRUZIUVRKR1NtUnBVVUZCUVVGQ1NsSlZOVVZ5YTBwbloyYzlQU2tLZlFvPSc7CkBmb250LWZhY2UgewogICAgZm9udC1mYW1pbHk6ICJNeSBGb250IjsKICAgIHNyYzogdXJsKCJkYXRhOmZvbnQvd29mZjtiYXNlNjQsVG05MElHRnVJR0ZqZEhWaGJDQjNiMlptSUdacGJHVXVMaUJpZFhRc0lIZG9ZWFJsZG1WeUxnbz0iKSBmb3JtYXQoIndvZmYiKTsKfQoKYm9keSB7CiAgICBjb2xvcjogYmx1ZTsKICAgIGJhY2tncm91bmQ6IHVybCgiZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFBRUFBQUFCQ0FZQUFBQWZGY1NKQUFBQURVbEVRVlFJbVdOZ2FHRDREd0FDaEFHQTJGSmRpUUFBQUFCSlJVNUVya0pnZ2c9PSIpOwp9Cg==\\" data-original-href=\\"https://example.com/main/style/style.css\\">
@@ -19,13 +19,13 @@ exports[`Freeze-dry an example page as expected 1`] = `
             <img src=\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAEUlEQVQYlWNgaGD4jxePDAUAE0dfwfSqhOEAAAAASUVORK5CYII=\\" srcset=\\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGUlEQVQ4jWNoYGj4TwlmGDVg1IBRA4aLAQA6U/8QUc9uQwAAAABJRU5ErkJggg== 2x, data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAALUlEQVRYhe3OIQEAAAwCMPr3eE4eAzMxv/TSpQgICAgICAgICAgICAgICKwDDxYBjJdfnw0EAAAAAElFTkSuQmCC 4x\\" data-original-src=\\"https://example.com/imgs/8x8.png\\" data-original-srcset=\\"https://example.com/imgs/16x16.png 2x, https://example.com/imgs/32x32.png 4x\\">
             
         </p>
-        <iframe src=\\"data:text/html;base64,PCFET0NUWVBFIGh0bWw+CjxodG1sPjxoZWFkPjwvaGVhZD4KPGJvZHk+CiAgICA8aDE+aWZyYW1lIGNvbnRlbnQ8L2gxPgogICAgPGltZyBzcmM9ImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQUVBQUFBQkNBWUFBQUFmRmNTSkFBQUFEVWxFUVZRSW1XTmdhR0Q0RHdBQ2hBR0EyRkpkaVFBQUFBQkpSVTVFcmtKZ2dnPT0iIGRhdGEtb3JpZ2luYWwtc3JjPSJodHRwczovL2V4YW1wbGUuY29tL2lmcmFtZS9pbWFnZS5wbmciPgogICAgCgoKPGhyPjwvYm9keT48L2h0bWw+\\" data-original-src=\\"https://example.com/iframe/innerpage.html\\"></iframe>
+        <iframe src=\\"data:text/html;base64,PCFET0NUWVBFIGh0bWw+CjxodG1sPjxoZWFkPjwvaGVhZD4KPGJvZHk+CiAgICA8aDE+aWZyYW1lIGNvbnRlbnQ8L2gxPgogICAgPGltZyBzcmM9ImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQUVBQUFBQkNBWUFBQUFmRmNTSkFBQUFEVWxFUVZRSW1XTmdhR0Q0RHdBQ2hBR0EyRkpkaVFBQUFBQkpSVTVFcmtKZ2dnPT0iIGRhdGEtb3JpZ2luYWwtc3JjPSJodHRwczovL2V4YW1wbGUuY29tL2lmcmFtZS9pbWFnZS5wbmciPgogICAgCgoKPC9ib2R5PjwvaHRtbD4=\\" data-original-src=\\"https://example.com/iframe/innerpage.html\\"></iframe>
     
 
 </body></html>"
 `;
 
-exports[`Freeze-dry should return the incomplete result after given timeout 1`] = `
+exports[`should return the incomplete result after given timeout 1`] = `
 "<!DOCTYPE html>
 <html><head><meta http-equiv=\\"Content-Security-Policy\\" content=\\"default-src 'none'; img-src data:; media-src data:; style-src data: 'unsafe-inline'; font-src data:; frame-src data:\\"><meta http-equiv=\\"Memento-Datetime\\" content=\\"Sat, 18 Aug 2018 18:02:20 GMT\\"><link rel=\\"original\\" href=\\"https://example.com/main/page.html\\">
         <link rel=\\"stylesheet\\" href=\\"https://example.com/main/style/style.css\\">
