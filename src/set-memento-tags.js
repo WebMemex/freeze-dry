@@ -32,7 +32,7 @@ export default function setMementoTags(doc, { originalUrl, datetime }) {
     }
 }
 
-// Produces an RFC 1223 datetime string, hard-coded to use GMT as its timezone, as Memento requires.
+// Produces an RFC 1123 datetime string, hard-coded to use GMT as its timezone, as Memento requires.
 function datetimeToString(datetime) {
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
