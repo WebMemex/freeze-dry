@@ -12,6 +12,11 @@ import createSingleFile from './create-single-file'
  * @param {string} [options.docUrl] - URL to override doc.URL.
  * @param {boolean} [options.addMetadata=true] - Whether to note the snapshotting time and the
  * document's URL in an extra meta and link tag.
+ * @param {boolean} [options.keepOriginalAttributes=true] - Whether to preserve the value of an
+ * element attribute if its URLs are inlined, by noting it as a new 'data-original-...' attribute.
+ * For example, <img src="bg.png"> would become <img src="data:..." data-original-src="bg.png">.
+ * Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
+ * URLs inside stylesheets are still lost.
  * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
@@ -19,6 +24,7 @@ export default async function freezeDry(doc = window.document, {
     timeout = Infinity,
     docUrl,
     addMetadata = true,
+    keepOriginalAttributes = true,
     now = new Date(),
 } = {}) {
     // Step 1: Capture the DOM (as well as DOMs inside frames).
@@ -34,7 +40,11 @@ export default async function freezeDry(doc = window.document, {
     dryResources(resource)
 
     // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
-    const html = await createSingleFile(resource, { addMetadata, snapshotTime: now })
+    const html = await createSingleFile(resource, {
+        addMetadata,
+        keepOriginalAttributes,
+        snapshotTime: now,
+    })
 
     return html
 }

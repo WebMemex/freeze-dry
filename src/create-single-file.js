@@ -10,8 +10,12 @@ import setContentSecurityPolicy from './set-content-security-policy'
  * be mutated.
  * @returns {string} html - the resulting HTML.
  */
-export default async function createSingleFile(resource, { addMetadata, snapshotTime }) {
-    await deepInlineSubresources(resource, { keepOriginalAttributes: true })
+export default async function createSingleFile(resource, {
+    addMetadata,
+    keepOriginalAttributes,
+    snapshotTime,
+} = {}) {
+    await deepInlineSubresources(resource, { keepOriginalAttributes })
 
     if (addMetadata) {
         // Add metadata about the snapshot to the snapshot itself.

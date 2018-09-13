@@ -33,6 +33,11 @@ to `window.document`. Possible options are:
 
   </details>
 
+- `keepOriginalAttributes` (boolean): If true (the default), preserves the original value of an
+  element attribute if its URLs are inlined, by noting it as a new `data-original-...` attribute.
+  For example, `<img src="bg.png">` would become `<img src="data:..." data-original-src="bg.png">`.
+  Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
+  URLs inside stylesheets are still lost.
 - `now` (Date): Overrides the snapshot time (only relevant when `addMetadata` is true). Mainly
   intended for testing purposes.
 
