@@ -1,5 +1,11 @@
 # Changelog for freeze-dry
 
+## 0.2.1 (2018-10-04)
+
+- Parse CSS properly; and now also recursively crawl through `@import` rules.
+- Add Memento-style metadata to note a snapshot's provenance.
+- Add a timeout option to limit the time spent fetching subresources.
+
 ## 0.2.0 (2018-07-19)
 
 Near-complete rewrite.
