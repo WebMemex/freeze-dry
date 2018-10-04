@@ -1,7 +1,7 @@
 {
   "name": "freeze-dry",
   "description": "Snapshots a web page to get it as a static, self-contained HTML document.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "Unlicense",
   "repository": {
     "type": "git",
