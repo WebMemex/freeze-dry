@@ -1,8 +1,8 @@
 import { blobToDataURL } from 'blob-util'
 import whenAllSettled from 'when-all-settled'
 
-import setMementoTags from './set-memento-tags'
-import setContentSecurityPolicy from './set-content-security-policy'
+import setMementoTags from './set-memento-tags.js'
+import setContentSecurityPolicy from './set-content-security-policy/index.js'
 
 /**
  * Serialises the DOM resource+subresources into a single, self-contained string of HTML.

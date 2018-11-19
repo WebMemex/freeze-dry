@@ -2,7 +2,7 @@ import valuesParser from 'postcss-values-parser'
 import postcss from 'postcss'
 import memoizeOne from 'memoize-one'
 
-import { deepSyncingProxy, transformingCache } from './parse-tools'
+import { deepSyncingProxy, transformingCache } from './parse-tools.js'
 
 /**
  * Extract links from a stylesheet.

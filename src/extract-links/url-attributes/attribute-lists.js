@@ -1,7 +1,7 @@
 // Lists of html attributes that can contain one or more URLs.
 
-import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list'
-import { omit } from './util'
+import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list.js'
+import { omit } from './util.js'
 
 // Default properties for the attributes listed below.
 const defaultItem = {

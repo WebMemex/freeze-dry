@@ -1,4 +1,4 @@
-import { datetimeToString } from './set-memento-tags'
+import { datetimeToString } from './set-memento-tags.js'
 
 describe('datetimeToString', () => {
     test('should work for a basic example', () => {

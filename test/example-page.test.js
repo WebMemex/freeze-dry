@@ -3,7 +3,7 @@ import jsdom from 'jsdom/lib/old-api'
 import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Request, ...
 import { dataURLToBlob } from 'blob-util'
 
-import freezeDry from '../src'
+import freezeDry from '../src/index.js'
 
 global.fetch = jestFetchMock
 beforeEach(() => {

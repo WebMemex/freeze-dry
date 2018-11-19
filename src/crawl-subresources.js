@@ -2,7 +2,7 @@ import whenAllSettled from 'when-all-settled'
 import documentOuterHTML from 'document-outerhtml'
 import postcss from 'postcss'
 
-import { extractLinksFromDom, extractLinksFromCss } from './extract-links'
+import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index.js'
 
 /**
  * Recursively fetch the subresources of a DOM resource.

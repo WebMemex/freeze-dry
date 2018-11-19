@@ -2,7 +2,7 @@ import documentOuterHTML from 'document-outerhtml'
 import pathForDomNode from 'path-to-domnode'
 import domNodeAtPath from 'domnode-at-path'
 
-import { extractLinksFromDom } from './extract-links'
+import { extractLinksFromDom } from './extract-links/index.js'
 
 /**
  * Clones the DOM and DOMs inside its frames (recursively), wraps them in a resource object.

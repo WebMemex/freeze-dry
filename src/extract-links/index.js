@@ -1,2 +1,2 @@
-export { extractLinksFromCss, extractLinksFromCssSynced } from './from-css'
-export { extractLinksFromDom } from './from-dom'
+export { extractLinksFromCss, extractLinksFromCssSynced } from './from-css.js'
+export { extractLinksFromDom } from './from-dom.js'

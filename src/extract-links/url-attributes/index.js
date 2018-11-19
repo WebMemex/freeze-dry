@@ -1,5 +1,5 @@
-import { html40, html52, whatwg } from './attribute-lists'
-import { mergeWith, uniq } from './util'
+import { html40, html52, whatwg } from './attribute-lists.js'
+import { mergeWith, uniq } from './util.js'
 
 // Helper for combining two object's element lists.
 const mergeAttributeInfos = (info1, info2) => (info1 === info2 ? info1 : {

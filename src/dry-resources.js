@@ -1,4 +1,4 @@
-import makeDomStatic from './make-dom-static'
+import makeDomStatic from './make-dom-static/index.js'
 
 /**
  * "Dry" the resource+subresources to make them static and context-free.
