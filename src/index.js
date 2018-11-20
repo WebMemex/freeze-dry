@@ -18,6 +18,7 @@ import createSingleFile from './create-single-file'
  * Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
  * URLs inside stylesheets are still lost.
  * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
+ * @param {Function} [options.fetchResource] - function API compatible with fetch (default) for fetching resources.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
 export default async function freezeDry(doc = window.document, {
@@ -25,6 +26,7 @@ export default async function freezeDry(doc = window.document, {
     docUrl,
     addMetadata = true,
     keepOriginalAttributes = true,
+    fetchResource = self.fetch,
     now = new Date(),
 } = {}) {
     // Step 1: Capture the DOM (as well as DOMs inside frames).
@@ -33,7 +35,7 @@ export default async function freezeDry(doc = window.document, {
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
     // Step 2: Fetch subresources, recursively.
-    await maxWait(timeout)(crawlSubresourcesOfDom(resource))
+    await maxWait(timeout)(crawlSubresourcesOfDom(resource, {fetchResource}))
     // TODO Upon timeout, abort the pending fetches on platforms that support this.
 
     // Step 3: "Dry" the resources to make them static and context-free.
