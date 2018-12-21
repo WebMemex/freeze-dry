@@ -125,8 +125,8 @@ async function fetchSubresource(url, options) {
         blob: typeof resourceOrResponse.blob === 'function'
             ? await resourceOrResponse.blob()
             : resourceOrResponse.blob,
-        // Read the final URL of the resource (after any redirects), or fall back to the known URL.
-        url: resourceOrResponse.url || url,
+        // Read the final URL of the resource (after any redirects).
+        url: resourceOrResponse.url,
     }
     return resource
 }
