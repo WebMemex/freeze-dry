@@ -40,6 +40,8 @@ to `window.document`. Possible options are:
   URLs inside stylesheets are still lost.
 - `now` (Date): Overrides the snapshot time (only relevant when `addMetadata` is true). Mainly
   intended for testing purposes.
+- `fetchResource`: custom function for fetching resources; should be API-compatible with the global
+  `fetch()`, but may also return an object `{ blob, url }` instead of a `Response`.
 
 Note that the resulting string can easily be several megabytes when pages contain images, videos,
 fonts, etcetera.
