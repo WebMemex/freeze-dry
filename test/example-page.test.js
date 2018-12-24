@@ -107,6 +107,41 @@ test('should respect the keepOriginalAttributes option', async () => {
     await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
 })
 
+test('should use the custom fetchResource function', async () => {
+    const now = new Date(1545671350764)
+    const doc = await getExampleDoc()
+    const expectedResult = await freezeDry(doc, { now })
+
+    fetch.mockClear() // Clear the invocation count.
+    const fetchResource = jest.fn(mockFetch) // Create a second mock using the same implementation.
+
+    const result = await freezeDry(doc, { now, fetchResource })
+
+    // We should have got the same result as usual, without the global fetch having been invoked.
+    expect(result).toEqual(expectedResult)
+    expect(fetchResource).toHaveBeenCalled()
+    expect(fetch).not.toHaveBeenCalled()
+})
+
+test('should work if the custom fetchResource function returns a simple object', async () => {
+    const now = new Date(1545671350764)
+    const doc = await getExampleDoc()
+    const expectedResult = await freezeDry(doc, { now })
+
+    // A fetch-like function, that returns not a Response but a plain object with a blob and a url.
+    async function fetchResource(...args) {
+        const response = await fetch(...args)
+        return {
+            url: response.url,
+            blob: await response.blob(),
+        }
+    }
+
+    const result = await freezeDry(doc, { now, fetchResource })
+
+    expect(result).toEqual(expectedResult)
+})
+
 async function getExampleDoc() {
     const docUrl = 'https://example.com/main/page.html'
     const docHtml = await (await fetch(docUrl)).text()
