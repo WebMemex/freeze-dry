@@ -1,6 +1,4 @@
-import valuesParser from 'postcss-values-parser'
-import postcss from 'postcss'
-import memoizeOne from 'memoize-one'
+import { memoizeOne, postcss, postCssValuesParser } from '../package.js'
 
 import { deepSyncingProxy, transformingCache } from './parse-tools.js'
 
@@ -18,7 +16,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
     parsedCss.walkAtRules('import', atRule => {
         let valueAst
         try {
-            valueAst = valuesParser(atRule.params).parse()
+            valueAst = postCssValuesParser(atRule.params).parse()
         } catch (err) {
             return // We ignore values we cannot parse.
         }
@@ -62,7 +60,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
         // TODO Possible future optimisation: only parse props known to allow a URL.
         let valueAst
         try {
-            valueAst = valuesParser(decl.value).parse()
+            valueAst = postCssValuesParser(decl.value).parse()
         } catch (err) {
             return // We ignore values we cannot parse.
         }

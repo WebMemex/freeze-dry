@@ -1,5 +1,4 @@
-import { blobToDataURL } from 'blob-util'
-import whenAllSettled from 'when-all-settled'
+import { blobToDataURL, whenAllSettled } from './package.js'
 
 import setMementoTags from './set-memento-tags.js'
 import setContentSecurityPolicy from './set-content-security-policy/index.js'

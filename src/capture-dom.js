@@ -1,6 +1,4 @@
-import documentOuterHTML from 'document-outerhtml'
-import pathForDomNode from 'path-to-domnode'
-import domNodeAtPath from 'domnode-at-path'
+import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package.js'
 
 import { extractLinksFromDom } from './extract-links/index.js'
 

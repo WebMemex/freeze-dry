@@ -1,6 +1,4 @@
-import whenAllSettled from 'when-all-settled'
-import documentOuterHTML from 'document-outerhtml'
-import postcss from 'postcss'
+import { whenAllSettled, postcss, documentOuterHTML } from './package.js'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index.js'
 
