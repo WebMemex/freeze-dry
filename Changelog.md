@@ -1,5 +1,11 @@
 # Changelog for freeze-dry
 
+## 0.2.2 (2019-01-27)
+
+- Allow passing a custom fetchResource function.
+- Solve error that appeared when installing with yarn.
+- Take steps towards being usable as a plain ES module.
+
 ## 0.2.1 (2018-10-04)
 
 - Parse CSS properly; and now also recursively crawl through `@import` rules.
