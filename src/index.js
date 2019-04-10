@@ -2,6 +2,7 @@ import captureDom from './capture-dom.js'
 import crawlSubresourcesOfDom from './crawl-subresources.js'
 import dryResources from './dry-resources.js'
 import createSingleFile from './create-single-file.js'
+import { blobToDataURL } from './package/blob-util.js'
 
 /**
  * Freeze dry an HTML Document
@@ -20,6 +21,8 @@ import createSingleFile from './create-single-file.js'
  * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
  * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
+ * @param {Funciton} [options.blobToURL] - Custom function for taking resource blobs into urls
+ * that will be used in place of original; Must return promise that resolves to URL string.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
 export default async function freezeDry(doc = window.document, {
@@ -27,7 +30,8 @@ export default async function freezeDry(doc = window.document, {
     docUrl,
     addMetadata = true,
     keepOriginalAttributes = true,
-    fetchResource,
+    blobToURL = blobToDataURL,
+    fetchResource = self.fetch,
     now = new Date(),
 } = {}) {
     // Step 1: Capture the DOM (as well as DOMs inside frames).
@@ -46,6 +50,7 @@ export default async function freezeDry(doc = window.document, {
     const html = await createSingleFile(resource, {
         addMetadata,
         keepOriginalAttributes,
+        blobToURL,
         snapshotTime: now,
     })
 
