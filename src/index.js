@@ -2,7 +2,7 @@ import captureDom from './capture-dom.js'
 import crawlSubresourcesOfDom from './crawl-subresources.js'
 import dryResources from './dry-resources.js'
 import createSingleFile from './create-single-file.js'
-import { blobToDataURL } from './package/blob-util.js'
+import { blobToDataURL } from './package.js'
 
 /**
  * Freeze dry an HTML Document

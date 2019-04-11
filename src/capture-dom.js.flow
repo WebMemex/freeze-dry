@@ -1,0 +1,10 @@
+// @flow strict
+
+import type { DocumentResource } from "./resource.js"
+
+export type Options = {
+  docUrl?:string;
+  getDocInFrame?:HTMLIFrameElement => ?Document
+}
+
+declare export default (doc:Document, options?:Options) => DocumentResource

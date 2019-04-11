@@ -1,8 +1,14 @@
+// @flow strict
+
 import getBaseUrl from './get-base-url.js'
 import { syncingParsedView } from './parse-tools.js'
 import { extractLinksFromCssSynced } from './from-css.js'
 import urlAttributes from './url-attributes/index.js'
 import { flatMap } from './util.js'
+
+/*::
+import type { Link } from "../archiver.js"
+*/
 
 /**
  * Extracts links from an HTML Document.
@@ -12,21 +18,24 @@ import { flatMap } from './util.js'
  * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
  * inside the DOM.
  */
-export function extractLinksFromDom(doc, { docUrl } = {}) {
+export function extractLinksFromDom(doc/*:Document*/, { docUrl }/*:{docUrl?:string}*/ = {})/*:Link[]*/ {
     const baseUrl = docUrl !== undefined
         ? getBaseUrl(doc, docUrl)
         : undefined // No override; functions will read the correct value from <node>.baseURI.
 
     const rootElement = doc.documentElement // = the <html> element.
-    const links = [
-        ...extractLinksFromAttributes({ rootElement, baseUrl, docUrl }),
-        ...extractLinksFromStyleAttributes({ rootElement, baseUrl }),
-        ...extractLinksFromStyleTags({ rootElement, baseUrl }),
-    ]
-    return links
+    if (rootElement) {
+        return [
+            ...extractLinksFromAttributes({ rootElement, baseUrl, docUrl }),
+            ...extractLinksFromStyleAttributes({ rootElement, baseUrl }),
+            ...extractLinksFromStyleTags({ rootElement, baseUrl }),
+        ]
+    } else {
+        return []
+    }
 }
 
-function extractLinksFromAttributes({ rootElement, baseUrl, docUrl }) {
+function extractLinksFromAttributes({ rootElement, baseUrl, docUrl })/*:Link[]*/ {
     // For each known attribute type, we find all elements having it.
     // Note the 'style' attribute is handled separately, in extractLinksFromStyleAttributes below.
     const links = flatMap(Object.values(urlAttributes), attributeInfo => {
@@ -43,8 +52,9 @@ function extractLinksFromAttributes({ rootElement, baseUrl, docUrl }) {
     return links // links in all attributes of all elements
 }
 
+
 // Gets the links (usually just one) inside the specified attribute of the given element.
-function linksInAttribute({ element, attributeInfo, baseUrl, docUrl }) {
+function linksInAttribute({ element, attributeInfo, baseUrl, docUrl })/*:Link[]*/ {
     const { attribute, parse, makeAbsolute } = attributeInfo
 
     // Get a live&editable view on the URL(s) in the attribute.
@@ -96,6 +106,7 @@ function extractLinksFromStyleAttributes({ rootElement, baseUrl }) {
             // Use javascript's prototype inheritance, overriding the `from` property descriptor.
             Object.create(link, {
                 from: {
+                    /*::value:null,*/
                     get: () => ({
                         get element() { return element },
                         get attribute() { return 'style' },
@@ -127,6 +138,7 @@ function extractLinksFromStyleTags({ rootElement, baseUrl }) {
             // Use javascript's prototype inheritance, overriding the `from` property descriptor.
             Object.create(link, {
                 from: {
+                    /*::value:null,*/
                     get: () => ({
                         get element() { return element },
                         get rangeWithinTextContent() { return link.from.range },
