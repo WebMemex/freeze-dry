@@ -302,9 +302,12 @@ class DocumentResource extends PlainResource {
   captureDocument()/*:Promise<Document>*/ {
     throw Error("captureDocument must be implemented by subclass")
   }
+  get url()/*:string*/ {
+    return this.link.target
+  }
   static async links(resource/*:DocumentResource*/) {
     const document = await resource.captureDocument()
-    return extractLinksFromDom(document).map(link => makeLinkAbsolute(link, resource))
+    return extractLinksFromDom(document, {docUrl:resource.url}).map(link => makeLinkAbsolute(link, resource))
   }
   links()/*:Promise<Link[]>*/ {
     const {documentLinks} = this
@@ -419,9 +422,6 @@ class RootResource extends DocumentResource {
       this.document = document
       return document
     }
-  }
-  get url() {
-    return this.link.target
   }
   static new(io/*:Bundler*/, document/*:Document*/, options/*:ArchiveOptions*/)/*:Archiver*/ {
     return new RootResource({io, options}, new RootLink(options.url), document)
