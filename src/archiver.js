@@ -369,34 +369,20 @@ class DocumentResource extends PlainResource {
     }
     const document = await this.captureDocument()
     makeDomStatic(document)
-    if (this.options.metadata) {
-      this.setMetadata(document, this.options.metadata)
-    }
-    this.setContentSecurityPolicy(document, this.options.contentSecurityPolicy)
+    this.setMetadata(document, this.options)
     return documentOuterHTML(document)
   }
   async blob() {
     const text = await this.text()
     return new Blob([text], {type:"text/html"})
   }
-  setMetadata(document/*:Document*/, metadata) {
-    setMementoTags(document, {
-      originalUrl: this.url || document.URL,
-      datetime: metadata.time
-    })
-  }
-  setContentSecurityPolicy(document/*:Document*/, contentSecurityPolicy/*:string*/) {
-    // Set a strict Content Security Policy in a <meta> tag.
-    const csp = contentSecurityPolicy || [
-      "default-src 'none'", // By default, block all connectivity and scripts.
-      "img-src data:", // Allow inlined images.
-      "media-src data:", // Allow inlined audio/video.
-      "style-src data: 'unsafe-inline'", // Allow inlined styles.
-      "font-src data:", // Allow inlined fonts.
-      "frame-src data:", // Allow inlined iframes.
-    ].join('; ')
-    setContentSecurityPolicy(document, csp)
-  } 
+  // TODO: Consult @treora if it was intended to add CSP & momento data only
+  // on the top document. Implementation used to generate data URLs for all
+  // resources so it was not that useful there, however if resources are saved
+  // in separate files it might make sense to add metadata everywhere.
+  // At the moment we just do it on the top document to match assumbtions in
+  // tests.
+  setMetadata(document/*:Document*/, options/*:ArchiveOptions*/) {}
 }
 
 class RootLink {
@@ -445,6 +431,26 @@ class RootResource extends DocumentResource {
     for (const resource of resources) {
 
     }
+  }
+  setMetadata(document/*:Document*/, options/*:ArchiveOptions*/) {
+    const { metadata, contentSecurityPolicy } = options
+
+    if (metadata) {
+      setMementoTags(document, {
+        originalUrl: this.url || document.URL,
+        datetime: metadata.time
+      })
+    }
+    // Set a strict Content Security Policy in a <meta> tag.
+    const csp = contentSecurityPolicy || [
+      "default-src 'none'", // By default, block all connectivity and scripts.
+      "img-src data:", // Allow inlined images.
+      "media-src data:", // Allow inlined audio/video.
+      "style-src data: 'unsafe-inline'", // Allow inlined styles.
+      "font-src data:", // Allow inlined fonts.
+      "frame-src data:", // Allow inlined iframes.
+    ].join('; ')
+    setContentSecurityPolicy(document, csp)
   }
 }
 
