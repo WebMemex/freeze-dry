@@ -1,6 +1,6 @@
 // @flow strict
 
-import archiver from "./archiver.js"
+import { DocumentResource } from "./archiver.js"
 import { blobToDataURL } from './package.js'
 
 /*::
@@ -112,7 +112,7 @@ export const archive = async (doc/*:Document*/=window.document, {
     resolveURL: resolveURL,
     getDocument: getDocInFrame
   }
-  const resource = archiver(io, doc, {
+  const resource = DocumentResource.new(io, doc, {
     url: docUrl,
     keepOriginalAttributes,
     contentSecurityPolicy: "",

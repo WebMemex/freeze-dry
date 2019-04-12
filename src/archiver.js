@@ -7,16 +7,10 @@ import setMementoTags from './set-memento-tags.js'
 import setContentSecurityPolicy from './set-content-security-policy/index.js'
 
 /*::
-export interface Bundler {
+export interface IO {
   fetch(string):Promise<Response>;
   resolveURL(Resource):Promise<string>;
   getDocument(HTMLIFrameElement):?Document;
-}
-
-interface Archiver {
-  +url:string;
-  text():Promise<string>;
-  blob():Promise<Blob>;
 }
 
 interface ResourceLink {
@@ -85,7 +79,8 @@ interface TopLink {
   target:string;
   +absoluteTarget:string;
   +subresourceType:"top";
-  +from: null;
+  +source: Document;
+  +from:null;
 }
 
 export type Link =
@@ -110,14 +105,25 @@ export type ArchiveOptions = {
 
 type Parent = {
   +options:ArchiveOptions;
-  +io:Bundler;
+  +io:IO;
+}
+
+interface PostCSS {
+  toResult():{css:string}
+}
+
+type StyleSheet = {
+  url:string;
+  css:?PostCSS;
+  links:Link[];
+  source:string;
 }
 */
 
 
 export class Resource {
   /*::
-  +io:Bundler
+  +io:IO
   +options:ArchiveOptions
 
   +link:Link
@@ -136,6 +142,20 @@ export class Resource {
     this.options = options
     this.link = link
     this.sourceURL = this.link.absoluteTarget
+  }
+  static makeLinkAbsolute(link/*:Link*/, {url}/*:Resource*/)/*:Link*/ {
+    const { hash } = new URL(link.absoluteTarget)
+    const urlWithoutHash = url => url.split('#')[0]
+    if (hash && urlWithoutHash(link.absoluteTarget) === urlWithoutHash(url)) {
+      // The link points to a fragment inside the resource itself.
+      // We make it relative.
+      link.target = hash
+    } else {
+      // The link points outside the resource (or to the resource itself).
+      // We make it absolute.
+      link.target = link.absoluteTarget
+    }
+    return link
   }
 
   // URL for this resource
@@ -297,43 +317,57 @@ export class Resource {
 }
 
 
-const makeLinkAbsolute = (link, {url}) => {
-  const { hash } = new URL(link.absoluteTarget)
-  const urlWithoutHash = url => url.split('#')[0]
-  if (hash && urlWithoutHash(link.absoluteTarget) === urlWithoutHash(url)) {
-    // The link points to a fragment inside the resource itself.
-    // We make it relative.
-    link.target = hash
-  } else {
-    // The link points outside the resource (or to the resource itself).
-    // We make it absolute.
-    link.target = link.absoluteTarget
-  }
-  return link
-}
 
-
-
-class DocumentResource extends Resource {
+export class DocumentResource extends Resource {
   /*::
   +options:ArchiveOptions;
   +link:DocumentLink|TopLink;
   +sourceDocument:?Document;
+  +parent:DocumentResource;
+  document:?Document;
   documentLinks:?Promise<Link[]>
   documentResources:?Promise<Iterable<Resource>>
   */
+ static new(io/*:IO*/, document/*:Document*/, options/*:ArchiveOptions*/) {
+    return new DocumentResource({io, options}, new RootLink(options.url, document))
+  }
+  get isRoot() {
+    return this.link.subresourceType === "top"
+  }
   get resourceType()/*:string*/ {
     return "document"
   }
-  captureDocument()/*:Promise<Document>*/ {
-    throw Error("captureDocument must be implemented by subclass")
+  get sourceDocument()/*:?Document*/ {
+    const { link, parent } = this
+    if (link.subresourceType === "document") {
+      const { element } = link.from
+      const document = parent.sourceDocument
+      const frame = document && DocumentResource.getFrame(element, document)
+      const sourceDocument = frame && this.io.getDocument(frame)
+      return sourceDocument
+    } else {
+      return link.source
+    }
   }
-  get url()/*:string*/ {
-    return this.link.target
+  static getFrame(frame/*:HTMLIFrameElement*/, document/*:Document*/)/*:?HTMLIFrameElement*/ {
+    return domNodeAtPath(pathForDomNode(frame, frame.ownerDocument), document)
   }
-  static async links(resource/*:DocumentResource*/) {
+  async captureDocument()/*:Promise<Document>*/ {
+    const {document} = this
+    if (document) {
+      return document
+    } else {
+      const { sourceDocument } = this
+      const document = sourceDocument
+        ? sourceDocument.cloneNode(true)
+        : new DOMParser().parseFromString(await this.downloadText(), "text/html")
+      this.document = document
+      return document
+    }
+  }
+  static async links(resource/*:DocumentResource*/)/*:Promise<Link[]>*/ {
     const document = await resource.captureDocument()
-    return extractLinksFromDom(document, {docUrl:resource.url}).map(link => makeLinkAbsolute(link, resource))
+    return extractLinksFromDom(document, {docUrl:resource.url}).map(link => Resource.makeLinkAbsolute(link, resource))
   }
   links()/*:Promise<Link[]>*/ {
     const {documentLinks} = this
@@ -349,7 +383,7 @@ class DocumentResource extends Resource {
     const links = await resource.links()
     return DocumentResource.documentResourceIterator(resource, links)
   }
-  static * documentResourceIterator(resource/*:DocumentResource*/, links) {
+  static * documentResourceIterator(resource/*:DocumentResource*/, links/*:Link[]*/)/*:Iterable<Resource>*/ {
     for (const link of links) {
       if (link.isSubresource) {
         switch (link.subresourceType) {
@@ -361,7 +395,7 @@ class DocumentResource extends Resource {
             break
           }
           case "document": {
-            yield new NestedDocumentResource(resource, link)
+            yield new DocumentResource(resource, link)
             break
           }
           case "style": {
@@ -398,65 +432,20 @@ class DocumentResource extends Resource {
     }
     const document = await this.captureDocument()
     makeDomStatic(document)
-    this.setMetadata(document, this.options)
+    // TODO: Consult @treora if it was intended to add CSP & momento data only
+    // on the top document. Implementation used to generate data URLs for all
+    // resources so it was not that useful there, however if resources are saved
+    // in separate files it might make sense to add metadata everywhere.
+    // At the moment we just do it on the top document to match assumbtions in
+    // tests.
+    if (this.isRoot) {
+      this.setMetadata(document, this.options)
+    }
     return documentOuterHTML(document)
   }
   async blob() {
     const text = await this.text()
     return new Blob([text], {type:"text/html"})
-  }
-  // TODO: Consult @treora if it was intended to add CSP & momento data only
-  // on the top document. Implementation used to generate data URLs for all
-  // resources so it was not that useful there, however if resources are saved
-  // in separate files it might make sense to add metadata everywhere.
-  // At the moment we just do it on the top document to match assumbtions in
-  // tests.
-  setMetadata(document/*:Document*/, options/*:ArchiveOptions*/) {}
-}
-
-class RootLink {
-  /*::
-  target:string
-  +subresourceType:"top"
-  from:null
-  */
-  constructor(url) {
-    this.subresourceType = "top"
-    this.target = url
-    this.from = null
-  }
-  get absoluteTarget() {
-    return this.target
-  }
-}
-
-class RootResource extends DocumentResource {
-  /*::
-  +sourceDocument:Document
-  document:?Document
-  */
-  constructor(parent/*:Parent*/, link/*:TopLink*/, sourceDocument/*:Document*/) {
-    super(parent, link)
-    this.sourceDocument = sourceDocument
-  }
-  async captureDocument() {
-    const {document} = this
-    if (document) {
-      return document
-    } else {
-      const document = this.sourceDocument.cloneNode(true)
-      this.document = document
-      return document
-    }
-  }
-  static new(io/*:Bundler*/, document/*:Document*/, options/*:ArchiveOptions*/)/*:Archiver*/ {
-    return new RootResource({io, options}, new RootLink(options.url), document)
-  }
-  async archive() {
-    const resources = await this.resources()
-    for (const resource of resources) {
-
-    }
   }
   setMetadata(document/*:Document*/, options/*:ArchiveOptions*/) {
     const { metadata, contentSecurityPolicy } = options
@@ -480,59 +469,8 @@ class RootResource extends DocumentResource {
   }
 }
 
-class NestedDocumentResource extends DocumentResource {
-  /*::
-  +link:DocumentLink;
-  +parent:DocumentResource;
-  document:?Document
-  */
-  static getDocument(frame/*:HTMLIFrameElement*/)/*:?Document*/ {
-    try {
-      return frame.contentDocument
-    } catch(error) {
-      return null
-    }
-  }
-  static getFrame(frame/*:HTMLIFrameElement*/, document/*:Document*/)/*:?HTMLIFrameElement*/ {
-    return domNodeAtPath(pathForDomNode(frame, frame.ownerDocument), document)
-  }
-  get sourceDocument()/*:?Document*/ {
-    const { link, parent } = this
-    const { element } = link.from
-    const document = parent.sourceDocument
-    const frame = document && NestedDocumentResource.getFrame(element, document)
-    const sourceDocument = frame && NestedDocumentResource.getDocument(frame)
-    return sourceDocument
-  }
-  async captureDocument()/*:Promise<Document>*/ {
-    const {document} = this
-    if (document) {
-      return document
-    } else {
-      const { sourceDocument } = this
-      const document = sourceDocument
-        ? sourceDocument.cloneNode(true)
-        : new DOMParser().parseFromString(await this.downloadText(), "text/html")
-      this.document = document
-      return document
-    }
-  }
-}
 
-/*::
-interface PostCSS {
-  toResult():{css:string}
-}
-
-type StyleSheet = {
-  url:string;
-  css:?PostCSS;
-  links:Link[];
-  source:string;
-}
-*/
-
-class StyleSheetResource extends Resource {
+export class StyleSheetResource extends Resource {
   /*::
   +link:StyleLink;
   styleLinks:?Promise<Link[]>;
@@ -558,7 +496,7 @@ class StyleSheetResource extends Resource {
     try {
       const css = postcss.parse(source)
       const url = response.url || resource.link.absoluteTarget
-      const links = extractLinksFromCss(css, url)
+      const links = extractLinksFromCss(css, url).map(link => Resource.makeLinkAbsolute(link, resource))
       return {css, links, source, url}
     } catch(error) {
       return {css:null, links:[], source, url:resource.link.absoluteTarget}
@@ -602,5 +540,19 @@ class StyleSheetResource extends Resource {
   }
 }
 
-
-export default RootResource.new
+class RootLink {
+  /*::
+  target:string
+  +subresourceType:"top"
+  +source:Document
+  +from:null
+  */
+  constructor(url, document/*:Document*/) {
+    this.subresourceType = "top"
+    this.target = url
+    this.source = document
+  }
+  get absoluteTarget() {
+    return this.target
+  }
+}
