@@ -2,8 +2,6 @@
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index.js'
 import { documentOuterHTML, pathForDomNode, domNodeAtPath, postcss } from './package.js'
-import { Interface } from 'readline';
-import { makeLinksAbsolute } from './dry-resources.js';
 import makeDomStatic from './make-dom-static/index.js';
 import setMementoTags from './set-memento-tags.js'
 import setContentSecurityPolicy from './set-content-security-policy/index.js'
@@ -23,8 +21,8 @@ export interface Bundler {
 
 interface Archiver {
   +url:string;
-  text(ArchiveOptions):Promise<string>;
-  blob(ArchiveOptions):Promise<Blob>;
+  text():Promise<string>;
+  blob():Promise<Blob>;
 }
 
 interface ResourceLink {
@@ -33,7 +31,7 @@ interface ResourceLink {
   +isSubresource:true;
 }
 
-export type From <element:Element, attribute> = {
+export type From <element:Node, attribute> = {
   +attribute: attribute;
   +element: element;
   +rangeWithinTextContent: [number, number];
@@ -89,6 +87,12 @@ interface FontLink extends ResourceLink {
   +from: From<HTMLElement, string>;
 }
 
+interface TopLink {
+  target:string;
+  +absoluteTarget:string;
+  +subresourceType:"top";
+  +from: null;
+}
 
 export type Link =
   | StyleLink
@@ -101,92 +105,140 @@ export type Link =
   | FontLink
   | EmbedLink
   | TrackLink
+  | TopLink
 
 export type ArchiveOptions = {
-  contentSecurityPolicy?:true|string;
-  metadata?:?{time:Date}
+  url:string;
+  contentSecurityPolicy:string;
+  metadata?:?{time:Date};
+  keepOriginalAttributes?:boolean;
+}
+
+type Parent = {
+  +options:ArchiveOptions;
+  +io:Bundler;
 }
 */
 
 
 class IO {
   /*::
-  io:Bundler
-  response:Promise<Response>
-  sourceText:Promise<string>
-  sourceBlob:Promise<Blob>
+  +io:Bundler
+  +options:ArchiveOptions
+  sourceResponse:?Promise<Response>
+  sourceText:?Promise<string>
+  sourceBlob:?Promise<Blob>
   */
-  constructor(io/*:Bundler*/) {
+  constructor(io/*:Bundler*/, options/*:ArchiveOptions*/) {
     this.io = io
+    this.options = options
   }
-  static async fetch(resource) {
-    return resource.io.fetch(resource)
+  static async download(resource/*:IO*/)/*:Promise<Response>*/ {
+    const $resource/*:any*/ = resource
+    const response = await resource.io.fetch($resource)
+    return response
   }
-  get response() {
-    const self/*:any*/ = this
-    Object.defineProperty(this, "response", { value: this.io.fetch(self) })
-  }
-  static async toText(resource) {
-    const response = await resource.response
+  static async downloadText(resource/*:IO*/)/*:Promise<string>*/ {
+    const response = await resource.download()
     return await response.text()
   }
-  get sourceText() {
-    Object.defineProperty(this, "sourceText", { value:IO.toText(this)  })
+  static async downloadBlob(resource/*:IO*/)/*:Promise<Blob>*/ {
+    const response = await resource.download()
+    const blob = await response.blob()
+    return blob
   }
-  static async toBlob(resource) {
-    const response = await resource.response
-    return await response.blob() 
+  download()/*:Promise<Response>*/ {
+    const { sourceResponse } = this
+    if (sourceResponse) {
+      return sourceResponse
+    } else {
+      const sourceResponse = IO.download(this)
+      this.sourceResponse = sourceResponse
+      return sourceResponse
+    }
   }
-  get sourceBlob() {
-    Object.defineProperty(this, "sourceBlob", { value:IO.toBlob(this)  })
+  downloadText()/*:Promise<string>*/ {
+    const { sourceText } = this
+    if (sourceText) {
+      return sourceText
+    } else {
+      const sourceText = IO.downloadText(this)
+      this.sourceText = sourceText
+      return sourceText
+    }
   }
+  downloadBlob()/*:Promise<Blob>*/ {
+    const { sourceBlob } = this
+    if (sourceBlob) {
+      return sourceBlob
+    } else {
+      const sourceBlob = IO.downloadBlob(this)
+      this.sourceBlob = sourceBlob
+      return sourceBlob
+    }
+  }
+}
+
+
+const makeLinkAbsolute = (link, {url}) => {
+  const { hash } = new URL(link.absoluteTarget)
+  const urlWithoutHash = url => url.split('#')[0]
+  if (hash && urlWithoutHash(link.absoluteTarget) === urlWithoutHash(url)) {
+    // The link points to a fragment inside the resource itself.
+    // We make it relative.
+    link.target = hash
+  } else {
+    // The link points outside the resource (or to the resource itself).
+    // We make it absolute.
+    link.target = link.absoluteTarget
+  }
+  return link
 }
 
 class PlainResource extends IO {
   /*::
   +link:Link
-  +parent:Resource
-  resources:Promise<Iterable<Resource>>;
+  +parent:Parent
+  linkedResources:?Promise<Iterable<Resource>>;
+  sourceURL:string;
   */
-  constructor(parent/*:Resource*/, link/*:Link*/) {
-    super(parent.io)
+  constructor(parent/*:Parent*/, link/*:Link*/) {
+    const {io, options} = parent
+    super(io, options)
     this.parent = parent
     this.link = link
+    this.sourceURL = this.link.absoluteTarget
   }
   get url()/*:string*/ {
     return this.link.absoluteTarget
   }
-  get resourceType() {
-    return this.link.subresourceType
+  get resourceType()/*:string*/ {
+    return this.link.subresourceType || "unknown"
   }
-  get links() {
+  async links()/*:Promise<Link[]>*/ {
     return []
   }
-  get resources() {
-    return []
+  text() {
+    return this.downloadText()
   }
-  async text() {
-    const response = await this.response
-    return response.text()
+  blob() {
+    return this.downloadBlob()
   }
-  async blob() {
-    const response = await this.response
-    return response.blob()
+  resources()/*:Promise<Iterable<Resource>>*/ {
+    const {linkedResources} = this
+    if (linkedResources) {
+      return linkedResources
+    } else {
+      const linkedResources = PlainResource.resources(this)
+      this.linkedResources = linkedResources
+      return linkedResources
+    }
   }
-  replaceURL(url) {
-    this.link.target = url
-  }
-
-  static async resources(resource/*:Resource*/) {
-    const links = await resource.links
+  static async resources(resource/*:PlainResource*/)/*:Promise<Iterable<Resource>>*/ {
+    const links = await resource.links()
     return PlainResource.resourceIterator(resource, links)
   }
-  get resources()/*:Promise<Iterable<Resource>>*/ {
-    const resources = PlainResource.resources(this)
-    Object.defineProperty(this, "resources", {value:resources})
-    return resources
-  }
-  static * resourceIterator(resource/*:Resource*/, links) {
+  static * resourceIterator(resource/*:Resource*/, links/*:Link[]*/) {
     for (const link of links) {
       switch (link.subresourceType) {
         case "image":
@@ -206,79 +258,106 @@ class PlainResource extends IO {
       }
     }
   }
+  replaceURL(url/*:string*/) {
+    const { link, options: { keepOriginalAttributes } } = this
+    const { from } = link
+    if (keepOriginalAttributes && from && from.element && from.attribute) {
+      const { element, attribute } = from
+      const noteAttribute = `data-original-${from.attribute}`
+      // Multiple links may be contained in one attribute (e.g. a srcset); we must act
+      // only at the first one, therefore we check for existence of the noteAttribute.
+      // XXX This also means that if the document already had 'data-original-...' attributes,
+      // we leave them as is; this may or may not be desirable (e.g. it helps toward idempotency).
+      if (!element.hasAttribute(noteAttribute)) {
+        const originalValue = from.element.getAttribute(attribute) || ""
+        element.setAttribute(noteAttribute, originalValue)
+      }
+    }
+
+    // Replace the link target with the data URL. Note that link.target is a setter that will update
+    // the resource itself.
+    link.target = url
+
+    // Remove integrity attribute, if any. (should only be necessary if the content of the
+    // subresource has been modified, but we keep things simple and blunt)
+    // TODO should this be done elsewhere? Perhaps the link.target setter?
+    if (from && from.element && from.element.hasAttribute('integrity')) {
+      from.element.removeAttribute('integrity')
+      // (we could also consider modifying or even adding integrity attributes..)
+    }
+  }
 }
 
-class DocumentResource extends IO {
+class DocumentResource extends PlainResource {
   /*::
-  +sourceDocument:Promise<Document> | Document
-  document:Promise<Document>
-  links:Promise<Link[]>
-  resources:Promise<Iterable<Resource>>
-  url:string
+  +options:ArchiveOptions;
+  +link:DocumentLink|TopLink;
+  +sourceDocument:?Document;
+  documentLinks:?Promise<Link[]>
+  documentResources:?Promise<Iterable<Resource>>
   */
-  constructor(io/*:Bundler*/) {
-    super(io)
-  }
-  static async document(resource) {
-    const document = await resource.sourceDocument
-    return document.cloneNode(true)
-  }
-  get resourceType() {
+  get resourceType()/*:string*/ {
     return "document"
   }
-  get document() {
-    const document = DocumentResource.document(this)
-    Object.defineProperty(this, "document", {value:document})
-    return document
+  captureDocument()/*:Promise<Document>*/ {
+    throw Error("captureDocument must be implemented by subclass")
   }
-  static async links(resource) {
-    const document = await resource.document
-    return extractLinksFromDom(document)
+  static async links(resource/*:DocumentResource*/) {
+    const document = await resource.captureDocument()
+    return extractLinksFromDom(document).map(link => makeLinkAbsolute(link, resource))
   }
-  get links() {
-    const links = DocumentResource.links(this)
-    Object.defineProperty(this, "links", {value:links})
-    return links
+  links()/*:Promise<Link[]>*/ {
+    const {documentLinks} = this
+    if (documentLinks) {
+      return documentLinks
+    } else {
+      const documentLinks = DocumentResource.links(this)
+      this.documentLinks = documentLinks
+      return documentLinks
+    }
   }
-  static async resources(resource/*:DocumentResource*/) {
-    const links = await resource.links
-    return DocumentResource.resourceIterator(resource, links)
+  static async documentResources(resource/*:DocumentResource*/) {
+    const links = await resource.links()
+    return DocumentResource.documentResourceIterator(resource, links)
   }
-  static * resourceIterator(resource/*:DocumentResource*/, links) {
+  static * documentResourceIterator(resource/*:DocumentResource*/, links) {
     for (const link of links) {
-      switch (link.subresourceType) {
-        case "image": 
-        case "audio":
-        case "video":
-        case "font": {
-          yield new PlainResource(resource, link)
-          break
-        }
-        case "document": {
-          yield new NestedDocumentResource(resource, link)
-          break
-        }
-        case "style": {
-          yield new StyleSheetResource(resource, link)
-          break
-        }
-        default: {
-          throw Error(`Resource "${resource.resourceType}" can not link to resource of type "${link.subresourceType}"`)
+      if (link.isSubresource) {
+        switch (link.subresourceType) {
+          case "image": 
+          case "audio":
+          case "video":
+          case "font": {
+            yield new PlainResource(resource, link)
+            break
+          }
+          case "document": {
+            yield new NestedDocumentResource(resource, link)
+            break
+          }
+          case "style": {
+            yield new StyleSheetResource(resource, link)
+            break
+          }
+          default: {
+            throw Error(`Resource "${resource.resourceType}" can not link to resource of type "${link.subresourceType}"`)
+          }
         }
       }
     }
   }
-  get resources()/*:Promise<Iterable<Resource>>*/ {
-    const resources = DocumentResource.resources(this)
-    Object.defineProperty(this, "resources", {value:resources})
-    return resources
+  resources()/*:Promise<Iterable<Resource>>*/ {
+    const { documentResources } = this
+    if (documentResources) {
+      return documentResources
+    } else {
+      const documentResources = DocumentResource.documentResources(this)
+      this.documentResources = documentResources
+      return documentResources
+    }
   }
-
-  replaceURL(url) {
-    this.url = url
-  }
-  async text(options/*:ArchiveOptions*/ = {}) {
-    const resources = await this.resources
+  async text() {
+    const resources = await this.resources()
     for (const resource of resources) {
       // We go over each resource which may already be fetched & crawled
       // or it could be a fresh wrapper over the link. It is up to bundler
@@ -289,21 +368,25 @@ class DocumentResource extends IO {
       resource.replaceURL(url)
       // TODO: Incorporate makeLinksAbsolute logic here.
     }
-    const document = await this.document
+    const document = await this.captureDocument()
     makeDomStatic(document)
-    if (options.metadata) {
-      this.setMetadata(document, options.metadata)
+    if (this.options.metadata) {
+      this.setMetadata(document, this.options.metadata)
     }
-    this.setContentSecurityPolicy(document, options.contentSecurityPolicy)
+    this.setContentSecurityPolicy(document, this.options.contentSecurityPolicy)
     return documentOuterHTML(document)
   }
-  setMetadata(document, metadata) {
+  async blob() {
+    const text = await this.text()
+    return new Blob([text], {type:"text/html"})
+  }
+  setMetadata(document/*:Document*/, metadata) {
     setMementoTags(document, {
       originalUrl: this.url || document.URL,
       datetime: metadata.time
     })
   }
-  setContentSecurityPolicy(document, contentSecurityPolicy) {
+  setContentSecurityPolicy(document/*:Document*/, contentSecurityPolicy/*:string*/) {
     // Set a strict Content Security Policy in a <meta> tag.
     const csp = contentSecurityPolicy || [
       "default-src 'none'", // By default, block all connectivity and scripts.
@@ -314,24 +397,52 @@ class DocumentResource extends IO {
       "frame-src data:", // Allow inlined iframes.
     ].join('; ')
     setContentSecurityPolicy(document, csp)
-  }
-  async blob(options/*:ArchiveOptions*/ = {}) {
-    const text = await this.text()
-    return new Blob([text], {type:"text/html"})
   } 
 }
 
-class RootResource extends DocumentResource {
-  static new(io/*:Bundler*/, document/*:Document*/, url/*:string*/=document.URL)/*:Archiver*/ {
-    return new RootResource(io, document, url)
+class RootLink {
+  /*::
+  target:string
+  +subresourceType:"top"
+  from:null
+  */
+  constructor(url) {
+    this.subresourceType = "top"
+    this.target = url
+    this.from = null
   }
-  constructor(io/*:Bundler*/, sourceDocument/*:Document*/, url/*:string*/) {
-    super(io)
+  get absoluteTarget() {
+    return this.target
+  }
+}
+
+class RootResource extends DocumentResource {
+  /*::
+  +sourceDocument:Document
+  document:?Document
+  */
+  constructor(parent/*:Parent*/, link/*:TopLink*/, sourceDocument/*:Document*/) {
+    super(parent, link)
     this.sourceDocument = sourceDocument
-    this.url = url
+  }
+  async captureDocument() {
+    const {document} = this
+    if (document) {
+      return document
+    } else {
+      const document = this.sourceDocument.cloneNode(true)
+      this.document = document
+      return document
+    }
+  }
+  get url() {
+    return this.link.target
+  }
+  static new(io/*:Bundler*/, document/*:Document*/, options/*:ArchiveOptions*/)/*:Archiver*/ {
+    return new RootResource({io, options}, new RootLink(options.url), document)
   }
   async archive() {
-    const resources = await this.resources
+    const resources = await this.resources()
     for (const resource of resources) {
 
     }
@@ -342,13 +453,8 @@ class NestedDocumentResource extends DocumentResource {
   /*::
   +link:DocumentLink;
   +parent:DocumentResource;
-  sourceDocument:Promise<Document>|Document;
+  document:?Document
   */
-  constructor(parent/*:DocumentResource*/, link/*:DocumentLink*/) {
-    super(parent.io)
-    this.link = link
-    this.parent = parent
-  }
   static getDocument(frame/*:HTMLIFrameElement*/)/*:?Document*/ {
     try {
       return frame.contentDocument
@@ -359,28 +465,26 @@ class NestedDocumentResource extends DocumentResource {
   static getFrame(frame/*:HTMLIFrameElement*/, document/*:Document*/)/*:?HTMLIFrameElement*/ {
     return domNodeAtPath(pathForDomNode(frame, frame.ownerDocument), document)
   }
-  static async sourceDocument(resource)/*:Promise<Document>*/ {
-    const { link, parent } = resource
-    const parentSourceDocument = await parent.sourceDocument
-    const frame = link.from.element 
-    const sourceFrame = parent.sourceDocument
-      ? NestedDocumentResource.getFrame(frame, parentSourceDocument)
-      : null
-    
-    const sourceDocument = sourceFrame
-      ? NestedDocumentResource.getDocument(sourceFrame)
-      : null
-
-    const document = sourceDocument
-      ? sourceDocument
-      : new DOMParser().parseFromString(await resource.sourceText, "text/html")
-
-    return document
+  get sourceDocument()/*:?Document*/ {
+    const { link, parent } = this
+    const { element } = link.from
+    const document = parent.sourceDocument
+    const frame = document && NestedDocumentResource.getFrame(element, document)
+    const sourceDocument = frame && NestedDocumentResource.getDocument(frame)
+    return sourceDocument
   }
-  get sourceDocument() {
-    const document = NestedDocumentResource.sourceDocument(this)
-    Object.defineProperty(this, "sourceDocument", { value: document })
-    return document
+  async captureDocument()/*:Promise<Document>*/ {
+    const {document} = this
+    if (document) {
+      return document
+    } else {
+      const { sourceDocument } = this
+      const document = sourceDocument
+        ? sourceDocument.cloneNode(true)
+        : new DOMParser().parseFromString(await this.downloadText(), "text/html")
+      this.document = document
+      return document
+    }
   }
 }
 
@@ -400,21 +504,26 @@ type StyleSheet = {
 class StyleSheetResource extends PlainResource {
   /*::
   +link:StyleLink;
-  links:Promise<Link[]>;
-  styleSheet:Promise<StyleSheet>
+  styleLinks:?Promise<Link[]>;
+  styleSheet:?Promise<StyleSheet>
   */
   constructor(parent/*:Resource*/, link/*:StyleLink*/) {
     super(parent, link)
     this.parent = parent
   }
-  get styleSheet() {
-    const styleSheet = StyleSheetResource.styleSheet(this)
-    Object.defineProperty(this, "styleSheet", {value:styleSheet})
-    return styleSheet
+  downloadStyleSheet()/*:Promise<StyleSheet>*/ {
+    const { styleSheet } = this
+    if (styleSheet) {
+      return styleSheet
+    } else {
+      const styleSheet = StyleSheetResource.downloadStyleSheet(this)
+      this.styleSheet = styleSheet
+      return styleSheet
+    }
   }
-  static async styleSheet(resource/*:StyleSheetResource*/)/*:Promise<StyleSheet>*/ {
-    const response = await resource.response
-    const source = await resource.sourceText
+  static async downloadStyleSheet(resource/*:StyleSheetResource*/)/*:Promise<StyleSheet>*/ {
+    const response = await resource.download()
+    const source = await response.text()
     try {
       const css = postcss.parse(source)
       const url = response.url || resource.link.absoluteTarget
@@ -424,17 +533,22 @@ class StyleSheetResource extends PlainResource {
       return {css:null, links:[], source, url:resource.link.absoluteTarget}
     }
   }
-  static async links(resource) {
-    const { links } = await resource.styleSheet
+  static async links(resource/*:StyleSheetResource*/) {
+    const {links} = await resource.downloadStyleSheet()
     return links
   }
-  get links() {
-    const links = StyleSheetResource.links(this)
-    Object.defineProperty(this, "links", {value:links})
-    return links
+  links()/*:Promise<Link[]>*/ {
+    const { styleLinks } = this
+    if (styleLinks) {
+      return styleLinks
+    } else {
+      const styleLinks = StyleSheetResource.links(this)
+      this.styleLinks = styleLinks
+      return styleLinks
+    }
   }
   async text()/*:Promise<string>*/ {
-    const { source, css } = await this.styleSheet
+    const { source, css } = await this.downloadStyleSheet()
     if (css) {
       return css.toResult().css
     } else {

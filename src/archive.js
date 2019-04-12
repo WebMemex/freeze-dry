@@ -13,16 +13,33 @@ export type Options = {
   now?:Date;
 
   getDocInFrame?: (HTMLIFrameElement) => ?Document;
-  fetchResource?: (Resource) => Promise<Response>;
+  fetch?: (Resource) => Promise<Response>;
+  fetchResource?:Fetch;
   resolveURL?: (Resource) => Promise<string>;
 }
+
+type Fetch = (input:RequestInfo, init?:RequestOptions) =>
+  Promise<{url:string, blob:Promise<Blob>}|Response>
 */
 
-const fetchSubresource = async (resource/*:Resource*/) => {
-  return await self.fetch(resource.url, {
+const fetcher = (fetchWith/*:Fetch*/) => async (resource/*:Resource*/)/*:Promise<Response>*/ => {
+  const response = await fetchWith(resource.url, {
     cache: 'force-cache',
     redirect: 'follow',
   })
+
+  return response instanceof Response
+    ? response
+    : toResponse(response)
+}
+
+const toResponse = async (resource) => {
+  const blob = typeof resource.blob === 'function'
+    ? await resource.blob()
+    : await resource.blob
+  const response = new Response(blob)
+  Object.defineProperty(response, "url", {value:resource.url})
+  return response
 }
 
 const resourceToDataURL = async (resource/*:Resource*/) => {
@@ -38,23 +55,28 @@ const getFrameDocument = (iframe/*:HTMLIFrameElement*/)/*:?Document*/ => {
   }
 }
 
-const archive = async (doc=window.document, {
+export const archive = async (doc/*:Document*/=window.document, {
   timeout = Infinity,
   docUrl = doc.URL,
   addMetadata = true,
   keepOriginalAttributes = true,
   getDocInFrame = getFrameDocument,
-  fetchResource = fetchSubresource,
+  fetchResource = self.fetch,
+  fetch,
   resolveURL = resourceToDataURL,
   now = new Date(),
 }/*:Options*/ = {}) => {
   const io = {
-    fetch: fetchResource,
+    fetch: fetch ? fetch : fetcher(fetchResource),
     resolveURL: resolveURL,
     getDocument: getDocInFrame
   }
-  const resource = archiver(io, doc, docUrl)
-  const metadata = addMetadata ? {time:now} : null
-  const html = await resource.text({ metadata })
+  const resource = archiver(io, doc, {
+    url: docUrl,
+    keepOriginalAttributes,
+    contentSecurityPolicy: "",
+    metadata: addMetadata ? {time:now} : null
+  })
+  const html = await resource.text()
   return html
 }

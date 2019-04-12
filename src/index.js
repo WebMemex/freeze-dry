@@ -3,6 +3,7 @@ import crawlSubresourcesOfDom from './crawl-subresources.js'
 import dryResources from './dry-resources.js'
 import createSingleFile from './create-single-file.js'
 import { blobToDataURL } from './package.js'
+import { archive } from "./archive.js"
 
 /**
  * Freeze dry an HTML Document
@@ -25,7 +26,7 @@ import { blobToDataURL } from './package.js'
  * that will be used in place of original; Must return promise that resolves to URL string.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
-export default async function freezeDry(doc = window.document, {
+async function freezeDry(doc = window.document, {
     timeout = Infinity,
     docUrl,
     addMetadata = true,
@@ -63,3 +64,5 @@ const maxWait = timeout => timeout === Infinity
         promise,
         new Promise(resolve => setTimeout(resolve, timeout)),
     ])
+
+export default archive
