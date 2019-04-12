@@ -366,7 +366,6 @@ class DocumentResource extends PlainResource {
       // inline or it's links to eentually turn it into data URL.
       const url = await resource.io.resolveURL(resource)
       resource.replaceURL(url)
-      // TODO: Incorporate makeLinksAbsolute logic here.
     }
     const document = await this.captureDocument()
     makeDomStatic(document)
@@ -547,15 +546,25 @@ class StyleSheetResource extends PlainResource {
       return styleLinks
     }
   }
-  async text()/*:Promise<string>*/ {
-    const { source, css } = await this.downloadStyleSheet()
-    if (css) {
-      return css.toResult().css
-    } else {
-      return source
-    }
+  static async downloadStyleSheetText(resource/*:StyleSheetResource*/) {
+    const { source, css } = await resource.downloadStyleSheet()
+    const sourceText = css
+      ? css.toResult().css
+      : source
+    return source
   }
-  async blob()/*:Promise<Blob>*/ {
+  async text() {
+    const resources = await this.resources()
+    for (const resource of resources) {
+      const url = await resource.io.resolveURL(resource)
+      resource.replaceURL(url)
+    }
+
+    const { source, css } = await this.downloadStyleSheet()
+    const text = css ? css.toResult().css : source
+    return text
+  }
+  async blob() {
     const text = await this.text()
     return new Blob([text], {type: "text/css"});
   }
