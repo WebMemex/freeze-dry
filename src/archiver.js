@@ -9,6 +9,23 @@ import setMementoTags from './set-memento-tags.js'
 import setContentSecurityPolicy from './set-content-security-policy/index.js'
 
 /*::
+export type Resource =
+  | DocumentResource
+  | StyleSheetResource
+  | PlainResource
+
+
+export interface Bundler {
+  fetch(Resource):Promise<Response>;
+  resolveURL(Resource):Promise<string>;
+  getDocument(HTMLIFrameElement):?Document;
+}
+
+interface Archiver {
+  +url:string;
+  text(ArchiveOptions):Promise<string>;
+  blob(ArchiveOptions):Promise<Blob>;
+}
 
 interface ResourceLink {
   target:string;
@@ -16,8 +33,7 @@ interface ResourceLink {
   +isSubresource:true;
 }
 
-
-type From <element:Element, attribute> = {
+export type From <element:Element, attribute> = {
   +attribute: attribute;
   +element: element;
   +rangeWithinTextContent: [number, number];
@@ -86,9 +102,9 @@ export type Link =
   | EmbedLink
   | TrackLink
 
-type ArchiveOptions = {
+export type ArchiveOptions = {
   contentSecurityPolicy?:true|string;
-  metadata?:{time:Date}
+  metadata?:?{time:Date}
 }
 */
 
@@ -136,6 +152,9 @@ class PlainResource extends IO {
     super(parent.io)
     this.parent = parent
     this.link = link
+  }
+  get url()/*:string*/ {
+    return this.link.absoluteTarget
   }
   get resourceType() {
     return this.link.subresourceType
@@ -195,7 +214,7 @@ class DocumentResource extends IO {
   document:Promise<Document>
   links:Promise<Link[]>
   resources:Promise<Iterable<Resource>>
-  url:?string
+  url:string
   */
   constructor(io/*:Bundler*/) {
     super(io)
@@ -303,6 +322,9 @@ class DocumentResource extends IO {
 }
 
 class RootResource extends DocumentResource {
+  static new(io/*:Bundler*/, document/*:Document*/, url/*:string*/=document.URL)/*:Archiver*/ {
+    return new RootResource(io, document, url)
+  }
   constructor(io/*:Bundler*/, sourceDocument/*:Document*/, url/*:string*/) {
     super(io)
     this.sourceDocument = sourceDocument
@@ -426,13 +448,4 @@ class StyleSheetResource extends PlainResource {
 }
 
 
-type Resource =
-  | DocumentResource
-  | StyleSheetResource
-  | PlainResource
-
-
-interface Bundler {
-  fetch(Resource):Promise<Response>;
-  resolveURL(Resource):Promise<string>;
-}
+export default RootResource.new

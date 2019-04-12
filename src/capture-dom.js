@@ -1,7 +1,6 @@
 // @flow strict
 
 import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package.js'
-import { DocumentResource } from "./resource.js"
 import { extractLinksFromDom } from './extract-links/index.js'
 
 /**
@@ -54,7 +53,8 @@ export default function captureDom(
                 docUrl: docUrl !== undefined ? link.absoluteTarget : undefined,
             })
             // Associate this subresource with the link object.
-            link.resource = innerDocResource
+            const $link/*:any*/ = link
+            $link.resource = innerDocResource
         } else {
             // We cannot access the frame content's current state (e.g. due to same origin policy).
             // We will fall back to refetching the inner document while crawling the subresources.
@@ -64,11 +64,16 @@ export default function captureDom(
     // TODO Capture form input values
     // TODO Extract images from canvasses
 
-    return new DocumentResource(
-        docUrl || originalDoc.URL,
-        clonedDoc,
-        links
-    )
+    return {
+        url: docUrl || originalDoc.URL,
+        doc: clonedDoc,
+        get blob() { return new Blob([this.string], { type: 'text/html' }) },
+        get string() {
+            // TODO Add <meta charset> if absent? Or html-encode characters as needed?
+            return documentOuterHTML(clonedDoc)
+        },
+        links, // TODO should links be a getter that extracts the links again?
+    }
 }
 
 function defaultGetDocInFrame(frameElement/*:HTMLIFrameElement*/)/*:?Document*/ {
