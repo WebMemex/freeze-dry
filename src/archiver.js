@@ -7,14 +7,8 @@ import setMementoTags from './set-memento-tags.js'
 import setContentSecurityPolicy from './set-content-security-policy/index.js'
 
 /*::
-export type Resource =
-  | DocumentResource
-  | StyleSheetResource
-  | PlainResource
-
-
 export interface Bundler {
-  fetch(Resource):Promise<Response>;
+  fetch(string):Promise<Response>;
   resolveURL(Resource):Promise<string>;
   getDocument(HTMLIFrameElement):?Document;
 }
@@ -121,131 +115,69 @@ type Parent = {
 */
 
 
-class IO {
+export class Resource {
   /*::
   +io:Bundler
   +options:ArchiveOptions
+
+  +link:Link
+  +parent:Parent
+  sourceURL:string;
+  linkedResources:?Promise<Iterable<Resource>>;
+
   sourceResponse:?Promise<Response>
   sourceText:?Promise<string>
   sourceBlob:?Promise<Blob>
   */
-  constructor(io/*:Bundler*/, options/*:ArchiveOptions*/) {
-    this.io = io
-    this.options = options
-  }
-  static async download(resource/*:IO*/)/*:Promise<Response>*/ {
-    const $resource/*:any*/ = resource
-    const response = await resource.io.fetch($resource)
-    return response
-  }
-  static async downloadText(resource/*:IO*/)/*:Promise<string>*/ {
-    const response = await resource.download()
-    return await response.text()
-  }
-  static async downloadBlob(resource/*:IO*/)/*:Promise<Blob>*/ {
-    const response = await resource.download()
-    const blob = await response.blob()
-    return blob
-  }
-  download()/*:Promise<Response>*/ {
-    const { sourceResponse } = this
-    if (sourceResponse) {
-      return sourceResponse
-    } else {
-      const sourceResponse = IO.download(this)
-      this.sourceResponse = sourceResponse
-      return sourceResponse
-    }
-  }
-  downloadText()/*:Promise<string>*/ {
-    const { sourceText } = this
-    if (sourceText) {
-      return sourceText
-    } else {
-      const sourceText = IO.downloadText(this)
-      this.sourceText = sourceText
-      return sourceText
-    }
-  }
-  downloadBlob()/*:Promise<Blob>*/ {
-    const { sourceBlob } = this
-    if (sourceBlob) {
-      return sourceBlob
-    } else {
-      const sourceBlob = IO.downloadBlob(this)
-      this.sourceBlob = sourceBlob
-      return sourceBlob
-    }
-  }
-}
-
-
-const makeLinkAbsolute = (link, {url}) => {
-  const { hash } = new URL(link.absoluteTarget)
-  const urlWithoutHash = url => url.split('#')[0]
-  if (hash && urlWithoutHash(link.absoluteTarget) === urlWithoutHash(url)) {
-    // The link points to a fragment inside the resource itself.
-    // We make it relative.
-    link.target = hash
-  } else {
-    // The link points outside the resource (or to the resource itself).
-    // We make it absolute.
-    link.target = link.absoluteTarget
-  }
-  return link
-}
-
-class PlainResource extends IO {
-  /*::
-  +link:Link
-  +parent:Parent
-  linkedResources:?Promise<Iterable<Resource>>;
-  sourceURL:string;
-  */
   constructor(parent/*:Parent*/, link/*:Link*/) {
-    const {io, options} = parent
-    super(io, options)
+    const { io, options } = parent
+    this.io = io
     this.parent = parent
+    this.options = options
     this.link = link
     this.sourceURL = this.link.absoluteTarget
   }
+
+  // URL for this resource
   get url()/*:string*/ {
     return this.link.absoluteTarget
   }
+  // Resource type
   get resourceType()/*:string*/ {
     return this.link.subresourceType || "unknown"
   }
+
+  // Links to subresources. Default resource has none subclasses can override
+  // to extract links from the resource content.
   async links()/*:Promise<Link[]>*/ {
     return []
   }
-  text() {
-    return this.downloadText()
-  }
-  blob() {
-    return this.downloadBlob()
-  }
+  // Immediate subresources represented as `Resource` instances.
+  // This just calls static function with a same name and caches result for
+  // subsequent calls.
   resources()/*:Promise<Iterable<Resource>>*/ {
     const {linkedResources} = this
     if (linkedResources) {
       return linkedResources
     } else {
-      const linkedResources = PlainResource.resources(this)
+      const linkedResources = Resource.resources(this)
       this.linkedResources = linkedResources
       return linkedResources
     }
   }
-  static async resources(resource/*:PlainResource*/)/*:Promise<Iterable<Resource>>*/ {
+  static async resources(resource/*:Resource*/)/*:Promise<Iterable<Resource>>*/ {
     const links = await resource.links()
-    return PlainResource.resourceIterator(resource, links)
+    return Resource.resourceIterator(resource, links)
   }
-  static * resourceIterator(resource/*:Resource*/, links/*:Link[]*/) {
+  // Function just turns subresource links into resource instances.
+  static * resourceIterator(resource/*:Resource*/, links/*:Link[]*/)/*:Iterable<Resource>*/ {
     for (const link of links) {
       switch (link.subresourceType) {
         case "image":
         case "audio":
         case "video":
         case "font": {
-          yield new PlainResource(resource, link)
+          yield new Resource(resource, link)
           break
         }
         case "style": {
@@ -258,6 +190,82 @@ class PlainResource extends IO {
       }
     }
   }
+
+
+  text() {
+    return this.downloadText()
+  }
+  blob() {
+    return this.downloadBlob()
+  }
+
+  // Downloads content for this resource. Function also caches result so that
+  // subsequent calls can avoid IO. Actual implementation implementation is
+  // in the static function.
+  download()/*:Promise<Response>*/ {
+    const { sourceResponse } = this
+    if (sourceResponse) {
+      return sourceResponse
+    } else {
+      const sourceResponse = Resource.download(this)
+      this.sourceResponse = sourceResponse
+      return sourceResponse
+    }
+  }
+  static async download(resource/*:Resource*/)/*:Promise<Response>*/ {
+    const response = await resource.io.fetch(resource.url)
+    return response
+  }
+
+  // Same as download except returns string for the downloaded content.
+  downloadText()/*:Promise<string>*/ {
+    const { sourceText } = this
+    if (sourceText) {
+      return sourceText
+    } else {
+      const sourceText = Resource.downloadText(this)
+      this.sourceText = sourceText
+      return sourceText
+    }
+  }
+  static async downloadText(resource/*:Resource*/)/*:Promise<string>*/ {
+    const response = await resource.download()
+    return await response.text()
+  }
+
+
+  // Same as download except reutrns blob for the downloaded content.
+  static async downloadBlob(resource/*:Resource*/)/*:Promise<Blob>*/ {
+    const response = await resource.download()
+    const blob = await response.blob()
+    return blob
+  }
+  downloadBlob()/*:Promise<Blob>*/ {
+    const { sourceBlob } = this
+    if (sourceBlob) {
+      return sourceBlob
+    } else {
+      const sourceBlob = Resource.downloadBlob(this)
+      this.sourceBlob = sourceBlob
+      return sourceBlob
+    }
+  }
+
+  // Returns freeze-dryed string representation of this resource. For leaf
+  // sub-resource (like this implementation) it's just a correspondting content.
+  // Non leaf resources will override this with logic with one that replaces
+  // sub-resource links and then serializes it.
+  text() {
+    return this.downloadText()
+  }
+  // Same as `text()` above except returns `Blob`.
+  blob() {
+    return this.downloadBlob()
+  }
+
+  // This is MUTABLE operation. It is invoked by a parent resource to swap the
+  // URL of the subresource with a replacement.
+  // CAUTION: This also mutates corresponding dom elements.
   replaceURL(url/*:string*/) {
     const { link, options: { keepOriginalAttributes } } = this
     const { from } = link
@@ -288,7 +296,25 @@ class PlainResource extends IO {
   }
 }
 
-class DocumentResource extends PlainResource {
+
+const makeLinkAbsolute = (link, {url}) => {
+  const { hash } = new URL(link.absoluteTarget)
+  const urlWithoutHash = url => url.split('#')[0]
+  if (hash && urlWithoutHash(link.absoluteTarget) === urlWithoutHash(url)) {
+    // The link points to a fragment inside the resource itself.
+    // We make it relative.
+    link.target = hash
+  } else {
+    // The link points outside the resource (or to the resource itself).
+    // We make it absolute.
+    link.target = link.absoluteTarget
+  }
+  return link
+}
+
+
+
+class DocumentResource extends Resource {
   /*::
   +options:ArchiveOptions;
   +link:DocumentLink|TopLink;
@@ -331,7 +357,7 @@ class DocumentResource extends PlainResource {
           case "audio":
           case "video":
           case "font": {
-            yield new PlainResource(resource, link)
+            yield new Resource(resource, link)
             break
           }
           case "document": {
@@ -506,7 +532,7 @@ type StyleSheet = {
 }
 */
 
-class StyleSheetResource extends PlainResource {
+class StyleSheetResource extends Resource {
   /*::
   +link:StyleLink;
   styleLinks:?Promise<Link[]>;
