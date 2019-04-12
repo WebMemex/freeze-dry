@@ -1,68 +1,125 @@
-import captureDom from './capture-dom.js'
-import crawlSubresourcesOfDom from './crawl-subresources.js'
-import dryResources from './dry-resources.js'
-import createSingleFile from './create-single-file.js'
+// @flow strict
+
+import { DocumentResource } from "./resource.js"
 import { blobToDataURL } from './package.js'
-import { archive } from "./archive.js"
 
-/**
- * Freeze dry an HTML Document
- * @param {Document} [doc=window.document] - HTML Document to be freeze-dried. Remains unmodified.
- * @param {Object} [options]
- * @param {number} [options.timeout=Infinity] - Maximum time (in milliseconds) spent on fetching the
- * page's subresources. The resulting HTML will have only succesfully fetched subresources inlined.
- * @param {string} [options.docUrl] - URL to override doc.URL.
- * @param {boolean} [options.addMetadata=true] - Whether to note the snapshotting time and the
- * document's URL in an extra meta and link tag.
- * @param {boolean} [options.keepOriginalAttributes=true] - Whether to preserve the value of an
- * element attribute if its URLs are inlined, by noting it as a new 'data-original-...' attribute.
- * For example, <img src="bg.png"> would become <img src="data:..." data-original-src="bg.png">.
- * Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
- * URLs inside stylesheets are still lost.
- * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
- * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
- * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
- * @param {Funciton} [options.blobToURL] - Custom function for taking resource blobs into urls
- * that will be used in place of original; Must return promise that resolves to URL string.
- * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
- */
-async function freezeDry(doc = window.document, {
-    timeout = Infinity,
-    docUrl,
-    addMetadata = true,
-    keepOriginalAttributes = true,
-    blobToURL = blobToDataURL,
-    fetchResource = self.fetch,
-    now = new Date(),
-} = {}) {
-    // Step 1: Capture the DOM (as well as DOMs inside frames).
-    const resource = captureDom(doc, { docUrl })
+/*::
+import type { Link, From, Resource } from "./resource.js"
 
-    // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
-    // Step 2: Fetch subresources, recursively.
-    await maxWait(timeout)(crawlSubresourcesOfDom(resource, { fetchResource }))
-    // TODO Upon timeout, abort the pending fetches on platforms that support this.
+// Optional parameters can be passed to an archive function to customize it
+// it's behavior.
+export type Options = {
+  // Maximum time (in milliseconds) spent on fetching document subresources.
+  // Resulting HTML will only have only succesfully fetched subresources
+  // inlined.
+  timeout?:number;
+  // URL to override doc.URL.
+  docUrl?:string;
+  // Whether to note the snapshotting time and the document's URL in an extra
+  // meta and link tag.
+  addMetadata?:boolean;
+  // Whether to preserve the value of an element attribute if its URLs are
+  // inlined, by noting it as a new 'data-original-...' attribute.
+  // For example, <img src="bg.png"> would become
+  // <img src="data:..." data-original-src="bg.png">.
+  // Note this is an unstandardised workaround to keep URLs of subresources
+  // available; unfortunately URLs inside stylesheets are still lost.
+  keepOriginalAttributes?:boolean;
+  // Override the snapshot time (only relevant when addMetadata=true).
+  now?:Date;
+  // Optional function to customize how to obtain an iframe's contentDocument.
+  // Defaults to simply trying to access frame.contentDocument. Should return
+  // null if accessing the contentDocument fails. This is useful in cases
+  // where more privileged API is availble that can overcome cross-origin
+  // boundries.
+  getDocInFrame?: (HTMLIFrameElement) => ?Document;
+  // Custom function for fetching resources; It should be API-compatible with
+  // the global fetch(), but may also return { blob, url } instead of a
+  // `Response`.
+  // DEPRICATED: I would like to depricate this in favor of `fetch` below.
+  fetchResource?:Fetch;
 
-    // Step 3: "Dry" the resources to make them static and context-free.
-    dryResources(resource)
-
-    // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
-    const html = await createSingleFile(resource, {
-        addMetadata,
-        keepOriginalAttributes,
-        blobToURL,
-        snapshotTime: now,
-    })
-
-    return html
+  // Custom function used for turning document subresources into URLs that
+  // will be used in place of the original URLs. Function is passed `Resource`
+  // instance representing a subresource. It has `url` property corresponding
+  // to the resource. Function can either simply return an alternative URL or
+  // get `resource.text()` / `resource.body()` and turn that into data URL.
+  // Calling those methods would recurse the resource traversal that is:
+  // 1. Obtain contents of the resource.
+  // 2. Analyzing resource for it's immediate subresources.
+  // 3. Swapping subresource URLs with ones returned by `resolveURL` (that can
+  //    recurse down the resource tree).
+  // 4. Serializing resource (with swapped URLs) to text / blob.
+  resolveURL?: (Resource) => Promise<string>;
+  // Custom function used for fetching document subresource into `Response`
+  // object. This is a replacement for a `fetchResource` option that enables
+  // more advanced use cases because as described above `Resource` instance
+  // provides methods to automate process of freezing subresources.
+  fetch?: (string) => Promise<Response>;
 }
 
-const maxWait = timeout => timeout === Infinity
-    ? promise => promise
-    : promise => Promise.race([
-        promise,
-        new Promise(resolve => setTimeout(resolve, timeout)),
-    ])
+type Fetch = (input:RequestInfo, init?:RequestOptions) =>
+  Promise<{url:string, blob:Promise<Blob>}|Response>
+*/
 
-export default archive
+const fetcher = (fetchWith/*:Fetch*/) => async (url/*:string*/)/*:Promise<Response>*/ => {
+  const response = await fetchWith(url, {
+    cache: 'force-cache',
+    redirect: 'follow',
+  })
+
+  return response instanceof Response
+    ? response
+    : toResponse(response)
+}
+
+const toResponse = async (resource) => {
+  const blob = typeof resource.blob === 'function'
+    ? await resource.blob()
+    : await resource.blob
+  const response = new Response(blob)
+  Object.defineProperty(response, "url", {value:resource.url})
+  return response
+}
+
+const resourceToDataURL = async (resource/*:Resource*/) => {
+  const blob = await resource.blob()
+  return await blobToDataURL(blob)
+}
+
+const getFrameDocument = (iframe/*:HTMLIFrameElement*/)/*:?Document*/ => {
+  try {
+    return iframe.contentDocument
+  } catch (_) {
+    return null
+  }
+}
+
+export const freezeDry = async (doc/*:Document*/=window.document, {
+  timeout = Infinity,
+  docUrl = doc.URL,
+  addMetadata = true,
+  keepOriginalAttributes = true,
+  getDocInFrame = getFrameDocument,
+  fetchResource = self.fetch,
+  fetch,
+  resolveURL = resourceToDataURL,
+  now = new Date(),
+}/*:Options*/ = {}) => {
+  const io = {
+    fetch: fetch ? fetch : fetcher(fetchResource),
+    resolveURL: resolveURL,
+    getDocument: getDocInFrame
+  }
+  const resource = DocumentResource.new(io, doc, {
+    url: docUrl,
+    keepOriginalAttributes,
+    contentSecurityPolicy: "",
+    metadata: addMetadata ? {time:now} : null
+  })
+  const html = await resource.text()
+  return html
+}
+
+export default freezeDry
