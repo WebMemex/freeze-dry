@@ -1,7 +1,8 @@
 # Freeze-dry: web page conservation
 
-Freeze-dry stores a web page as it is shown in the browser. It takes the DOM, and returns it as an
-HTML string, after having and inlined external resources such as images and stylesheets (as `data:`
+Freeze-dry stores a web page as it is shown in the browser. It takes the DOM,
+and returns an archive that can be serialized to HTML string (or a blob), after
+having and inlined external resources such as images and stylesheets (as `data:`
 URLs).
 
 It also ensures the snapshot is static and completely offline: all scripts are removed, and any
@@ -12,7 +13,7 @@ For more details about how this exactly works, see [src/Readme.md](src/Readme.md
 
 ## Usage
 
-    const html = await freezeDry(document, options)
+    const html = await freezeDry(document, options).text()
 
 The `options` object is optional, and even `document` can be omitted, in which case it will default
 to `window.document`. Possible options are:
@@ -42,9 +43,15 @@ to `window.document`. Possible options are:
   intended for testing purposes.
 - `fetchResource`: custom function for fetching resources; should be API-compatible with the global
   `fetch()`, but may also return an object `{ blob, url }` instead of a `Response`.
+- `resolveURL`: custom function for turning subresources into URLs that will be
+  used in place of the original resource URLs. Function is passed `resource`
+  object representing a subresource, which funciton can use to either simply map
+  `resource.url` to an alternative URL (e.g. relative url) or use
+  `resource.text()` / `resource.body()` methods to e.g. compute data URL and
+  return that.
 
-Note that the resulting string can easily be several megabytes when pages contain images, videos,
-fonts, etcetera.
+Note that the resulting HTML can easily be several megabytes when document
+contain images, videos, fonts, etcetera.
 
 
 [DOMParser]: https://developer.mozilla.org/en-US/docs/Web/API/DOMParser

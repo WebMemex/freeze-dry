@@ -4,7 +4,7 @@ import { DocumentResource } from "./resource.js"
 import { blobToDataURL } from './package.js'
 
 /*::
-import type { Link, From, Resource } from "./resource.js"
+import type { Resource } from "./resource.js"
 
 
 // Optional parameters can be passed to an archive function to customize it
@@ -96,9 +96,27 @@ const getFrameDocument = (iframe/*:HTMLIFrameElement*/)/*:?Document*/ => {
   }
 }
 
-export const freezeDry = async (doc/*:Document*/=window.document, {
+class RootLink {
+  /*::
+  target:string
+  +subresourceType:"top"
+  +source:Document
+  +from:null
+  */
+  constructor(url, document/*:Document*/) {
+    this.subresourceType = "top"
+    this.target = url
+    this.source = document
+  }
+  get absoluteTarget() {
+    return this.target
+  }
+}
+
+
+export const freezeDry = (document/*:Document*/=window.document, {
   timeout = Infinity,
-  docUrl = doc.URL,
+  docUrl = document.URL,
   addMetadata = true,
   keepOriginalAttributes = true,
   getDocInFrame = getFrameDocument,
@@ -112,14 +130,14 @@ export const freezeDry = async (doc/*:Document*/=window.document, {
     resolveURL: resolveURL,
     getDocument: getDocInFrame
   }
-  const resource = DocumentResource.new(io, doc, {
+  const options = {
     url: docUrl,
     keepOriginalAttributes,
     contentSecurityPolicy: "",
     metadata: addMetadata ? {time:now} : null
-  })
-  const html = await resource.text()
-  return html
+  }
+
+  return new DocumentResource({io, options}, new RootLink(docUrl, document))
 }
 
 export default freezeDry

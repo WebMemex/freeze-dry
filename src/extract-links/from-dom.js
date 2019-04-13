@@ -7,7 +7,7 @@ import urlAttributes from './url-attributes/index.js'
 import { flatMap } from './util.js'
 
 /*::
-import type { Link } from "../resource.js"
+import type { Link } from "../link.js"
 */
 
 /**

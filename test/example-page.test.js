@@ -16,7 +16,7 @@ test('should freeze-dry an example page as expected', async () => {
     const doc = await getExampleDoc()
 
     // Run freeze-dry, while passing a fixed date for reproducability.
-    const result = await freezeDry(doc, { now: new Date(1534615340948) })
+    const result = await freezeDry(doc, { now: new Date(1534615340948) }).text()
 
     expect(result).toMatchSnapshot() // compares to (or creates) snapshot in __snapshots__ folder
 })
@@ -28,7 +28,7 @@ test('should capture current state of documents inside frames', async () => {
     const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
     innerDoc.body.appendChild(innerDoc.createElement('hr'))
 
-    const result = await freezeDry(doc, { now: new Date(1534615340948) })
+    const result = await freezeDry(doc, { now: new Date(1534615340948) }).text()
 
     const dryDoc = await makeDom(result)
     const dryInnerDoc = dryDoc.querySelector('iframe').contentDocument
@@ -37,12 +37,12 @@ test('should capture current state of documents inside frames', async () => {
 
 test('should be idempotent', async () => {
     const doc = await getExampleDoc()
-    const dryHtml = await freezeDry(doc, { now: new Date(1534615340948) })
+    const dryHtml = await freezeDry(doc, { now: new Date(1534615340948) }).text()
     const docUrl = 'https://url.should.be/irrelevant'
     const dryDoc = await makeDom(dryHtml, docUrl)
 
     // Freeze-dry the freeze-dried page. Adding metadata would of course break idempotency.
-    const extraDryHtml = await freezeDry(dryDoc, { addMetadata: false })
+    const extraDryHtml = await freezeDry(dryDoc, { addMetadata: false }).text()
 
     expect(extraDryHtml).toEqual(dryHtml)
 })
@@ -56,7 +56,7 @@ test('should return the incomplete result after given timeout', async () => {
     const resultP = freezeDry(doc, {
         now: new Date(1534615340948),
         timeout: 2000,
-    })
+    }).text()
     jest.runAllTimers() // trigger the timeout directly.
     const result = await resultP
 
@@ -69,7 +69,7 @@ test('should use the given docUrl', async () => {
     // This time, we use a DOMParser, and create a Document that lacks a URL.
     const doc = new DOMParser().parseFromString(docHtml, 'text/html')
 
-    const result = await freezeDry(doc, { docUrl })
+    const result = await freezeDry(doc, { docUrl }).text()
 
     const dryDoc = await makeDom(result)
     expect(dryDoc.querySelector('a').getAttribute('href'))
@@ -82,7 +82,7 @@ test('should respect the addMetadata option', async () => {
     const testWithOption = async addMetadata => {
         const doc = await getExampleDoc()
 
-        const result = await freezeDry(doc, { addMetadata })
+        const result = await freezeDry(doc, { addMetadata }).text()
 
         const dryDoc = await makeDom(result)
         expect(dryDoc.querySelector('link[rel=original]')).not.toBeNull()
@@ -97,7 +97,7 @@ test('should respect the keepOriginalAttributes option', async () => {
     const testWithOption = async keepOriginalAttributes => {
         const doc = await getExampleDoc()
 
-        const result = await freezeDry(doc, { keepOriginalAttributes })
+        const result = await freezeDry(doc, { keepOriginalAttributes }).text()
 
         const dryDoc = await makeDom(result)
         expect(dryDoc.querySelector('img[data-original-src]')).not.toBeNull()
@@ -110,12 +110,12 @@ test('should respect the keepOriginalAttributes option', async () => {
 test('should use the custom fetchResource function', async () => {
     const now = new Date(1545671350764)
     const doc = await getExampleDoc()
-    const expectedResult = await freezeDry(doc, { now })
+    const expectedResult = await freezeDry(doc, { now }).text()
 
     fetch.mockClear() // Clear the invocation count.
     const fetchResource = jest.fn(mockFetch) // Create a second mock using the same implementation.
 
-    const result = await freezeDry(doc, { now, fetchResource })
+    const result = await freezeDry(doc, { now, fetchResource }).text()
 
     // We should have got the same result as usual, without the global fetch having been invoked.
     expect(result).toEqual(expectedResult)
@@ -126,7 +126,7 @@ test('should use the custom fetchResource function', async () => {
 test('should work if the custom fetchResource function returns a simple object', async () => {
     const now = new Date(1545671350764)
     const doc = await getExampleDoc()
-    const expectedResult = await freezeDry(doc, { now })
+    const expectedResult = await freezeDry(doc, { now }).text()
 
     // A fetch-like function, that returns not a Response but a plain object with a blob and a url.
     async function fetchResource(...args) {
@@ -137,7 +137,7 @@ test('should work if the custom fetchResource function returns a simple object',
         }
     }
 
-    const result = await freezeDry(doc, { now, fetchResource })
+    const result = await freezeDry(doc, { now, fetchResource }).text()
 
     expect(result).toEqual(expectedResult)
 })

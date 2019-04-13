@@ -7,94 +7,14 @@ import setMementoTags from './set-memento-tags.js'
 import setContentSecurityPolicy from './set-content-security-policy/index.js'
 
 /*::
+import type { Link, DocumentLink, TopLink, StyleLink } from "./link.js"
+
 export interface IO {
   fetch(string):Promise<Response>;
   resolveURL(Resource):Promise<string>;
   getDocument(HTMLIFrameElement):?Document;
 }
 
-interface ResourceLink {
-  target:string;
-  +absoluteTarget:string;
-  +isSubresource:true;
-}
-
-export type From <element:Node, attribute> = {
-  +attribute: attribute;
-  +element: element;
-  +rangeWithinTextContent: [number, number];
-}
-
-interface StyleLink extends ResourceLink  {
-  +subresourceType: "style";
-  +from: From<HTMLElement, ?"style">;
-}
-
-interface ImageLink extends ResourceLink  {
-  +subresourceType: "image";
-  +from: From<HTMLElement, string>;
-}
-
-interface ObjectLink extends ResourceLink {
-  +subresourceType: "object";
-  +from: From<HTMLElement, string>;
-}
-
-interface DocumentLink extends ResourceLink {
-  +subresourceType: "document";
-  +from: From<HTMLIFrameElement, "src">;
-}
-
-interface ScriptLink extends ResourceLink {
-  +subresourceType: "script";
-  +from: From<HTMLScriptElement, "src">;
-}
-
-interface AudioLink extends ResourceLink {
-  +subresourceType: "audio";
-  +from: From<HTMLSourceElement, "src">;
-}
-
-interface VideoLink extends ResourceLink {
-  +subresourceType: "video";
-  +from: From<HTMLSourceElement, "src">;
-}
-
-interface EmbedLink extends ResourceLink {
-  +subresourceType: "embed";
-  +from: From<HTMLEmbedElement, "embed">;
-}
-
-interface TrackLink extends ResourceLink {
-  +subresourceType: "track";
-  +from: From<HTMLTrackElement, "src">;
-}
-
-interface FontLink extends ResourceLink {
-  +subresourceType: "font";
-  +from: From<HTMLElement, string>;
-}
-
-interface TopLink {
-  target:string;
-  +absoluteTarget:string;
-  +subresourceType:"top";
-  +source: Document;
-  +from:null;
-}
-
-export type Link =
-  | StyleLink
-  | ImageLink
-  | ObjectLink
-  | DocumentLink
-  | ScriptLink
-  | VideoLink
-  | AudioLink
-  | FontLink
-  | EmbedLink
-  | TrackLink
-  | TopLink
 
 export type ArchiveOptions = {
   url:string;
@@ -119,7 +39,6 @@ type StyleSheet = {
   source:string;
 }
 */
-
 
 export class Resource {
   /*::
@@ -328,9 +247,6 @@ export class DocumentResource extends Resource {
   documentLinks:?Promise<Link[]>
   documentResources:?Promise<Iterable<Resource>>
   */
- static new(io/*:IO*/, document/*:Document*/, options/*:ArchiveOptions*/) {
-    return new DocumentResource({io, options}, new RootLink(options.url, document))
-  }
   get isRoot() {
     return this.link.subresourceType === "top"
   }
@@ -537,22 +453,5 @@ export class StyleSheetResource extends Resource {
   async blob() {
     const text = await this.text()
     return new Blob([text], {type: "text/css"});
-  }
-}
-
-class RootLink {
-  /*::
-  target:string
-  +subresourceType:"top"
-  +source:Document
-  +from:null
-  */
-  constructor(url, document/*:Document*/) {
-    this.subresourceType = "top"
-    this.target = url
-    this.source = document
-  }
-  get absoluteTarget() {
-    return this.target
   }
 }
