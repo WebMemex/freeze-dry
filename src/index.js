@@ -13,7 +13,7 @@ export type Options = {
   // Maximum time (in milliseconds) spent on fetching document subresources.
   // Resulting HTML will only have only succesfully fetched subresources
   // inlined.
-  timeout?:number;
+  signal?:AbortSignal;
   // URL to override doc.URL.
   docUrl?:string;
   // Whether to note the snapshotting time and the document's URL in an extra
@@ -52,22 +52,14 @@ export type Options = {
   //    recurse down the resource tree).
   // 4. Serializing resource (with swapped URLs) to text / blob.
   resolveURL?: (Resource) => Promise<string>;
-  // Custom function used for fetching document subresource into `Response`
-  // object. This is a replacement for a `fetchResource` option that enables
-  // more advanced use cases because as described above `Resource` instance
-  // provides methods to automate process of freezing subresources.
-  fetch?: (string) => Promise<Response>;
 }
 
 type Fetch = (input:RequestInfo, init?:RequestOptions) =>
   Promise<{url:string, blob:Promise<Blob>}|Response>
 */
 
-const fetcher = (fetchWith/*:Fetch*/) => async (url/*:string*/)/*:Promise<Response>*/ => {
-  const response = await fetchWith(url, {
-    cache: 'force-cache',
-    redirect: 'follow',
-  })
+const fetcher = (fetchWith/*:Fetch*/) => async (url/*:string*/, init/*::?:RequestOptions*/)/*:Promise<Response>*/ => {
+  const response = await fetchWith(url, init)
 
   return response instanceof Response
     ? response
@@ -78,14 +70,23 @@ const toResponse = async (resource) => {
   const blob = typeof resource.blob === 'function'
     ? await resource.blob()
     : await resource.blob
-  const response = new Response(blob)
+  const response = new Response(blob, { headers: { "content-type": blob.type }})
   Object.defineProperty(response, "url", {value:resource.url})
   return response
 }
 
 const resourceToDataURL = async (resource/*:Resource*/) => {
-  const blob = await resource.blob()
-  return await blobToDataURL(blob)
+  try {
+    const blob = await resource.blob()
+    const result = await blobToDataURL(blob)
+    return result
+  } catch(error) {
+    if (error.name === "AbortError") {
+      return resource.url
+    } else {
+      throw error
+    }
+  }
 }
 
 const getFrameDocument = (iframe/*:HTMLIFrameElement*/)/*:?Document*/ => {
@@ -115,18 +116,18 @@ class RootLink {
 
 
 export const freezeDry = (document/*:Document*/=window.document, {
-  timeout = Infinity,
+  signal,
   docUrl = document.URL,
   addMetadata = true,
   keepOriginalAttributes = true,
   getDocInFrame = getFrameDocument,
   fetchResource = self.fetch,
-  fetch,
   resolveURL = resourceToDataURL,
   now = new Date(),
 }/*:Options*/ = {}) => {
   const io = {
-    fetch: fetch ? fetch : fetcher(fetchResource),
+    signal: signal,
+    fetch: fetcher(fetchResource),
     resolveURL: resolveURL,
     getDocument: getDocInFrame
   }

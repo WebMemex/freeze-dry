@@ -10,7 +10,8 @@ import setContentSecurityPolicy from './set-content-security-policy/index.js'
 import type { Link, DocumentLink, TopLink, StyleLink } from "./link.js"
 
 export interface IO {
-  fetch(string):Promise<Response>;
+  signal:?AbortSignal;
+  fetch(string, init?:RequestOptions):Promise<Response>;
   resolveURL(Resource):Promise<string>;
   getDocument(HTMLIFrameElement):?Document;
 }
@@ -152,7 +153,11 @@ export class Resource {
     }
   }
   static async download(resource/*:Resource*/)/*:Promise<Response>*/ {
-    const response = await resource.io.fetch(resource.url)
+    const response = await resource.io.fetch(resource.url, {
+      signal: resource.io.signal,
+      cache: 'force-cache',
+      redirect: 'follow'
+    })
     return response
   }
 

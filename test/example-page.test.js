@@ -1,16 +1,23 @@
 import fs from 'fs'
-import jsdom from 'jsdom/lib/old-api'
+import { JSDOM, ResourceLoader } from 'jsdom'
 import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Request, ...
 import { dataURLToBlob } from 'blob-util'
-
 import freezeDry from '../src/index.js'
 
 global.fetch = jestFetchMock
+global.AbortController = new JSDOM().window.AbortController
+
 beforeEach(() => {
     fetch.mockImplementation(mockFetch)
 })
 
 jest.useFakeTimers()
+
+const setResponseURL = (response, url) => {
+    Object.defineProperty(response, "url", {value:url})
+}
+
+
 
 test('should freeze-dry an example page as expected', async () => {
     const doc = await getExampleDoc()
@@ -47,17 +54,16 @@ test('should be idempotent', async () => {
     expect(extraDryHtml).toEqual(dryHtml)
 })
 
-test('should return the incomplete result after given timeout', async () => {
+test('should return the incomplete result when abort signalled', async () => {
     const doc = await getExampleDoc()
 
-    // Make fetch never resolve
-    fetch.mockImplementation(url => new Promise(resolve => {}))
-
+    const controller = new AbortController()
     const resultP = freezeDry(doc, {
         now: new Date(1534615340948),
-        timeout: 2000,
+        signal: controller.signal
     }).text()
-    jest.runAllTimers() // trigger the timeout directly.
+    controller.abort()
+
     const result = await resultP
 
     expect(result).toMatchSnapshot()
@@ -131,10 +137,11 @@ test('should work if the custom fetchResource function returns a simple object',
     // A fetch-like function, that returns not a Response but a plain object with a blob and a url.
     async function fetchResource(...args) {
         const response = await fetch(...args)
-        return {
+        const result = {
             url: response.url,
             blob: await response.blob(),
         }
+        return result
     }
 
     const result = await freezeDry(doc, { now, fetchResource }).text()
@@ -144,24 +151,20 @@ test('should work if the custom fetchResource function returns a simple object',
 
 async function getExampleDoc() {
     const docUrl = 'https://example.com/main/page.html'
-    const docHtml = await (await fetch(docUrl)).text()
+    const response = await fetch(docUrl)
+    const docHtml = await response.text()
     const doc = await makeDom(docHtml, docUrl)
     return doc
 }
 
 async function makeDom(docHtml, docUrl) {
-    const doc = jsdom.jsdom(docHtml, {
+    const doc = new JSDOM(docHtml, {
         url: docUrl,
-        async resourceLoader({ url }, callback) {
-            const response = await mockFetch(url.href)
-            const body = await response.text()
-            callback(null, body)
-            return null
-        },
+        resources: resourceLoader,
         features: {
             FetchExternalResources: ['link', 'frame', 'iframe'],
         },
-    })
+    }).window.document
 
     // Wait until JSDOM has completed loading the page (including frames).
     await new Promise(resolve => {
@@ -176,7 +179,7 @@ async function makeDom(docHtml, docUrl) {
 }
 
 // A fetch function that reads the subresources from local files.
-async function mockFetch(url) {
+async function mockFetch(url, options={}) {
     const websiteOrigin = 'https://example.com'
     const basedir = __dirname + '/example-page'
 
@@ -188,22 +191,81 @@ async function mockFetch(url) {
         'woff': 'font/woff',
     }
 
+    if (options.signal && options.signal.aborted) {
+        throw new AbortError("The operation was aborted.")
+    }
+
     if (url.startsWith(websiteOrigin)) {
         const path = url.slice(websiteOrigin.length,)
         const content = fs.readFileSync(basedir + path)
         const mimeType = extensionTypes[url.split('.').reverse()[0]]
+        
         const blob = new Blob([content], { type: mimeType })
-        const response = new Response(blob, { status: 200 })
-        response.url = url
+        if (!blob.isAPICompatiblilityFixed) {
+            const jsdomBlob = new Blob([])
+            const [impl] = Object.getOwnPropertySymbols(jsdomBlob)
+            const responseBlob = await new Response([]).blob()
+            const [type, BUFFER] = Object.getOwnPropertySymbols(responseBlob)
+
+            Object.defineProperties(Blob.prototype, {
+                // https://github.com/bitinn/node-fetch/blob/e996bdab73baf996cf2dbf25643c8fe2698c3249/src/blob.js#L48
+                [type]: { get() { return this[impl].type || "application/octet-stream" } },
+                // https://github.com/bitinn/node-fetch/blob/e996bdab73baf996cf2dbf25643c8fe2698c3249/src/blob.js#L37
+                [BUFFER]: { get() { return this[impl]._buffer } }
+            })
+
+            // Patch proto so that in node-fetch blob instanceof Blob is true
+            Blob.prototype.__proto__ = responseBlob.__proto__
+            // We also need to ensure that response.blob() is instance of Blob
+            // expected by jsdom. To accomplish this we patch `Response.prototype`
+            // that would return correct blob instead of one that will cause
+            // blob instanceof Blob to be false in JSDOM code.
+            const Respones$prototype$blob = Response.prototype.blob
+            Response.prototype.blob = async function() {
+                const source = await Respones$prototype$blob.call(this)
+                return new Blob([source[BUFFER]], {type:source.type})
+            }
+            
+            Blob.prototype.isAPICompatiblilityFixed = true
+        }
+        if (blob.type !== mimeType) {
+            console.log("==?", blob.type, mimeType)
+        }
+        const response = new Response(blob, {
+            status: 200,
+            headers: { 'content-type': blob.type }
+        })
+
+        
+        setResponseURL(response, url)
         return response
     }
 
     if (url.startsWith('data:')) {
         const blob = await dataURLToBlob(url)
-        const response = new Response(blob, { status: 200 })
-        response.url = url
+        const response = new Response(blob, {
+            status: 200,
+            headers: { 'content-type': blob.type }
+        })
+        setResponseURL(response, url)
         return response
     }
 
     throw new Error(`Trying to fetch unknown URL: ${url}`)
 }
+
+class AbortError {
+    get name() { return 'AbortError' }
+    get code() { return 20 }
+}
+AbortError.prototype.__proto__ = Error.prototype
+
+function MockResourceLoader (...args) {}
+MockResourceLoader.prototype = Object.create(ResourceLoader.prototype)
+MockResourceLoader.prototype.fetch = async function(url, options) {
+    const response = await mockFetch(url, options)
+    const body = await response.text()
+    return body
+}
+
+const resourceLoader = new MockResourceLoader()
