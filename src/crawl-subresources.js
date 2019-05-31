@@ -42,7 +42,7 @@ async function crawlSubresource(link, options) {
 }
 
 async function crawlLeafSubresource(link, options) {
-    const fetchedResource = await fetchSubresource(link.absoluteTarget, options)
+    const fetchedResource = await fetchSubresource(link, options)
     link.resource = {
         url: fetchedResource.url,
         blob: fetchedResource.blob,
@@ -55,7 +55,7 @@ async function crawlFrame(link, options) {
     if (!link.resource) {
         // Apparently we could not capture the frame's DOM in the initial step. To still do the best
         // we can, we fetch and parse the framed document's html source and work with that.
-        const fetchedResource = await fetchSubresource(link.absoluteTarget, options)
+        const fetchedResource = await fetchSubresource(link, options)
         const html = await blobToText(fetchedResource.blob)
         const parser = new DOMParser()
         const innerDoc = parser.parseFromString(html, 'text/html')
@@ -81,7 +81,7 @@ async function crawlFrame(link, options) {
 }
 
 async function crawlStylesheet(link, options) {
-    const fetchedResource = await fetchSubresource(link.absoluteTarget, options)
+    const fetchedResource = await fetchSubresource(link, options)
     // Note that the final URL may differ from link.absoluteTarget in case of redirects.
     const stylesheetUrl = fetchedResource.url
     const originalStylesheetText = await blobToText(fetchedResource.blob)
@@ -111,7 +111,12 @@ async function crawlStylesheet(link, options) {
     await crawlSubresources(stylesheetResource.links, options)
 }
 
-async function fetchSubresource(url, options) {
+async function fetchSubresource(link, options) {
+    if (link.absoluteTarget === undefined) {
+        throw new Error(`Cannot fetch invalid target: ${link.target}`)
+    }
+    const url = link.absoluteTarget
+
     const fetchFunction = options.fetchResource || self.fetch
     // TODO investigate whether we should supply origin, credentials, ...
     const resourceOrResponse = await fetchFunction(url, {
