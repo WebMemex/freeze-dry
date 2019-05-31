@@ -30,6 +30,9 @@ function* allResourcesInTree(resource) {
 // Make links absolute. Except within-document links: keep/make those relative (e.g. href="#top").
 function makeLinksAbsolute(resource) {
     resource.links.forEach(link => {
+        // If target is invalid (hence absoluteTarget undefined), leave it untouched.
+        if (link.absoluteTarget === undefined) return
+
         const targetHash = new URL(link.absoluteTarget).hash
         const urlWithoutHash = url => url.split('#')[0]
         if (targetHash && urlWithoutHash(link.absoluteTarget) === urlWithoutHash(resource.url)) {

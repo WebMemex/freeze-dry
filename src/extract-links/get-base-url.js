@@ -1,3 +1,5 @@
+import tryParseUrl from './try-parse-url.js'
+
 /**
  * Equivalent to reading doc.baseURI, except that the document's URL can be overridden.
  * @param {Document} doc - the HTML document.
@@ -8,7 +10,10 @@ export default function getBaseUrl(doc, docUrl = doc.URL) {
     const baseEl = doc.querySelector('base[href]')
     if (baseEl) {
         // Interpret the base href relative to the document URL
-        return new URL(baseEl.getAttribute('href'), docUrl).href
+        const baseUrl = tryParseUrl(baseEl.getAttribute('href'), docUrl)
+        if (baseUrl) {
+            return baseUrl
+        }
     }
 
     // Tricky cases that would need more scrutiny, and I see no use case for.

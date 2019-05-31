@@ -1,5 +1,6 @@
 // Lists of html attributes that can contain one or more URLs.
 
+import tryParseUrl from '../try-parse-url'
 import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list.js'
 import { omit } from './util.js'
 
@@ -40,7 +41,7 @@ const defaultItem = {
         documentURL = element.ownerDocument.URL,
     ) {
         // Normally, the URL is simply relative to the document's base URL.
-        return new URL(url, baseUrl).href
+        return tryParseUrl(url, baseUrl)
     },
 }
 
@@ -53,7 +54,7 @@ const makeAbsoluteUsingCodebase = (url, element, ...etc) => {
         if (codebaseUrlLocation) {
             const codebaseUrl = codebaseUrlLocation.token
             const codebaseAbsoluteUrl = html40.codebase.makeAbsolute(codebaseUrl, element, ...etc)
-            return new URL(url, codebaseAbsoluteUrl).href
+            return tryParseUrl(url, codebaseAbsoluteUrl)
         }
     }
     // If there is no (valid) codebase attribute, interpret relative URLs as usual.
@@ -246,7 +247,7 @@ export const html52 = {
         // subresourceType? Maybe 'manifest'? Confusion with <link rel=manifest>
         makeAbsolute(url, element, _, documentURL = element.ownerDocument.URL) {
             // The manifest is not influenced by a <base href="..."> tag.
-            return new URL(url, documentURL).href
+            return tryParseUrl(url, documentURL)
         },
     },
     poster: {

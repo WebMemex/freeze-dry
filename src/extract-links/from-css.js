@@ -1,5 +1,6 @@
 import { memoizeOne, postcss, postCssValuesParser } from '../package.js'
 
+import tryParseUrl from './try-parse-url.js'
 import { deepSyncingProxy, transformingCache } from './parse-tools.js'
 
 /**
@@ -41,7 +42,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                     atRule.params = valueAst.toString()
                 },
                 get absoluteTarget() {
-                    return new URL(this.target, baseUrl).href
+                    return tryParseUrl(this.target, baseUrl)
                 },
                 get isSubresource() { return true },
                 get subresourceType() { return 'style' },
@@ -92,7 +93,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                         decl.value = valueAst.toString()
                     },
                     get absoluteTarget() {
-                        return new URL(this.target, baseUrl).href
+                        return tryParseUrl(this.target, baseUrl)
                     },
                     get isSubresource() { return true },
                     get subresourceType() { return subresourceType },
