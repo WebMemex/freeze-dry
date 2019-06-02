@@ -1,6 +1,7 @@
 import { blobToDataURL, whenAllSettled } from './package.js'
 
 import setMementoTags from './set-memento-tags.js'
+import setCharsetDeclaration from './set-charset-declaration.js'
 import setContentSecurityPolicy from './set-content-security-policy/index.js'
 
 /**
@@ -10,11 +11,15 @@ import setContentSecurityPolicy from './set-content-security-policy/index.js'
  * @returns {string} html - the resulting HTML.
  */
 export default async function createSingleFile(resource, {
+    charsetDeclaration,
     addMetadata,
     keepOriginalAttributes,
     snapshotTime,
 } = {}) {
     await deepInlineSubresources(resource, { keepOriginalAttributes })
+
+    // Create/replace the <meta charset> element.
+    setCharsetDeclaration(resource.doc, charsetDeclaration)
 
     if (addMetadata) {
         // Add metadata about the snapshot to the snapshot itself.

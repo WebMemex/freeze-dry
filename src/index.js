@@ -10,6 +10,9 @@ import createSingleFile from './create-single-file.js'
  * @param {number} [options.timeout=Infinity] - Maximum time (in milliseconds) spent on fetching the
  * page's subresources. The resulting HTML will have only succesfully fetched subresources inlined.
  * @param {string} [options.docUrl] - URL to override doc.URL.
+ * @param {string} [options.charsetDeclaration='utf-8'] - The value put into the <meta charset="…">
+ * element of the snapshot. If you will store/serve the returned string using an encoding other than
+ * UTF8, pass its name here; or pass an empty string to omit the declaration altogether.
  * @param {boolean} [options.addMetadata=true] - Whether to note the snapshotting time and the
  * document's URL in an extra meta and link tag.
  * @param {boolean} [options.keepOriginalAttributes=true] - Whether to preserve the value of an
@@ -25,6 +28,7 @@ import createSingleFile from './create-single-file.js'
 export default async function freezeDry(doc = window.document, {
     timeout = Infinity,
     docUrl,
+    charsetDeclaration = 'utf-8',
     addMetadata = true,
     keepOriginalAttributes = true,
     fetchResource,
@@ -44,6 +48,7 @@ export default async function freezeDry(doc = window.document, {
 
     // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
     const html = await createSingleFile(resource, {
+        charsetDeclaration,
         addMetadata,
         keepOriginalAttributes,
         snapshotTime: now,
