@@ -13,7 +13,7 @@ export default function setCharsetDeclaration(doc, charsetDeclaration) {
     }
 
     // Remove any existing <meta charset> elements
-    const existingElements = doc.head.querySelectorAll('meta[charset i]')
+    const existingElements = doc.head.querySelectorAll('meta[charset]')
     existingElements.forEach(element => element.parentNode.removeChild(element))
 
     // Create a new <meta charset> element if a value for it has been given.
