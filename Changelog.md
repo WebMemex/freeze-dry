@@ -1,5 +1,9 @@
 # Changelog for freeze-dry
 
+## 0.2.4 (2019-06-04)
+
+- Fix tiny but fatal error in previous release.
+
 ## 0.2.3 (2019-06-04)
 
 - Presumptively put a <meta charset="utf-8"> declaration in the snapshot by default; while adding
