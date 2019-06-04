@@ -12,9 +12,8 @@
   ],
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel src -d lib --ignore '*.test.*'",
+    "prepare": "babel src -d lib --ignore '*.test.*'",
     "watch": "babel src -d lib --ignore '*.test.*' -w",
-    "prepublish": "npm run build",
     "test": "jest --verbose"
   },
   "devDependencies": {
