@@ -12,8 +12,8 @@
   ],
   "main": "lib/index.js",
   "scripts": {
-    "prepare": "babel src -d lib --ignore '*.test.*'",
-    "watch": "babel src -d lib --ignore '*.test.*' -w",
+    "prepare": "babel src -d lib --ignore '**/*.test.js'",
+    "watch": "babel src -d lib --ignore '**/*.test.js' -w",
     "test": "jest --verbose"
   },
   "devDependencies": {
