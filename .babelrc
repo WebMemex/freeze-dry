@@ -1,9 +1,15 @@
 {
   "plugins": [
-      "transform-regenerator",
-      ["transform-runtime", {
-          "polyfill": false
-      }]
+    "@babel/plugin-transform-runtime"
   ],
-  "presets": ["es2015", "stage-1"]
+  "presets": [
+    "@babel/preset-env"
+  ],
+  "env": {
+    "test": {
+      "presets": [
+        ["@babel/preset-env", { "targets": { "node": "current" } }]
+      ]
+    }
+  }
 }

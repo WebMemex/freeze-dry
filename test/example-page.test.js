@@ -1,5 +1,5 @@
 import fs from 'fs'
-import jsdom from 'jsdom/lib/old-api'
+import jsdom from 'jsdom'
 import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Request, ...
 import { dataURLToBlob } from 'blob-util'
 
@@ -150,18 +150,12 @@ async function getExampleDoc() {
 }
 
 async function makeDom(docHtml, docUrl) {
-    const doc = jsdom.jsdom(docHtml, {
+    const dom = new jsdom.JSDOM(docHtml, {
         url: docUrl,
-        async resourceLoader({ url }, callback) {
-            const response = await mockFetch(url.href)
-            const body = await response.text()
-            callback(null, body)
-            return null
-        },
-        features: {
-            FetchExternalResources: ['link', 'frame', 'iframe'],
-        },
+        resources: new MockResourceLoader(),
     })
+
+    const doc = dom.window.document
 
     // Wait until JSDOM has completed loading the page (including frames).
     await new Promise(resolve => {
@@ -173,6 +167,14 @@ async function makeDom(docHtml, docUrl) {
     })
 
     return doc
+}
+
+class MockResourceLoader extends jsdom.ResourceLoader {
+    async fetch(url, options) {
+        const response = await mockFetch(url)
+        const text = await response.text()
+        return Buffer.from(text)
+    }
 }
 
 // A fetch function that reads the subresources from local files.
