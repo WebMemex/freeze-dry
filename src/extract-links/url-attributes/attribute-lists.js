@@ -322,8 +322,8 @@ export const whatwg = {
             return splitByWhitespace(value)
                 .filter(({ token }) => token.includes(':')) // tokens without colon are property names.
         },
-        // Can only contain absolute urls.
-        makeAbsolute: url => url,
+        // May only contain absolute URLs, so we merely check whether they are valid URLs.
+        makeAbsolute: url => tryParseUrl(url),
     },
     itemtype: {
         // Note: "Except if otherwise specified by that specification, the URLs given as the item
@@ -332,8 +332,8 @@ export const whatwg = {
         ...defaultItem,
         attribute: 'itemtype',
         parse: splitByWhitespace,
-        // May only contain absolute urls.
-        makeAbsolute: url => url,
+        // May only contain absolute URLs, so we merely check whether they are valid URLs.
+        makeAbsolute: url => tryParseUrl(url),
     },
     itemid: {
         ...defaultItem,
