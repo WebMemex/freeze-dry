@@ -5,7 +5,7 @@ import {
     transformingCache,
     makeListenerProxy,
     deepProxy,
-} from './parse-tools.js'
+} from './parse-tools.ts'
 
 const deepClone = object => JSON.parse(JSON.stringify(object))
 

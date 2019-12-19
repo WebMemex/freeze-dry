@@ -1,8 +1,8 @@
-import getBaseUrl from './get-base-url.js'
-import { syncingParsedView } from './parse-tools.js'
-import { extractLinksFromCssSynced } from './from-css.js'
-import urlAttributes from './url-attributes/index.js'
-import { flatMap } from './util.js'
+import getBaseUrl from './get-base-url.ts'
+import { syncingParsedView } from './parse-tools.ts'
+import { extractLinksFromCssSynced } from './from-css.ts'
+import urlAttributes from './url-attributes/index.ts'
+import { flatMap } from './util.ts'
 
 /**
  * Extracts links from an HTML Document.

@@ -1,4 +1,4 @@
-import { flatMap } from './util.js'
+import { flatMap } from './util.ts'
 
 test('flatMap', () => {
     const result = flatMap([0, 1, 2, 3], v => new Array(v).fill(v))

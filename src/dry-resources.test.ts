@@ -1,4 +1,4 @@
-import { allResourcesInTree, makeLinksAbsolute } from './dry-resources.js'
+import { allResourcesInTree, makeLinksAbsolute } from './dry-resources.ts'
 
 let testResource
 

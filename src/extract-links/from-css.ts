@@ -1,7 +1,7 @@
-import { memoizeOne, postcss, postCssValuesParser } from '../package.js'
+import { memoizeOne, postcss, postCssValuesParser } from '../package.ts'
 
-import tryParseUrl from './try-parse-url.js'
-import { deepSyncingProxy, transformingCache } from './parse-tools.js'
+import tryParseUrl from './try-parse-url.ts'
+import { deepSyncingProxy, transformingCache } from './parse-tools.ts'
 
 /**
  * Extract links from a stylesheet.

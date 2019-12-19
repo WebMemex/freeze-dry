@@ -1,4 +1,4 @@
-import { html40, html52, whatwg } from './attribute-lists.js'
+import { html40, html52, whatwg } from './attribute-lists.ts'
 
 describe('default parser', () => {
     test('should strip whitespace', () => {

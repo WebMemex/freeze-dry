@@ -1,7 +1,7 @@
-import captureDom from './capture-dom.js'
-import crawlSubresourcesOfDom from './crawl-subresources.js'
-import dryResources from './dry-resources.js'
-import createSingleFile from './create-single-file.js'
+import captureDom from './capture-dom.ts'
+import crawlSubresourcesOfDom from './crawl-subresources.ts'
+import dryResources from './dry-resources.ts'
+import createSingleFile from './create-single-file.ts'
 
 /**
  * Freeze dry an HTML Document

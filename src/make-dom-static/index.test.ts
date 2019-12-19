@@ -1,4 +1,4 @@
-import makeDomStatic from './index.js'
+import makeDomStatic from './index.ts'
 
 function makeExampleDoc() {
     const html = `<html>

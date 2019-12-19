@@ -1,6 +1,6 @@
 import postcss from 'postcss'
 
-import { extractLinksFromCss, extractLinksFromCssSynced } from './from-css.js'
+import { extractLinksFromCss, extractLinksFromCssSynced } from './from-css.ts'
 
 const exampleCssString = `
     @import 'sheet2.css' screen and orientation('landscape');

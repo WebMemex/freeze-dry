@@ -1,4 +1,4 @@
-import setCharsetDeclaration from './set-charset-declaration.js'
+import setCharsetDeclaration from './set-charset-declaration.ts'
 
 describe('setCharsetDeclaration', () => {
     test('should prepend a charset declaration if absent', () => {

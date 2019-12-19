@@ -1,8 +1,8 @@
 // Lists of html attributes that can contain one or more URLs.
 
 import tryParseUrl from '../try-parse-url'
-import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list.js'
-import { omit } from './util.js'
+import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list.ts'
+import { omit } from './util.ts'
 
 // Default properties for the attributes listed below.
 const defaultItem = {
