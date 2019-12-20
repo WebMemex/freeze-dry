@@ -14,7 +14,8 @@
   "scripts": {
     "prepare": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts'",
     "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts' -w",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "typecheck": "tsc --noEmit --lib es2017,dom -t ES2017 src/index.ts || true"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
@@ -26,7 +27,8 @@
     "jest": "^24.8.0",
     "jest-cli": "^24.8.0",
     "jest-fetch-mock": "=1.2.0",
-    "jsdom": "^15.1.1"
+    "jsdom": "^15.1.1",
+    "typescript": "^3.7.4"
   },
   "dependencies": {
     "@babel/runtime": "^7.4.5",
