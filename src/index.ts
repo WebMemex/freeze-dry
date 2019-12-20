@@ -2,6 +2,10 @@ import captureDom from './capture-dom'
 import crawlSubresourcesOfDom from './crawl-subresources'
 import dryResources from './dry-resources'
 import createSingleFile from './create-single-file'
+import { UrlString } from './types/index'
+
+type Fetchy = typeof self.fetch
+    | ((...args: Parameters<typeof self.fetch>) => { blob: Blob, url: UrlString })
 
 /**
  * Freeze dry an HTML Document
@@ -25,7 +29,7 @@ import createSingleFile from './create-single-file'
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
-export default async function freezeDry(doc = window.document, {
+export default async function freezeDry(doc: Document = window.document, {
     timeout = Infinity,
     docUrl,
     charsetDeclaration = 'utf-8',
@@ -33,7 +37,15 @@ export default async function freezeDry(doc = window.document, {
     keepOriginalAttributes = true,
     fetchResource,
     now = new Date(),
-} = {}) {
+} : {
+    timeout?: number,
+    docUrl?: UrlString,
+    charsetDeclaration?: string,
+    addMetadata?: boolean,
+    keepOriginalAttributes?: boolean,
+    fetchResource?: Fetchy,
+    now?: Date,
+} = {}): Promise<string> {
     // Step 1: Capture the DOM (as well as DOMs inside frames).
     const resource = captureDom(doc, { docUrl })
 
@@ -57,9 +69,10 @@ export default async function freezeDry(doc = window.document, {
     return html
 }
 
-const maxWait = timeout => timeout === Infinity
-    ? promise => promise
-    : promise => Promise.race([
-        promise,
-        new Promise(resolve => setTimeout(resolve, timeout)),
-    ])
+const maxWait: (timeout: number) => <T>(promise: Promise<T>) => Promise<T | undefined> =
+    timeout => timeout === Infinity
+        ? promise => promise
+        : promise => Promise.race([
+            promise,
+            new Promise(resolve => setTimeout(resolve, timeout)) as Promise<undefined>,
+        ])

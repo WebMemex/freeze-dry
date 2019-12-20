@@ -1,6 +1,7 @@
 import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package'
 
 import { extractLinksFromDom } from './extract-links/index'
+import { UrlString, FrameElement, DomResource } from './types/index'
 
 /**
  * Clones the DOM and DOMs inside its frames (recursively), wraps them in a resource object.
@@ -8,25 +9,28 @@ import { extractLinksFromDom } from './extract-links/index'
  * @param {Object} [options]
  * @param {string} [options.docUrl] - URL to override doc.URL, to influence interpretation of
  * relative URLs.
- * @param {(iframe: Element) => ?Document} [getDocInFrame] - customises how to obtain an iframe's
+ * @param {(frame: Element) => ?Document} [getDocInFrame] - customises how to obtain an (i)frame's
  * contentDocument. Defaults to simply trying to access frame.contentDocument. Should return null if
  * accessing the contentDocument fails.
  * @returns {Object} resource - the resource object representing the DOM with its subresources.
  */
 export default function captureDom(
-    originalDoc,
+    originalDoc: Document,
     {
         docUrl,
         getDocInFrame = defaultGetDocInFrame,
+    } : {
+        docUrl?: UrlString,
+        getDocInFrame?: (frameElement: FrameElement) => Document | null,
     } = {},
-) {
+): DomResource {
     // The first step is about grabbing everything that we need access to the original DOM for.
     // Think documents in frames, current values of form inputs, canvas state..
     // We make clones of everything we need, so in the next step we can do async stuff without
     // worrying about the DOM changing.
 
     // Clone the document
-    const clonedDoc = originalDoc.cloneNode(/* deep = */ true)
+    const clonedDoc = originalDoc.cloneNode(/* deep = */ true) as Document
 
     // Extract all links. With links we mean both the usual 'hyperlinks' and links to subresources.
     // We only really need the frame links in this step, but extract all as we will need them later.
@@ -74,7 +78,7 @@ export default function captureDom(
     }
 }
 
-function defaultGetDocInFrame(frameElement) {
+function defaultGetDocInFrame(frameElement: FrameElement): Document | null {
     try {
         return frameElement.contentDocument
     } catch (err) {

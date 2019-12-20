@@ -1,6 +1,8 @@
 import { whenAllSettled, postcss, documentOuterHTML } from './package'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
+import { Resource, UrlString } from './types/index'
+import { Link, SubresourceLink } from './extract-links/types'
 
 /**
  * Recursively fetch the subresources of a DOM resource.
@@ -41,7 +43,7 @@ async function crawlSubresource(link, options) {
     await crawler(link, options)
 }
 
-async function crawlLeafSubresource(link, options) {
+async function crawlLeafSubresource(link: SubresourceLink, options) {
     const fetchedResource = await fetchSubresource(link, options)
     link.resource = {
         url: fetchedResource.url,
@@ -111,7 +113,7 @@ async function crawlStylesheet(link, options) {
     await crawlSubresources(stylesheetResource.links, options)
 }
 
-async function fetchSubresource(link, options) {
+async function fetchSubresource(link: SubresourceLink, options): Promise<{ url: UrlString, blob: Blob }> {
     if (link.absoluteTarget === undefined) {
         throw new Error(`Cannot fetch invalid target: ${link.target}`)
     }
@@ -134,10 +136,10 @@ async function fetchSubresource(link, options) {
     return resource
 }
 
-async function blobToText(blob) {
-    const text = await new Promise((resolve, reject) => {
+async function blobToText(blob: Blob): Promise<string> {
+    const text = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader()
-        reader.onload = () => resolve(reader.result)
+        reader.onload = () => resolve(reader.result as string)
         reader.onerror = () => reject(reader.error)
         reader.readAsText(blob) // TODO should we know&tell which encoding to use?
     })
