@@ -1,6 +1,6 @@
 import {
     mergeWith, omit, uniq,
-} from './util.ts'
+} from './util'
 
 test('mergeWith', () => {
     const object1 = { a: 1, b: 2 }

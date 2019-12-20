@@ -1,4 +1,4 @@
-import getBaseUrl from './get-base-url.ts'
+import getBaseUrl from './get-base-url'
 
 describe('getBaseUrl', () => {
     const parser = new DOMParser()

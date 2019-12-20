@@ -1,8 +1,8 @@
-import { blobToDataURL, whenAllSettled } from './package.ts'
+import { blobToDataURL, whenAllSettled } from './package'
 
-import setMementoTags from './set-memento-tags.ts'
-import setCharsetDeclaration from './set-charset-declaration.ts'
-import setContentSecurityPolicy from './set-content-security-policy/index.ts'
+import setMementoTags from './set-memento-tags'
+import setCharsetDeclaration from './set-charset-declaration'
+import setContentSecurityPolicy from './set-content-security-policy/index'
 
 /**
  * Serialises the DOM resource+subresources into a single, self-contained string of HTML.

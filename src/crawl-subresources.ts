@@ -1,6 +1,6 @@
-import { whenAllSettled, postcss, documentOuterHTML } from './package.ts'
+import { whenAllSettled, postcss, documentOuterHTML } from './package'
 
-import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index.ts'
+import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
 
 /**
  * Recursively fetch the subresources of a DOM resource.

@@ -1,6 +1,6 @@
 import {
     splitByWhitespace, splitByComma, splitByCommaPickFirstTokens,
-} from './split-token-list.ts'
+} from './split-token-list'
 
 describe('splitByWhitespace', () => {
     test('should work for a basic case', () => {

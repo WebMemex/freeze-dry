@@ -1,4 +1,4 @@
-import makeDomStatic from './make-dom-static/index.ts'
+import makeDomStatic from './make-dom-static/index'
 
 /**
  * "Dry" the resource+subresources to make them static and context-free.

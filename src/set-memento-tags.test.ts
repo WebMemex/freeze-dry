@@ -1,4 +1,4 @@
-import { datetimeToString } from './set-memento-tags.ts'
+import { datetimeToString } from './set-memento-tags'
 
 describe('datetimeToString', () => {
     test('should work for a basic example', () => {

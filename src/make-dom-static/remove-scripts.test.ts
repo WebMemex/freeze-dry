@@ -1,4 +1,4 @@
-import removeScripts from './remove-scripts.ts'
+import removeScripts from './remove-scripts'
 
 describe('removeScripts', () => {
     test('should remove script tags from the document', () => {

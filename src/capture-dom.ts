@@ -1,6 +1,6 @@
-import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package.ts'
+import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package'
 
-import { extractLinksFromDom } from './extract-links/index.ts'
+import { extractLinksFromDom } from './extract-links/index'
 
 /**
  * Clones the DOM and DOMs inside its frames (recursively), wraps them in a resource object.

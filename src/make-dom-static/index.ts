@@ -1,4 +1,4 @@
-import removeScripts from './remove-scripts.ts'
+import removeScripts from './remove-scripts'
 
 /**
  * Remove interactivity from a document.

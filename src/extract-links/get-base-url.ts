@@ -1,4 +1,4 @@
-import tryParseUrl from './try-parse-url.ts'
+import tryParseUrl from './try-parse-url'
 
 /**
  * Equivalent to reading doc.baseURI, except that the document's URL can be overridden.
