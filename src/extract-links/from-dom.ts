@@ -12,7 +12,7 @@ import { flatMap } from './util'
  * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
  * inside the DOM.
  */
-export function extractLinksFromDom(doc, { docUrl } = {}) {
+export function extractLinksFromDom(doc, { docUrl = undefined } = {}) {
     const baseUrl = docUrl !== undefined
         ? getBaseUrl(doc, docUrl)
         : undefined // No override; functions will read the correct value from <node>.baseURI.

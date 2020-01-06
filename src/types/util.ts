@@ -1,3 +1,3 @@
-export type UrlString = string
+export { UrlString } from '../extract-links/types'
 
 export type FrameElement = HTMLFrameElement | HTMLIFrameElement

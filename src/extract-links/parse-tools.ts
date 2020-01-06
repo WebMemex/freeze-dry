@@ -4,6 +4,20 @@
 
 import { memoize, mutableProxyFactory } from '../package'
 
+interface TokenPointer {
+    token: string;
+    index: number;
+    note?: any;
+}
+
+interface ParsedView extends Array<TokenPointer> {
+    // Array of course already had a toString() method, but we redefine it, so just to be explicit:
+    toString(): string;
+}
+
+type Parser = (s: string) => TokenPointer[]
+
+
 /**
  * Allows manipulating tokens within a string.
  * @param {string => Object[]} parse - given a string, must return an array of objects { token,
@@ -18,7 +32,7 @@ import { memoize, mutableProxyFactory } from '../package'
  * view.forEach(tokenInfo => { tokenInfo.token = tokenInfo.token.replace(/^https?:/, 'dat:') })
  * view.toString() // 'bla dat://example.com blub'
  */
-export const parsedView = parse => value => {
+export const parsedView: (parse: Parser) => (value: string) => ParsedView = parse => value => {
     const parsedValue = parse(value)
 
     // Split the string into tokens and 'glue' (the segments before, between and after the tokens).
@@ -55,7 +69,11 @@ export const parsedView = parse => value => {
  * @param {() => string} options.get - string getter; invoked whenever a token is accessed.
  * @param {string => void} options.set - string setter; invoked when any of its tokens was modified.
  */
-export const syncingParsedView = ({ parse, get, set }) => deepSyncingProxy(
+export const syncingParsedView: (kwargs: {
+    parse: Parser,
+    get: () => string,
+    set: (string: string) => void,
+}) => ParsedView = ({ parse, get, set }) => deepSyncingProxy(
     transformingCache({
         get,
         set,
@@ -215,7 +233,10 @@ const modifyingOperations = [
  * @param {Object} object - the object to be proxied.
  * @returns {Proxy} The proxy to the given object.
  */
-export const makeListenerProxy = (before = () => {}, after = () => {}) => object => {
+export const makeListenerProxy = (
+    before = (method, args) => {},
+    after = (method, args) => {},
+) => object => {
     const handler = Object.assign(
         {},
         ...Object.getOwnPropertyNames(Reflect).map(method => ({

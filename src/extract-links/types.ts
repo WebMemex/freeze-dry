@@ -1,4 +1,7 @@
-import { UrlString, FrameElement } from '../types/util'
+import { FrameElement } from '../types/util'
+
+// This alias is used to explicitly state which strings are guaranteed/presumed to be absolute URLs.
+export type UrlString = string
 
 export interface Link {
     // The link's target URL. This is the exact value as it appears in the document, and may thus be
