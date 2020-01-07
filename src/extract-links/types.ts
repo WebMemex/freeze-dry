@@ -1,4 +1,5 @@
 import { FrameElement } from '../types/util'
+import { Resource } from '../types/resource' // TODO Remove need for this (recursive) import
 
 // This alias is used to explicitly state which strings are guaranteed/presumed to be absolute URLs.
 export type UrlString = string
@@ -47,6 +48,10 @@ export interface SubresourceLink extends Link {
     // Indicates the type of resource (`image`, `style`, ...). This corresponds to what is now
     // called the 'destination' in the WHATWG fetch spec. See <https://fetch.spec.whatwg.org/#concept-request-destination>
     readonly subresourceType?: string;
+
+    // If the subresource is available, it can be assigned to this attribute.
+    // TODO Remove this ‘upward’ dependency.
+    resource?: Resource;
 }
 
 export interface AudioLink extends SubresourceLink {
