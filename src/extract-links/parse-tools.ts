@@ -206,7 +206,7 @@ export function deepSyncingProxy<R extends object>({ get, set, alwaysSet = false
                 `Expected get()${path} to be an object, but get() is ${target}.`
             )
             const properties = path.split('.').slice(1)
-            for (const i in properties) {
+            for (let i = 0; i < properties.length; i++) {
                 target = target[properties[i]]
                 if (!isNonNullObject(target)) {
                     const pathSoFar = '.' + properties.slice(0, i+1).join('.')
