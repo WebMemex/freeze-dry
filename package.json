@@ -15,7 +15,7 @@
     "prepare": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts'",
     "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts' -w",
     "test": "jest --verbose",
-    "typecheck": "tsc --noEmit --lib es2017,dom -t ES2017 src/index.ts || true"
+    "typecheck": "tsc --noEmit || true"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
