@@ -3,9 +3,10 @@
 import tryParseUrl from '../try-parse-url'
 import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list'
 import { omit } from './util'
+import { AttributeInfo, AttributeInfoDict } from './types'
 
 // Default properties for the attributes listed below.
-const defaultItem = {
+const defaultItem: Omit<AttributeInfo, 'attribute'> = {
     // The name of the attribute
     // attribute: (no default value, required)
 
@@ -46,7 +47,7 @@ const defaultItem = {
 }
 
 // Helper for URL attributes that are defined to be relative to the element's 'codebase' attribute.
-const makeAbsoluteUsingCodebase = (url, element, ...etc) => {
+const makeAbsoluteUsingCodebase: AttributeInfo['makeAbsolute'] = (url, element, ...etc) => {
     // Read the value of the codebase attribute, and turn it into an absolute URL.
     const codebaseValue = element.getAttribute('codebase')
     if (codebaseValue) {
@@ -63,7 +64,7 @@ const makeAbsoluteUsingCodebase = (url, element, ...etc) => {
 
 // HTML 4.0
 // Mostly derived from https://www.w3.org/TR/REC-html40/index/attributes.html
-export const html40 = {
+export const html40: AttributeInfoDict = {
     action: {
         ...defaultItem,
         attribute: 'action',
@@ -218,7 +219,7 @@ export const html40 = {
 
 // HTML 5.2.
 // Derived from https://www.w3.org/TR/2017/REC-html52-20171214/fullindex.html#attributes-table
-export const html52 = {
+export const html52: AttributeInfoDict = {
     action: html40.action,
     cite: html40.cite,
     data: {
@@ -309,7 +310,7 @@ export const html52 = {
 
 // WHATWG as of 2018-04-20
 // https://html.spec.whatwg.org/multipage/indices.html#attributes-3 of 2018-04-20
-export const whatwg = {
+export const whatwg: AttributeInfoDict = {
     // Includes all of HTML 5.2 except longdesc
     ...omit('longdesc')(html52),
 

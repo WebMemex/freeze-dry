@@ -3,20 +3,12 @@
 // attribute, that allows both reading and writing the URLs in place.
 
 import { memoize, mutableProxyFactory } from '../package'
-
-interface TokenPointer {
-    token: string;
-    index: number;
-    note?: any;
-}
+import { Parser, TokenPointer } from './url-attributes/types'
 
 interface ParsedView extends Array<TokenPointer> {
     // Array of course already had a toString() method, but we redefine it, so just to be explicit:
     toString(): string;
 }
-
-type Parser = (s: string) => TokenPointer[]
-
 
 /**
  * Allows manipulating tokens within a string.

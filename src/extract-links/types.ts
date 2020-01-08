@@ -26,7 +26,6 @@ export interface Link {
 
 
 export interface Anchor {
-    element: Element;
 }
 
 export interface AttributeAnchor<E extends HTMLElement, A extends string> extends Anchor {

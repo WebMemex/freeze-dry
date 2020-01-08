@@ -1,4 +1,6 @@
-const splitByRegex = regex => value => {
+import { Parser } from './types'
+
+const splitByRegex: (regex: RegExp) => Parser = regex => value => {
     const tokens = []
     let remainder = value
     let remainderIndex = 0
@@ -22,13 +24,13 @@ const splitByRegex = regex => value => {
 
 // Split by whitespace, return values and their indices
 // E.g. 'aaa bbb' => [{ token: 'aaa', index: 0 }, { token: 'bbb', index: 4 }]
-export const splitByWhitespace = splitByRegex(/^(\s*)([^]*?)(\s*)(\s|$)/)
+export const splitByWhitespace: Parser = splitByRegex(/^(\s*)([^]*?)(\s*)(\s|$)/)
 
 // Split string by commas, strip whitespace, and return the index of every found token.
 // E.g. splitByComma('aaa, bbb') === [{ token: 'aaa', index: 0 }, { token: 'bbb', index: 5 }]
-export const splitByComma = splitByRegex(/^(\s*)([^]*?)(\s*)(,|$)/)
+export const splitByComma: Parser = splitByRegex(/^(\s*)([^]*?)(\s*)(,|$)/)
 
 // Split by commas, then split each token by whitespace and only keep the first piece.
 // E.g. 'aaa bbb, ccc' => [{ token: 'aaa', index: 0 }, { token: 'ccc', index: 9 }]
 // Used for parsing srcset: <img srcset="http://image 2x, http://other-image 1.5x" ...>
-export const splitByCommaPickFirstTokens = splitByRegex(/^(\s*)(\S*)([^]*?)(,|$)/)
+export const splitByCommaPickFirstTokens: Parser = splitByRegex(/^(\s*)(\S*)([^]*?)(,|$)/)

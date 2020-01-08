@@ -3,6 +3,8 @@ import { syncingParsedView } from './parse-tools'
 import { extractLinksFromCssSynced } from './from-css'
 import urlAttributes from './url-attributes/index'
 import { flatMap } from './util'
+import { UrlString, Link } from './types'
+import { AttributeInfo } from './url-attributes/types'
 
 /**
  * Extracts links from an HTML Document.
@@ -12,7 +14,11 @@ import { flatMap } from './util'
  * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
  * inside the DOM.
  */
-export function extractLinksFromDom(doc, { docUrl = undefined } = {}) {
+export function extractLinksFromDom(doc: Document, {
+    docUrl = undefined,
+}: {
+    docUrl?: UrlString,
+} = {}): Link[] {
     const baseUrl = docUrl !== undefined
         ? getBaseUrl(doc, docUrl)
         : undefined // No override; functions will read the correct value from <node>.baseURI.
@@ -26,7 +32,15 @@ export function extractLinksFromDom(doc, { docUrl = undefined } = {}) {
     return links
 }
 
-function extractLinksFromAttributes({ rootElement, baseUrl, docUrl }) {
+function extractLinksFromAttributes({
+    rootElement,
+    baseUrl,
+    docUrl,
+}: {
+    rootElement: Element,
+    baseUrl: UrlString,
+    docUrl: UrlString,
+}): Link[] {
     // For each known attribute type, we find all elements having it.
     // Note the 'style' attribute is handled separately, in extractLinksFromStyleAttributes below.
     const links = flatMap(Object.values(urlAttributes), attributeInfo => {
@@ -44,7 +58,17 @@ function extractLinksFromAttributes({ rootElement, baseUrl, docUrl }) {
 }
 
 // Gets the links (usually just one) inside the specified attribute of the given element.
-function linksInAttribute({ element, attributeInfo, baseUrl, docUrl }) {
+function linksInAttribute({
+    element,
+    attributeInfo,
+    baseUrl,
+    docUrl
+}: {
+    element: Element,
+    attributeInfo: AttributeInfo,
+    baseUrl: UrlString,
+    docUrl: UrlString,
+}): Link[] {
     const { attribute, parse, makeAbsolute } = attributeInfo
 
     // Get a live&editable view on the URL(s) in the attribute.
@@ -79,7 +103,13 @@ function linksInAttribute({ element, attributeInfo, baseUrl, docUrl }) {
     return links
 }
 
-function extractLinksFromStyleAttributes({ rootElement, baseUrl }) {
+function extractLinksFromStyleAttributes({
+    rootElement,
+    baseUrl,
+}: {
+    rootElement: Element,
+    baseUrl: UrlString,
+}): Link[] {
     // TODO try using element.style instead of parsing the attribute value ourselves.
     const querySelector = '*[style]'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
@@ -110,7 +140,13 @@ function extractLinksFromStyleAttributes({ rootElement, baseUrl }) {
     return links // links in the style attributes of *all* elements
 }
 
-function extractLinksFromStyleTags({ rootElement, baseUrl }) {
+function extractLinksFromStyleTags({
+    rootElement,
+    baseUrl,
+}: {
+    rootElement: Element,
+    baseUrl: UrlString,
+}): Link[] {
     const querySelector = 'style[type="text/css" i], style:not([type])'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
 

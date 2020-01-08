@@ -2,6 +2,9 @@ import { memoizeOne, postcss, postCssValuesParser } from '../package'
 
 import tryParseUrl from './try-parse-url'
 import { deepSyncingProxy, transformingCache } from './parse-tools'
+import { postcssValuesParser } from 'postcss-values-parser' // seems needed to get the namespace..
+import { Link, SubresourceLink, UrlString } from './types'
+import { SubresourceType } from './url-attributes/types'
 
 /**
  * Extract links from a stylesheet.
@@ -10,19 +13,19 @@ import { deepSyncingProxy, transformingCache } from './parse-tools'
  * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
  * inside the stylesheet.
  */
-export function extractLinksFromCss(parsedCss, baseUrl) {
-    const links = []
+export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString): Link[] {
+    const links: Link[] = []
 
     // Grab all @import urls
     parsedCss.walkAtRules('import', atRule => {
-        let valueAst
+        let valueAst: postcssValuesParser.Node | undefined
         try {
             valueAst = postCssValuesParser(atRule.params).parse()
         } catch (err) {
             return // We ignore values we cannot parse.
         }
 
-        let urlNode
+        let urlNode: postcssValuesParser.Node | undefined
         const firstNode = valueAst.nodes[0].nodes[0]
         if (firstNode.type === 'string') {
             urlNode = firstNode
@@ -35,7 +38,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
         }
 
         if (urlNode) {
-            links.push({
+            const link: SubresourceLink = {
                 get target() { return urlNode.value },
                 set target(newUrl) {
                     urlNode.value = newUrl
@@ -44,7 +47,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                 get absoluteTarget() {
                     return tryParseUrl(this.target, baseUrl)
                 },
-                get isSubresource() { return true },
+                get isSubresource() { return true as true },
                 get subresourceType() { return 'style' },
                 get from() {
                     // TODO combine atRule.source.start.{line|column} with urlNode.sourceIndex
@@ -52,14 +55,15 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                     // (if urlNode.type === 'string', offset by 1 to account for the quote)
                     return {}
                 },
-            })
+            }
+            links.push(link)
         }
     })
 
     // Grab every url(...) inside a property value; also gets those within @font-face.
     parsedCss.walkDecls(decl => {
         // TODO Possible future optimisation: only parse props known to allow a URL.
-        let valueAst
+        let valueAst: postcssValuesParser.Node | undefined
         try {
             valueAst = postCssValuesParser(decl.value).parse()
         } catch (err) {
@@ -70,7 +74,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
             if (functionNode.type !== 'func') return
             if (functionNode.value !== 'url') return
 
-            let subresourceType
+            let subresourceType: SubresourceType
             if (
                 decl.prop === 'src'
                 && decl.parent.type === 'atrule'
@@ -86,7 +90,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
             if (argument.type === 'string' || argument.type === 'word') {
                 const urlNode = argument // For either type, argument.value is our URL.
 
-                links.push({
+                const link: SubresourceLink = {
                     get target() { return urlNode.value },
                     set target(newUrl) {
                         urlNode.value = newUrl
@@ -95,7 +99,7 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                     get absoluteTarget() {
                         return tryParseUrl(this.target, baseUrl)
                     },
-                    get isSubresource() { return true },
+                    get isSubresource() { return true as true },
                     get subresourceType() { return subresourceType },
                     get from() {
                         // TODO combine decl.source.start.{line|column} with urlNode.sourceIndex
@@ -103,7 +107,8 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
                         // (if urlNode.type === 'string', offset by 1 to account for the quote)
                         return {}
                     },
-                })
+                }
+                links.push(link)
             }
         })
     })
@@ -121,14 +126,22 @@ export function extractLinksFromCss(parsedCss, baseUrl) {
  * @param {string} options.baseUrl - the absolute URL for interpreting any relative URLs in the
  * stylesheet.
  */
-export function extractLinksFromCssSynced({ get: getCssString, set: setCssString, baseUrl }) {
+export function extractLinksFromCssSynced({
+    get: getCssString,
+    set: setCssString,
+    baseUrl
+}: {
+    get: () => string,
+    set: (value: string) => void,
+    baseUrl: UrlString,
+}): Link[] {
     // We run two steps: string to AST to links; each getter is cached. Changes to links will
     // update the AST automatically, but we do have to write back the AST to the string.
     // cssString <===|===> parsedCss <------|===> links
     //            set|get             mutate|get
 
     // Wrap get and set so we can get and set the AST directly, without reparsing when unnecessary.
-    const { get: getParsedCss, set: setParsedCss } = transformingCache({
+    const { get: getParsedCss, set: setParsedCss } = transformingCache<string, postcss.Root>({
         get: getCssString,
         set: setCssString,
         transform: cssString => postcss.parse(cssString),
@@ -144,8 +157,8 @@ export function extractLinksFromCssSynced({ get: getCssString, set: setCssString
     // arguments to its callback, so operations performed on them would not be noticed. Therefore,
     // we manually remember currentParsedCss and set() it whenever (any member of) the links object
     // has been operated on.
-    let currentParsedCss
-    const links = deepSyncingProxy({
+    let currentParsedCss: postcss.Root | null
+    const links: Link[] = deepSyncingProxy<Link[]>({
         get: () => {
             try {
                 currentParsedCss = getParsedCss()

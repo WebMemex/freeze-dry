@@ -1,4 +1,6 @@
 /**
  * Combined map and flatten.
  */
-export const flatMap = (arr, f) => arr.map(f).reduce((newArr, item) => newArr.concat(item), [])
+export function flatMap<T,U>(arr: T[], f: (v: T) => (U | U[])): U[] {
+    return arr.map(f).reduce<U[]>((newArr, item) => newArr.concat(item), [])
+}
