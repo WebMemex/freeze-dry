@@ -97,16 +97,25 @@ export const syncingParsedView: (kwargs: {
  * Defaults to (new, old) => new === old.
  * @returns {Object} A pair of functions { get, set }.
  */
-export const transformingCache = ({
+export function transformingCache<T1, T2>({
     get,
     set,
     transform,
     untransform,
     isEqual = (a, b) => a === b,
-}) => {
+}: {
+    get: () => T1,
+    set: (value: T1) => void,
+    transform: (value: T1) => T2,
+    untransform: (transformedValue: T2) => T1,
+    isEqual?: (newValue: T1, oldValue: T1) => boolean,
+}): {
+    get: () => T2,
+    set: (transformedValue: T2, options?: { trustCache?: boolean }) => void,
+} {
     const uninitialised = Symbol('uninitialised')
-    let lastValue = uninitialised
-    let lastTransformedValue
+    let lastValue: T1 | typeof uninitialised = uninitialised
+    let lastTransformedValue: T2 | undefined
     return {
         get() {
             const newValue = get()
@@ -131,6 +140,8 @@ export const transformingCache = ({
     }
 }
 
+type ProxyMethodListener<T> = (method: keyof typeof Reflect, args: [T, ...any[] ]) => void
+
 /**
  * A Proxy that appears as the object returned by get(), *at any moment*, and writes back changes
  * using set(object).
@@ -138,7 +149,10 @@ export const transformingCache = ({
  * @param {Object => void} set - setter for the object; is run after any operation on the object.
  * @returns {Proxy} The proxy.
  */
-export const syncingProxy = ({ get, set }) => {
+export function syncingProxy<T extends object>({ get, set }: {
+    get: () => T,
+    set: (value: T) => void,
+}): T {
     // Get the current object to ensure the proxy's initial target has correct property descriptors.
     // (changing e.g. from a normal object to an Array causes trouble)
     const initialTarget = get()
@@ -153,7 +167,7 @@ export const syncingProxy = ({ get, set }) => {
         set(object)
     }
 
-    return makeListenerProxy(refreshProxyTarget, writeBack)(proxy)
+    return makeListenerProxy<T>(refreshProxyTarget, writeBack)(proxy)
 }
 
 /**
@@ -165,14 +179,21 @@ export const syncingProxy = ({ get, set }) => {
  * object or any of its members (or members' members, etc.).
  * @returns {Proxy} The proxy.
  */
-export const deepSyncingProxy = ({ get, set, alwaysSet = false }) => {
-    let rootObject
+export function deepSyncingProxy<R extends object>({ get, set, alwaysSet = false }: {
+    get: () => R,
+    set: (value: R) => void,
+    alwaysSet?: boolean,
+}): R {
+    let rootObject: R
     // We will reload the whole object before any operation on any (sub)object.
     const getRootObject = () => { rootObject = get() }
     // We write back the whole object after any operation on any (sub)object.
     const writeBack = () => { set(rootObject) }
 
-    const createProxy = (object, path) => {
+    function createProxy<S extends object>(
+        object: S,
+        path: string
+    ): S {
         // Create a mutable proxy, using object as the initial target.
         const { proxy, setTarget } = mutableProxyFactory(object)
 
@@ -180,7 +201,7 @@ export const deepSyncingProxy = ({ get, set, alwaysSet = false }) => {
             // Update the root object.
             getRootObject()
             // Walk to the corresponding object within the root object.
-            let target = rootObject
+            let target: object = rootObject
             if (!isNonNullObject(target)) throw new TypeError(
                 `Expected get()${path} to be an object, but get() is ${target}.`
             )
@@ -195,16 +216,16 @@ export const deepSyncingProxy = ({ get, set, alwaysSet = false }) => {
                 }
             }
             // Swap this proxy's target to the found object (we can leave other proxies outdated).
-            setTarget(target)
+            setTarget(target as S) // the object at the given path has the same type as initially.
         }
-        const writeBackIfMutating = (method, args) => {
+        const writeBackIfMutating: ProxyMethodListener<S> = (method, args) => {
             // If the operation would have mutated a normal object, trigger a set()-sync
             if (modifyingOperations.includes(method)) {
                 writeBack()
             }
         }
         const afterHook = alwaysSet ? writeBack : writeBackIfMutating
-        return makeListenerProxy(refreshProxyTarget, afterHook)(proxy)
+        return makeListenerProxy<S>(refreshProxyTarget, afterHook)(proxy)
     }
 
     // Get the current object to ensure the proxy's initial target has correct property descriptors.
@@ -213,7 +234,7 @@ export const deepSyncingProxy = ({ get, set, alwaysSet = false }) => {
     return deepProxy(createProxy)(initialRootObject)
 }
 
-function isNonNullObject(value) {
+function isNonNullObject(value: any): value is object {
     return (typeof value === 'object' && value !== null)
 }
 
@@ -233,22 +254,24 @@ const modifyingOperations = [
  * @param {Object} object - the object to be proxied.
  * @returns {Proxy} The proxy to the given object.
  */
-export const makeListenerProxy = (
-    before = (method, args) => {},
-    after = (method, args) => {},
-) => object => {
-    const handler = Object.assign(
-        {},
-        ...Object.getOwnPropertyNames(Reflect).map(method => ({
-            [method](...args) {
-                before(method, args)
-                const result = Reflect[method].apply(null, args)
-                after(method, args)
-                return result
-            },
-        })),
-    )
-    return new Proxy(object, handler)
+export function makeListenerProxy<T extends object>(
+    before: ProxyMethodListener<T> = () => {},
+    after: ProxyMethodListener<T> = () => {},
+): (object: T) => T {
+    return (object: T) => {
+        const handler = Object.assign(
+            {},
+            ...Object.getOwnPropertyNames(Reflect).map((method: keyof typeof Reflect) => ({
+                [method](...args: [T, ...any[]]) {
+                    before(method, args)
+                    const result = Reflect[method].apply(null, args)
+                    after(method, args)
+                    return result
+                },
+            })),
+        )
+        return new Proxy(object, handler)
+    }
 }
 
 /**
@@ -258,8 +281,10 @@ export const makeListenerProxy = (
  * @param {Object} object - the object which, and whose members, will be wrapped using createProxy.
  * @returns {Proxy} A proxy around the proxy of the object.
  */
-export const deepProxy = createProxy => {
-    let createDeepProxy = (object, path) => {
+export function deepProxy<T extends object>(
+    createProxy: (object: T, path: string) => T
+): (object: T) => T {
+    let createDeepProxy: (object: T, path: string) => T = (object, path) => {
         const target = createProxy(object, path)
         return new Proxy(target, {
             // Trap the get() method, to also wrap any subobjects using createProxy.
