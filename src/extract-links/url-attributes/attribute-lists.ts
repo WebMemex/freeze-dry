@@ -312,7 +312,7 @@ export const html52: AttributeInfoDict = {
 // https://html.spec.whatwg.org/multipage/indices.html#attributes-3 of 2018-04-20
 export const whatwg: AttributeInfoDict = {
     // Includes all of HTML 5.2 except longdesc
-    ...omit('longdesc')(html52),
+    ...omit(['longdesc'])(html52),
 
     itemprop: {
         // Microdata's itemprop can contain absolute URLs, used as identifiers.

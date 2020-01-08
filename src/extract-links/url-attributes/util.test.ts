@@ -12,7 +12,7 @@ test('mergeWith', () => {
 
 test('omit', () => {
     const object = { a: 1, b: 2, c: 3 }
-    const result = omit('b')(object)
+    const result = omit(['b'])(object)
     expect(result).toEqual({ a: 1, c: 3 })
 })
 
