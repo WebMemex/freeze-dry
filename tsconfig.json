@@ -5,6 +5,8 @@
             "es2017",
             "dom"
         ],
+        "moduleResolution": "Node",
+        "allowSyntheticDefaultImports": true,
         "typeRoots": [
             "./node_modules/@types",
             "./src/@types"
