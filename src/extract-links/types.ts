@@ -28,14 +28,14 @@ export interface Link {
 export interface Anchor {
 }
 
-export interface AttributeAnchor<E extends HTMLElement, A extends string> extends Anchor {
+export interface AttributeAnchor<E extends Element, A extends string> extends Anchor {
     element: E;
     attribute: A;
     // Range is kept optional while it is not yet implemented for the 'style' attribute
     rangeWithinAttribute?: [number, number];
 }
 
-export interface TextContentAnchor<E extends HTMLElement> extends Anchor {
+export interface TextContentAnchor<E extends Element> extends Anchor {
     element: E;
     rangeWithinTextContent?: [number, number]; // optional because not yet implemented
 }
@@ -78,7 +78,7 @@ export interface ImageLink extends SubresourceLink {
 
 export interface ObjectLink extends SubresourceLink {
     readonly subresourceType: "object";
-    readonly from: AttributeAnchor<HTMLElement, string>;
+    readonly from: AttributeAnchor<Element, string>;
 }
 
 export interface ScriptLink extends SubresourceLink {
@@ -88,7 +88,7 @@ export interface ScriptLink extends SubresourceLink {
 
 export interface StyleLink extends SubresourceLink {
     readonly subresourceType: "style";
-    readonly from: AttributeAnchor<HTMLElement, "style"> | TextContentAnchor<HTMLStyleElement>;
+    readonly from: AttributeAnchor<Element, "style"> | TextContentAnchor<HTMLStyleElement>;
 }
 
 export interface TrackLink extends SubresourceLink {

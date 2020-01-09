@@ -12,7 +12,7 @@ export interface AttributeInfo {
     readonly subresourceType?: SubresourceType;
     makeAbsolute(
         url: string,
-        element: HTMLElement,
+        element: Element,
         baseUrl?: string,
         documentURL?: string
     ): UrlString | undefined;
