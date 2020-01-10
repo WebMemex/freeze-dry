@@ -28,8 +28,8 @@ export const parsedView: (parse: Parser) => (value: string) => ParsedView = pars
     const parsedValue = parse(value)
 
     // Split the string into tokens and 'glue' (the segments before, between and after the tokens).
-    const tokens = []
-    const glueStrings = []
+    const tokens: ParsedView = []
+    const glueStrings: string[] = []
     let start = 0
     for (const { token, index, note } of parsedValue) {
         glueStrings.push(value.substring(start, index))
@@ -192,23 +192,24 @@ export function deepSyncingProxy<R extends object>({ get, set, alwaysSet = false
         const refreshProxyTarget = () => {
             // Update the root object.
             getRootObject()
+            if (!isNonNullObject(rootObject)) throw new TypeError(
+                `Expected get()${path} to be an object, but get() is ${rootObject}.`
+                )
             // Walk to the corresponding object within the root object.
-            let target: object = rootObject
-            if (!isNonNullObject(target)) throw new TypeError(
-                `Expected get()${path} to be an object, but get() is ${target}.`
-            )
+            let targetWalker: { [key: string]: any } = rootObject
             const properties = path.split('.').slice(1)
             for (let i = 0; i < properties.length; i++) {
-                target = target[properties[i]]
-                if (!isNonNullObject(target)) {
+                const child: any = targetWalker[properties[i]]
+                if (!isNonNullObject(child)) {
                     const pathSoFar = '.' + properties.slice(0, i+1).join('.')
                     throw new TypeError(
-                        `Expected get()${path} to be an object, but get()${pathSoFar} is ${target}.`
+                        `Expected get()${path} to be an object, but get()${pathSoFar} is ${child}.`
                     )
                 }
+                targetWalker = child
             }
             // Swap this proxy's target to the found object (we can leave other proxies outdated).
-            setTarget(target as S) // the object at the given path has the same type as initially.
+            setTarget(targetWalker as S) // the object at the given path has the same type as initially.
         }
         const writeBackIfMutating: ProxyMethodListener<S> = (method, args) => {
             // If the operation would have mutated a normal object, trigger a set()-sync

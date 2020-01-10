@@ -9,7 +9,7 @@
  */
 export function mergeWith<T, U extends object>(mergeValues: (a: T, b: T) => T): (...objects: U[]) => U {
     return (...objects) => {
-        const result = {}
+        const result: { [key: string]: any } = {}
         for (const object of objects) {
             for (const [key, value] of Object.entries(object)) {
                 result[key] = key in result ? mergeValues(result[key], value) : value
@@ -28,8 +28,8 @@ export function mergeWith<T, U extends object>(mergeValues: (a: T, b: T) => T): 
  */
 export function omit<T extends object>(keys: string[]): (object: T) => Partial<T> {
     return object => {
-        const entries = Object.entries(object)
-        const result = {}
+        const entries = Object.entries(object) as [string & keyof T, any][]
+        const result: Partial<T> = {}
         for (const [key, value] of entries) {
             if (!keys.includes(key)) {
                 result[key] = value
