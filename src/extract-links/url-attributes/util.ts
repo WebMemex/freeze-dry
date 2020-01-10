@@ -12,7 +12,7 @@ export function mergeWith<T, U extends object>(mergeValues: (a: T, b: T) => T): 
         const result = {}
         for (const object of objects) {
             for (const [key, value] of Object.entries(object)) {
-                result[key] = result[key] ? mergeValues(result[key], value) : value
+                result[key] = key in result ? mergeValues(result[key], value) : value
             }
         }
         return result as U
