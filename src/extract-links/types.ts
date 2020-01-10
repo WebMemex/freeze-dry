@@ -31,15 +31,26 @@ export interface Anchor {
 export interface AttributeAnchor<E extends Element, A extends string> extends Anchor {
     element: E;
     attribute: A;
-    // Range is kept optional while it is not yet implemented for the 'style' attribute
+    // Range is kept optional while it is not yet implemented for the 'style' attribute (it depends
+    // on CssAnchor.range)
     rangeWithinAttribute?: [number, number];
 }
 
 export interface TextContentAnchor<E extends Element> extends Anchor {
     element: E;
-    rangeWithinTextContent?: [number, number]; // optional because not yet implemented
+    // Range is kept optional because not yet implemented (it depends on CssAnchor.range)
+    rangeWithinTextContent?: [number, number];
 }
 
+export interface CssAnchor extends Anchor {
+    // The character position of the URL inside the stylesheet text.
+    range?: [number, number]; // optional because not yet implemented
+}
+
+
+export interface HtmlLink extends Link {
+    readonly from: AttributeAnchor<any, any> | TextContentAnchor<any>;
+}
 
 export interface SubresourceLink extends Link {
     readonly isSubresource: true;
@@ -53,50 +64,86 @@ export interface SubresourceLink extends Link {
     resource?: Resource;
 }
 
-export interface AudioLink extends SubresourceLink {
+type HtmlSubresourceLink = HtmlLink & SubresourceLink
+
+export interface HtmlAudioLink extends HtmlSubresourceLink {
     readonly subresourceType: "audio";
     readonly from: AttributeAnchor<HTMLSourceElement, "src">;
 }
 
-export interface DocumentLink extends SubresourceLink {
+export interface HtmlDocumentLink extends HtmlSubresourceLink {
     readonly subresourceType: "document";
     readonly from: AttributeAnchor<FrameElement, "src">;
 }
 
-export interface EmbedLink extends SubresourceLink {
+export interface HtmlEmbedLink extends HtmlSubresourceLink {
     readonly subresourceType: "embed";
     readonly from: AttributeAnchor<HTMLEmbedElement, "embed">;
 }
 
-export interface FontLink extends SubresourceLink {
+export interface HtmlFontLink extends HtmlSubresourceLink {
     readonly subresourceType: "font";
+    readonly from: TextContentAnchor<HTMLStyleElement>;
 }
 
-export interface ImageLink extends SubresourceLink {
+export interface HtmlImageLink extends HtmlSubresourceLink {
     readonly subresourceType: "image";
+    readonly from:
+        | AttributeAnchor<HTMLBodyElement, "background">
+        | AttributeAnchor<HTMLLinkElement, "href">
+        | AttributeAnchor<HTMLImageElement | HTMLInputElement, "src">
+        | AttributeAnchor<HTMLVideoElement, "poster">
+        | AttributeAnchor<HTMLImageElement | HTMLSourceElement, "srcset">
+        | TextContentAnchor<HTMLStyleElement>
+        ;
 }
 
-export interface ObjectLink extends SubresourceLink {
+export interface HtmlObjectLink extends HtmlSubresourceLink {
     readonly subresourceType: "object";
     readonly from: AttributeAnchor<Element, string>;
 }
 
-export interface ScriptLink extends SubresourceLink {
+export interface HtmlScriptLink extends HtmlSubresourceLink {
     readonly subresourceType: "script";
     readonly from: AttributeAnchor<HTMLScriptElement, "src">;
 }
 
-export interface StyleLink extends SubresourceLink {
+export interface HtmlStyleLink extends HtmlSubresourceLink {
     readonly subresourceType: "style";
-    readonly from: AttributeAnchor<Element, "style"> | TextContentAnchor<HTMLStyleElement>;
+    readonly from:
+        | AttributeAnchor<Element, "style">
+        | TextContentAnchor<HTMLStyleElement>
+        ;
 }
 
-export interface TrackLink extends SubresourceLink {
+export interface HtmlTrackLink extends HtmlSubresourceLink {
     readonly subresourceType: "track";
     readonly from: AttributeAnchor<HTMLTrackElement, "src">;
 }
 
-export interface VideoLink extends SubresourceLink {
+export interface HtmlVideoLink extends HtmlSubresourceLink {
     readonly subresourceType: "video";
     readonly from: AttributeAnchor<HTMLSourceElement, "src">;
+}
+
+
+// For CSS, we can easily enumerate all possible link types.
+export type CssLink = CssFontLink | CssImageLink | CssStyleLink
+
+export interface CssLink_base {
+    readonly from: CssAnchor;
+}
+
+type CssSubresourceLink = CssLink_base & SubresourceLink
+
+export interface CssFontLink extends CssSubresourceLink {
+    readonly subresourceType: "font";
+}
+
+export interface CssImageLink extends CssSubresourceLink {
+    readonly subresourceType: "image";
+}
+
+export interface CssStyleLink extends CssSubresourceLink {
+    readonly subresourceType: "style";
 }

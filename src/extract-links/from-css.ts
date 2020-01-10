@@ -3,8 +3,7 @@ import { memoizeOne, postcss, postCssValuesParser } from '../package'
 import tryParseUrl from './try-parse-url'
 import { deepSyncingProxy, transformingCache } from './parse-tools'
 import { postcssValuesParser } from 'postcss-values-parser' // seems needed to get the namespace..
-import { Link, SubresourceLink, UrlString } from './types'
-import { SubresourceType } from './url-attributes/types'
+import { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from './types'
 
 /**
  * Extract links from a stylesheet.
@@ -13,8 +12,8 @@ import { SubresourceType } from './url-attributes/types'
  * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
  * inside the stylesheet.
  */
-export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString): Link[] {
-    const links: Link[] = []
+export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString): CssLink[] {
+    const links: CssLink[] = []
 
     // Grab all @import urls
     parsedCss.walkAtRules('import', atRule => {
@@ -38,7 +37,7 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
         }
 
         if (urlNode) {
-            const link: SubresourceLink = {
+            const link: CssStyleLink = {
                 get target() { return urlNode.value },
                 set target(newUrl) {
                     urlNode.value = newUrl
@@ -48,7 +47,7 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
                     return tryParseUrl(this.target, baseUrl)
                 },
                 get isSubresource() { return true as true },
-                get subresourceType() { return 'style' },
+                get subresourceType() { return 'style' as 'style' },
                 get from() {
                     // TODO combine atRule.source.start.{line|column} with urlNode.sourceIndex
                     // But.. those numbers are not updated when the AST is mutated. Hopeless.
@@ -74,7 +73,7 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
             if (functionNode.type !== 'func') return
             if (functionNode.value !== 'url') return
 
-            let subresourceType: SubresourceType
+            let subresourceType: 'font' | 'image'
             if (
                 decl.prop === 'src'
                 && decl.parent.type === 'atrule'
@@ -90,7 +89,7 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
             if (argument.type === 'string' || argument.type === 'word') {
                 const urlNode = argument // For either type, argument.value is our URL.
 
-                const link: SubresourceLink = {
+                const link: CssFontLink | CssImageLink = {
                     get target() { return urlNode.value },
                     set target(newUrl) {
                         urlNode.value = newUrl
@@ -134,7 +133,7 @@ export function extractLinksFromCssSynced({
     get: () => string,
     set: (value: string) => void,
     baseUrl: UrlString,
-}): Link[] {
+}): CssLink[] {
     // We run two steps: string to AST to links; each getter is cached. Changes to links will
     // update the AST automatically, but we do have to write back the AST to the string.
     // cssString <===|===> parsedCss <------|===> links
@@ -158,7 +157,7 @@ export function extractLinksFromCssSynced({
     // we manually remember currentParsedCss and set() it whenever (any member of) the links object
     // has been operated on.
     let currentParsedCss: postcss.Root | null
-    const links: Link[] = deepSyncingProxy<Link[]>({
+    const links: CssLink[] = deepSyncingProxy<CssLink[]>({
         get: () => {
             try {
                 currentParsedCss = getParsedCss()

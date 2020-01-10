@@ -3,7 +3,7 @@ import { syncingParsedView } from './parse-tools'
 import { extractLinksFromCssSynced } from './from-css'
 import urlAttributes from './url-attributes/index'
 import { flatMap } from './util'
-import { UrlString, Link } from './types'
+import { UrlString, HtmlLink } from './types'
 import { AttributeInfo } from './url-attributes/types'
 
 /**
@@ -18,7 +18,7 @@ export function extractLinksFromDom(doc: Document, {
     docUrl = undefined,
 }: {
     docUrl?: UrlString,
-} = {}): Link[] {
+} = {}): HtmlLink[] {
     const baseUrl = docUrl !== undefined
         ? getBaseUrl(doc, docUrl)
         : undefined // No override; functions will read the correct value from <node>.baseURI.
@@ -40,10 +40,10 @@ function extractLinksFromAttributes({
     rootElement: Element,
     baseUrl: UrlString,
     docUrl: UrlString,
-}): Link[] {
+}): HtmlLink[] {
     // For each known attribute type, we find all elements having it.
     // Note the 'style' attribute is handled separately, in extractLinksFromStyleAttributes below.
-    const links = flatMap(Object.values(urlAttributes), attributeInfo => {
+    const links = flatMap<AttributeInfo,HtmlLink>(Object.values(urlAttributes), attributeInfo => {
         const { attribute, elements: elementNames } = attributeInfo
         const selector = elementNames
             .map(name => `${name}[${attribute}]`) // Only find elements having the attribute set.
@@ -68,7 +68,7 @@ function linksInAttribute({
     attributeInfo: AttributeInfo,
     baseUrl: UrlString,
     docUrl: UrlString,
-}): Link[] {
+}): HtmlLink[] {
     const { attribute, parse, makeAbsolute } = attributeInfo
 
     // Get a live&editable view on the URL(s) in the attribute.
@@ -78,7 +78,7 @@ function linksInAttribute({
         set: value => { element.setAttribute(attribute, value) },
     })
 
-    const links = parsedAttributeView.map(tokenView => ({
+    const links = parsedAttributeView.map<HtmlLink>(tokenView => ({
         get target() { return tokenView.token },
         set target(newUrl) { tokenView.token = newUrl },
         get absoluteTarget() {
@@ -91,7 +91,7 @@ function linksInAttribute({
                 get element() { return element },
                 get attribute() { return attribute },
                 get rangeWithinAttribute() {
-                    return [index, index + tokenView.token.length]
+                    return [index, index + tokenView.token.length] as [number, number]
                 },
             }
         },
@@ -109,11 +109,11 @@ function extractLinksFromStyleAttributes({
 }: {
     rootElement: Element,
     baseUrl: UrlString,
-}): Link[] {
+}): HtmlLink[] {
     // TODO try using element.style instead of parsing the attribute value ourselves.
     const querySelector = '*[style]'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
-    const links = flatMap(elements, element => {
+    const links = flatMap<Element, HtmlLink>(elements, element => {
         // Extract the links from the CSS using a live&editable view on the attribute value.
         const cssLinks = extractLinksFromCssSynced({
             get: () => element.getAttribute('style'),
@@ -122,9 +122,9 @@ function extractLinksFromStyleAttributes({
         })
 
         // Tweak the links to describe the 'from' info from the DOM's perspective.
-        const links = cssLinks.map(link =>
+        const links = cssLinks.map<HtmlLink>(link => {
             // Use javascript's prototype inheritance, overriding the `from` property descriptor.
-            Object.create(link, {
+            const newLink: HtmlLink = Object.create(link, {
                 from: {
                     get: () => ({
                         get element() { return element },
@@ -133,7 +133,8 @@ function extractLinksFromStyleAttributes({
                     }),
                 },
             })
-        )
+            return newLink
+        })
 
         return links // links in the style attribute of *this* element
     })
@@ -146,11 +147,11 @@ function extractLinksFromStyleTags({
 }: {
     rootElement: Element,
     baseUrl: UrlString,
-}): Link[] {
+}): HtmlLink[] {
     const querySelector = 'style[type="text/css" i], style:not([type])'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
 
-    const links = flatMap(elements, element => {
+    const links = flatMap<Element, HtmlLink>(elements, element => {
         // Extract the links from the CSS using a live&editable view on the content.
         const cssLinks = extractLinksFromCssSynced({
             get: () => element.textContent,
@@ -159,17 +160,18 @@ function extractLinksFromStyleTags({
         })
 
         // Tweak the links to describe the 'from' info from the DOM's perspective.
-        const links = cssLinks.map(link =>
+        const links = cssLinks.map<HtmlLink>(cssLink => {
             // Use javascript's prototype inheritance, overriding the `from` property descriptor.
-            Object.create(link, {
+            const htmlLink: HtmlLink = Object.create(cssLink, {
                 from: {
                     get: () => ({
                         get element() { return element },
-                        get rangeWithinTextContent() { return link.from.range },
+                        get rangeWithinTextContent() { return cssLink.from.range },
                     }),
                 },
             })
-        )
+            return htmlLink
+        })
 
         return links // links in this style element
     })
