@@ -1,6 +1,7 @@
 import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package'
 
 import { extractLinksFromDom } from './extract-links/index'
+import { HtmlDocumentLink, HtmlLink } from './extract-links/types'
 import { UrlString, FrameElement, DomResource } from './types/index'
 
 /**
@@ -37,7 +38,9 @@ export default function captureDom(
     const links = extractLinksFromDom(clonedDoc, { docUrl })
 
     // Capture the DOM inside every frame (recursively).
-    const frameLinks = links.filter(link => link.subresourceType === 'document')
+    const frameLinks: HtmlDocumentLink[] = links.filter((
+        link => link.isSubresource && link.subresourceType === 'document'
+    ) as (link: HtmlLink) => link is HtmlDocumentLink) // (this type assertion should not be necessary; bug in TypeScript?)
     frameLinks.forEach(link => {
         // Find the corresponding frame element in original document.
         const clonedFrameElement = link.from.element

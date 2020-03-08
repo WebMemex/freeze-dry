@@ -47,11 +47,21 @@ export interface CssAnchor extends Anchor {
     range?: [number, number]; // optional because not yet implemented
 }
 
+// A link defined in an HTML document.
+export type HtmlLink = HtmlNonSubresourceLink | HtmlSubresourceLink
 
-export interface HtmlLink extends Link {
+export interface HtmlLink_base extends Link {
     readonly from: AttributeAnchor<any, any> | TextContentAnchor<any>;
 }
 
+// Links that refer to resources without making them ‘part of’ the document.
+// Note the WHATWG HTML spec calls such (and *only* such) links ‘hyperlinks’ <https://html.spec.whatwg.org/multipage/links.html#hyperlink>
+export interface HtmlNonSubresourceLink extends HtmlLink_base {
+    readonly isSubresource: false;
+    readonly subresourceType: undefined;
+}
+
+// Links that make their targets ‘part of’ the document.
 export interface SubresourceLink extends Link {
     readonly isSubresource: true;
 
@@ -64,29 +74,47 @@ export interface SubresourceLink extends Link {
     resource?: Resource;
 }
 
-type HtmlSubresourceLink = HtmlLink & SubresourceLink
 
-export interface HtmlAudioLink extends HtmlSubresourceLink {
+export type HtmlSubresourceLink =
+    | HtmlUntypedLink
+    | HtmlAudioLink
+    | HtmlDocumentLink
+    | HtmlEmbedLink
+    | HtmlFontLink
+    | HtmlImageLink
+    | HtmlObjectLink
+    | HtmlScriptLink
+    | HtmlStyleLink
+    | HtmlTrackLink
+    | HtmlVideoLink
+
+type HtmlSubresourceLink_base = HtmlLink_base & SubresourceLink
+
+export interface HtmlUntypedLink extends HtmlSubresourceLink_base {
+    readonly subresourceType: undefined;
+}
+
+export interface HtmlAudioLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "audio";
     readonly from: AttributeAnchor<HTMLSourceElement, "src">;
 }
 
-export interface HtmlDocumentLink extends HtmlSubresourceLink {
+export interface HtmlDocumentLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "document";
     readonly from: AttributeAnchor<FrameElement, "src">;
 }
 
-export interface HtmlEmbedLink extends HtmlSubresourceLink {
+export interface HtmlEmbedLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "embed";
     readonly from: AttributeAnchor<HTMLEmbedElement, "embed">;
 }
 
-export interface HtmlFontLink extends HtmlSubresourceLink {
+export interface HtmlFontLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "font";
     readonly from: TextContentAnchor<HTMLStyleElement>;
 }
 
-export interface HtmlImageLink extends HtmlSubresourceLink {
+export interface HtmlImageLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "image";
     readonly from:
         | AttributeAnchor<HTMLBodyElement, "background">
@@ -98,17 +126,17 @@ export interface HtmlImageLink extends HtmlSubresourceLink {
         ;
 }
 
-export interface HtmlObjectLink extends HtmlSubresourceLink {
+export interface HtmlObjectLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "object";
     readonly from: AttributeAnchor<Element, string>;
 }
 
-export interface HtmlScriptLink extends HtmlSubresourceLink {
+export interface HtmlScriptLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "script";
     readonly from: AttributeAnchor<HTMLScriptElement, "src">;
 }
 
-export interface HtmlStyleLink extends HtmlSubresourceLink {
+export interface HtmlStyleLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "style";
     readonly from:
         | AttributeAnchor<Element, "style">
@@ -116,18 +144,17 @@ export interface HtmlStyleLink extends HtmlSubresourceLink {
         ;
 }
 
-export interface HtmlTrackLink extends HtmlSubresourceLink {
+export interface HtmlTrackLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "track";
     readonly from: AttributeAnchor<HTMLTrackElement, "src">;
 }
 
-export interface HtmlVideoLink extends HtmlSubresourceLink {
+export interface HtmlVideoLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "video";
     readonly from: AttributeAnchor<HTMLSourceElement, "src">;
 }
 
 
-// For CSS, we can easily enumerate all possible link types.
 export type CssLink = CssFontLink | CssImageLink | CssStyleLink
 
 export interface CssLink_base {

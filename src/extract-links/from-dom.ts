@@ -98,7 +98,7 @@ function linksInAttribute({
 
         // These values are constant, but we use getters anyway to emphasise they are read-only.
         get isSubresource() { return attributeInfo.isSubresource },
-        get subresourceType() { return attributeInfo.subresourceType },
+        get subresourceType() { return attributeInfo.subresourceType }, // TODO fix type
     }))
     return links
 }
