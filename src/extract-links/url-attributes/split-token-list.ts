@@ -5,8 +5,8 @@ const splitByRegex: (regex: RegExp) => Parser = regex => value => {
     let remainder = value
     let remainderIndex = 0
     while (remainder.length > 0) {
-        const match = remainder.match(regex)
-        // No check for match===null needed; the regexes given below produce a match on any string.
+        const match = remainder.match(regex) as RegExpMatchArray
+        // (match is never null, as the regexes given below match on any string)
         const leadingWhitespace = match[1]
         const token = match[2]
         if (token.length > 0) { // I suppose we can simply omit empty (= invalid?) tokens..

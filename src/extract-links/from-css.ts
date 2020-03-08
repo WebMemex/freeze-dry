@@ -17,26 +17,27 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
 
     // Grab all @import urls
     parsedCss.walkAtRules('import', atRule => {
-        let valueAst: postcssValuesParser.Node | undefined
+        let valueAst: postcssValuesParser.Node
         try {
             valueAst = postCssValuesParser(atRule.params).parse()
         } catch (err) {
             return // We ignore values we cannot parse.
         }
 
-        let urlNode: postcssValuesParser.Node | undefined
+        let maybeUrlNode: postcssValuesParser.Node | undefined
         const firstNode = valueAst.nodes[0].nodes[0]
         if (firstNode.type === 'string') {
-            urlNode = firstNode
+            maybeUrlNode = firstNode
         }
         else if (firstNode.type === 'func' && firstNode.value === 'url') {
             const argument = firstNode.nodes[1] // nodes[0] is the opening parenthesis.
             if (argument.type === 'string' || argument.type === 'word') {
-                urlNode = argument // For either type, argument.value is our URL.
+                maybeUrlNode = argument // For either type, argument.value is our URL.
             }
         }
 
-        if (urlNode) {
+        if (maybeUrlNode) {
+            const urlNode = maybeUrlNode
             const link: CssStyleLink = {
                 get target() { return urlNode.value },
                 set target(newUrl) {
@@ -62,7 +63,7 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
     // Grab every url(...) inside a property value; also gets those within @font-face.
     parsedCss.walkDecls(decl => {
         // TODO Possible future optimisation: only parse props known to allow a URL.
-        let valueAst: postcssValuesParser.Node | undefined
+        let valueAst: postcssValuesParser.Node
         try {
             valueAst = postCssValuesParser(decl.value).parse()
         } catch (err) {

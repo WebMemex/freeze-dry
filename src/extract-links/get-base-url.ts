@@ -11,9 +11,12 @@ export default function getBaseUrl(doc: Document, docUrl: UrlString = doc.URL): 
     const baseEl = doc.querySelector('base[href]')
     if (baseEl) {
         // Interpret the base href relative to the document URL
-        const baseUrl = tryParseUrl(baseEl.getAttribute('href'), docUrl)
-        if (baseUrl) {
-            return baseUrl
+        const baseHref = baseEl.getAttribute('href')
+        if (baseHref !== null) {
+            const baseUrl = tryParseUrl(baseHref, docUrl)
+            if (baseUrl) {
+                return baseUrl
+            }
         }
     }
 

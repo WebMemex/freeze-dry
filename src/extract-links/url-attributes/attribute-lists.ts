@@ -39,7 +39,7 @@ const defaultItem: Omit<AttributeInfo, 'attribute'> = {
         element,
         // We allow the caller to override the document's URL and base URL.
         baseUrl = element.baseURI,
-        documentURL = element.ownerDocument.URL,
+        documentURL = (element.ownerDocument !== null) ? element.ownerDocument.URL : undefined,
     ) {
         // Normally, the URL is simply relative to the document's base URL.
         return tryParseUrl(url, baseUrl)
@@ -246,7 +246,12 @@ export const html52: AttributeInfoDict = {
         elements: ['html'],
         isSubresource: true,
         // subresourceType? Maybe 'manifest'? Confusion with <link rel=manifest>
-        makeAbsolute(url, element, _, documentURL = element.ownerDocument.URL) {
+        makeAbsolute(
+            url,
+            element,
+            _,
+            documentURL = (element.ownerDocument !== null) ? element.ownerDocument.URL : undefined,
+        ) {
             // The manifest is not influenced by a <base href="..."> tag.
             return tryParseUrl(url, documentURL)
         },

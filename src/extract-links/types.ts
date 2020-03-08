@@ -11,7 +11,8 @@ export interface Link {
 
     // The link's target URL as an absolute URL. This takes into account factors like the <base
     // href="..."> tag, so usually you may prefer to use `absoluteTarget` rather than `target`.
-    readonly absoluteTarget: UrlString;
+    // If the target is not a valid (relative) URL, absoluteTarget equals undefined.
+    readonly absoluteTarget?: UrlString;
 
     // A boolean indicating whether the resource being linked to is normally considered a
     // subresource of the document. For example, the `src` of an `<img>` tag specifies a subresource

@@ -107,11 +107,14 @@ export function transformingCache<T1, T2>({
 } {
     const uninitialised = Symbol('uninitialised')
     let lastValue: T1 | typeof uninitialised = uninitialised
-    let lastTransformedValue: T2 | undefined
+    let lastTransformedValue: T2 | typeof uninitialised = uninitialised
     return {
         get() {
             const newValue = get()
-            if (lastValue === uninitialised || !isEqual(newValue, lastValue)) {
+            if (lastValue === uninitialised
+                || !isEqual(newValue, lastValue)
+                || lastTransformedValue === uninitialised // (this line should be superfluous)
+            ) {
                 lastTransformedValue = transform(newValue)
             }
             lastValue = newValue
@@ -119,7 +122,7 @@ export function transformingCache<T1, T2>({
         },
         // trustCache allows skipping the get(); for optimisation in case you can guarantee that the
         // value has not changed since the previous get or set (e.g. in an atomic update).
-        set(transformedValue, { trustCache = false } = {}) {
+        set(transformedValue, { trustCache = false }: { trustCache?: boolean } = {}) {
             // Idea: return directly if the transformed value is equal and known to be immutable.
             const newValue = untransform(transformedValue)
             const currentValue = trustCache ? lastValue : get()

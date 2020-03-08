@@ -38,8 +38,8 @@ function extractLinksFromAttributes({
     docUrl,
 }: {
     rootElement: Element,
-    baseUrl: UrlString,
-    docUrl: UrlString,
+    baseUrl?: UrlString,
+    docUrl?: UrlString,
 }): HtmlLink[] {
     // For each known attribute type, we find all elements having it.
     // Note the 'style' attribute is handled separately, in extractLinksFromStyleAttributes below.
@@ -66,15 +66,16 @@ function linksInAttribute({
 }: {
     element: Element,
     attributeInfo: AttributeInfo,
-    baseUrl: UrlString,
-    docUrl: UrlString,
+    baseUrl?: UrlString,
+    docUrl?: UrlString,
 }): HtmlLink[] {
     const { attribute, parse, makeAbsolute } = attributeInfo
 
     // Get a live&editable view on the URL(s) in the attribute.
     const parsedAttributeView = syncingParsedView({
         parse,
-        get: () => element.getAttribute(attribute),
+        // XXX We treat an absent attribute as an empty string; feels slightly wrong.
+        get: () => element.getAttribute(attribute) || '',
         set: value => { element.setAttribute(attribute, value) },
     })
 
@@ -108,7 +109,7 @@ function extractLinksFromStyleAttributes({
     baseUrl,
 }: {
     rootElement: Element,
-    baseUrl: UrlString,
+    baseUrl?: UrlString,
 }): HtmlLink[] {
     // TODO try using element.style instead of parsing the attribute value ourselves.
     const querySelector = '*[style]'
@@ -116,7 +117,8 @@ function extractLinksFromStyleAttributes({
     const links = flatMap<Element, HtmlLink>(elements, element => {
         // Extract the links from the CSS using a live&editable view on the attribute value.
         const cssLinks = extractLinksFromCssSynced({
-            get: () => element.getAttribute('style'),
+            // XXX We treat an absent attribute as an empty string; feels slightly wrong.
+            get: () => element.getAttribute('style') || '',
             set: newValue => { element.setAttribute('style', newValue) },
             baseUrl: baseUrl || element.baseURI,
         })
@@ -146,7 +148,7 @@ function extractLinksFromStyleTags({
     baseUrl,
 }: {
     rootElement: Element,
-    baseUrl: UrlString,
+    baseUrl?: UrlString,
 }): HtmlLink[] {
     const querySelector = 'style[type="text/css" i], style:not([type])'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
@@ -154,7 +156,8 @@ function extractLinksFromStyleTags({
     const links = flatMap<Element, HtmlLink>(elements, element => {
         // Extract the links from the CSS using a live&editable view on the content.
         const cssLinks = extractLinksFromCssSynced({
-            get: () => element.textContent,
+            // A <style> element's textContent should never be null, but we please the type checker.
+            get: () => element.textContent || '',
             set: newValue => { element.textContent = newValue },
             baseUrl: baseUrl || element.baseURI,
         })
