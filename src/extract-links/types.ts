@@ -102,7 +102,7 @@ export interface HtmlUntypedLink extends HtmlSubresourceLink_base {
 
 export interface HtmlAudioLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "audio";
-    readonly from: AttributeAnchor<HTMLSourceElement, "src">;
+    readonly from: AttributeAnchor<HTMLAudioElement | HTMLSourceElement, "src">;
 }
 
 export interface HtmlDocumentLink extends HtmlSubresourceLink_base {
@@ -130,12 +130,13 @@ export interface HtmlImageLink extends HtmlSubresourceLink_base {
         | AttributeAnchor<HTMLVideoElement, "poster">
         | AttributeAnchor<HTMLImageElement | HTMLSourceElement, "srcset">
         | TextContentAnchor<HTMLStyleElement>
+        | AttributeAnchor<HTMLElement, "style">
         ;
 }
 
 export interface HtmlObjectLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "object";
-    readonly from: AttributeAnchor<Element, string>;
+    readonly from: AttributeAnchor<HTMLObjectElement, "data">;
 }
 
 export interface HtmlScriptLink extends HtmlSubresourceLink_base {
@@ -146,7 +147,7 @@ export interface HtmlScriptLink extends HtmlSubresourceLink_base {
 export interface HtmlStyleLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "style";
     readonly from:
-        | AttributeAnchor<Element, "style">
+        | AttributeAnchor<HTMLLinkElement, "href">
         | TextContentAnchor<HTMLStyleElement>
         ;
 }
@@ -158,7 +159,10 @@ export interface HtmlTrackLink extends HtmlSubresourceLink_base {
 
 export interface HtmlVideoLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "video";
-    readonly from: AttributeAnchor<HTMLSourceElement, "src">;
+    readonly from:
+        | AttributeAnchor<HTMLSourceElement, "src">
+        | AttributeAnchor<HTMLVideoElement, "src">
+        ;
 }
 
 export type HtmlAttributeDefinedLink = HtmlLink & { from: AttributeAnchor<any, any> }
