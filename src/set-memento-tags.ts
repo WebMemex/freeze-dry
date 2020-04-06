@@ -8,7 +8,13 @@
  * @param {string} [options.originalUrl] - The page's original location.
  * @returns nothing; doc is mutated.
  */
-export default function setMementoTags(doc, { originalUrl, datetime }) {
+export default function setMementoTags(doc: Document, {
+    originalUrl,
+    datetime
+}: {
+    originalUrl?: string,
+    datetime?: Date,
+}) {
     // Ensure a head element exists.
     if (!doc.head) {
         const head = doc.createElement('head')
@@ -33,13 +39,13 @@ export default function setMementoTags(doc, { originalUrl, datetime }) {
 }
 
 // Produces an RFC 1123 datetime string, hard-coded to use GMT as its timezone, as Memento requires.
-function datetimeToString(datetime) {
+function datetimeToString(datetime: Date) {
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ]
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    const zeropad = l => n => `${Array(l - `${n}`.length).fill('0').join('')}${n}`
+    const zeropad = (l: number) => (n: number) => `${n}`.padStart(l, '0')
     const datetimeString =
         weekdays[datetime.getUTCDay()]
         + ', '

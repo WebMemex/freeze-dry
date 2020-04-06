@@ -5,7 +5,7 @@ import removeScripts from './remove-scripts'
  * @param {Document} doc - the Document to be modified.
  * @returns nothing; doc is mutated.
  */
-export default function makeDomStatic(doc) {
+export default function makeDomStatic(doc: Document) {
     // Remove all javascript.
     removeScripts(doc.documentElement)
 
@@ -14,10 +14,11 @@ export default function makeDomStatic(doc) {
     // TODO We should know whether noscript content was visible, and if so keep it in the doc.
     // TODO Keep noscript content in fetched iframe docs, as scripts have not been executed there?
     const noscripts = Array.from(doc.querySelectorAll('noscript'))
-    noscripts.forEach(element => element.parentNode.removeChild(element))
+    noscripts.forEach(element => element.parentNode?.removeChild(element))
 
     // Disable editing on editable elements
     const editableElements = Array.from(doc.querySelectorAll('*[contenteditable]'))
+        .filter((element: Element): element is HTMLElement => element instanceof HTMLElement)
     editableElements.forEach(element => {
         element.contentEditable = 'false'
         // TODO Reapply any style rules that matched only when contenteditable was set.

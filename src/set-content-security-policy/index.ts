@@ -4,7 +4,7 @@
  * @param {string} csp - the desired value of the Content Security Policy.
  * @returns nothing; doc is mutated.
  */
-export default function setContentSecurityPolicy(doc, csp) {
+export default function setContentSecurityPolicy(doc: Document, csp: string) {
     // Ensure a head element exists.
     if (!doc.head) {
         const head = doc.createElement('head')
@@ -13,7 +13,7 @@ export default function setContentSecurityPolicy(doc, csp) {
 
     // Remove any existing CSPs (relevant for idempotency; i.e. snapshotting a snapshot)
     const existingCsps = doc.head.querySelectorAll('meta[http-equiv=Content-Security-Policy i]')
-    existingCsps.forEach(element => element.parentNode.removeChild(element))
+    existingCsps.forEach(element => element.parentNode?.removeChild(element))
 
     // Insert a <meta> tag with the CSP at the start of the <head>
     const cspMetaEl = doc.createElement('meta')

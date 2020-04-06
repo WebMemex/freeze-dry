@@ -1,8 +1,7 @@
 import { UrlString } from '../types'
 
-export type SubresourceType = 'audio' | 'audioworklet' | 'document' | 'embed' | 'font' | 'image'
-    | 'manifest' | 'object' | 'paintworklet' | 'report' | 'script' | 'serviceworker'
-    | 'sharedworker' | 'style' | 'track' | 'video' | 'worker' | 'xslt'
+export type SubresourceType = 'audio' | 'document' | 'embed' | 'font' | 'image' | 'object'
+    | 'script' | 'style' | 'track' | 'video'
 
 export interface AttributeInfo {
     readonly attribute: string,

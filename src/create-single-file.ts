@@ -3,6 +3,16 @@ import { blobToDataURL, whenAllSettled } from './package'
 import setMementoTags from './set-memento-tags'
 import setCharsetDeclaration from './set-charset-declaration'
 import setContentSecurityPolicy from './set-content-security-policy/index'
+import { DomResource, Resource } from './types'
+import { Link, HtmlAttributeDefinedLink } from './extract-links/types'
+
+
+interface CreateSingleFileOptions {
+    charsetDeclaration?: string | null,
+    addMetadata?: boolean,
+    keepOriginalAttributes?: boolean,
+    snapshotTime?: Date,
+}
 
 /**
  * Serialises the DOM resource+subresources into a single, self-contained string of HTML.
@@ -10,16 +20,18 @@ import setContentSecurityPolicy from './set-content-security-policy/index'
  * be mutated.
  * @returns {string} html - the resulting HTML.
  */
-export default async function createSingleFile(resource, {
+export default async function createSingleFile(resource: DomResource, {
     charsetDeclaration,
     addMetadata,
     keepOriginalAttributes,
     snapshotTime,
-} = {}) {
+}: CreateSingleFileOptions = {}) {
     await deepInlineSubresources(resource, { keepOriginalAttributes })
 
     // Create/replace the <meta charset> element.
-    setCharsetDeclaration(resource.doc, charsetDeclaration)
+    if (charsetDeclaration !== undefined) {
+        setCharsetDeclaration(resource.doc, charsetDeclaration)
+    }
 
     if (addMetadata) {
         // Add metadata about the snapshot to the snapshot itself.
@@ -48,14 +60,14 @@ export default async function createSingleFile(resource, {
  * @param {Object} options
  * @returns nothing; the resource will be mutated.
  */
-async function deepInlineSubresources(resource, options = {}) {
+async function deepInlineSubresources(resource: Resource, options: CreateSingleFileOptions = {}) {
     await whenAllSettled(
-        resource.links.map(async link => {
+        (resource.links as Link[]).map(async link => {
             if (!link.isSubresource) {
-                // The link is not a resource, nothing to do.
+                // Nothing to do.
                 return
             } else if (!link.resource) {
-                // The link is a resource, but we do not have the resource's content.
+                // The link defines a subresource, but we do not have the resource's content.
                 // TODO we may want to do something here. Turn target into about:invalid? For
                 // now, we rely on the content security policy to prevent loading this resource.
                 return
@@ -72,10 +84,14 @@ async function deepInlineSubresources(resource, options = {}) {
     )
 }
 
-function setLinkTarget(link, target, { keepOriginalAttributes } = {}) {
+function setLinkTarget(
+    link: Link,
+    target: string,
+    { keepOriginalAttributes }: CreateSingleFileOptions = {},
+) {
     // Optionally, remember the attribute's original value (if applicable).
     // TODO should this be done elsewhere? Perhaps the link.target setter?
-    if (keepOriginalAttributes && link.from.element && link.from.attribute) {
+    if (isHtmlAttributeDefinedLink(link) && keepOriginalAttributes) {
         const noteAttribute = `data-original-${link.from.attribute}`
         // Multiple links may be contained in one attribute (e.g. a srcset); we must act
         // only at the first one, therefore we check for existence of the noteAttribute.
@@ -94,8 +110,13 @@ function setLinkTarget(link, target, { keepOriginalAttributes } = {}) {
     // Remove integrity attribute, if any. (should only be necessary if the content of the
     // subresource has been modified, but we keep things simple and blunt)
     // TODO should this be done elsewhere? Perhaps the link.target setter?
-    if (link.from.element && link.from.element.hasAttribute('integrity')) {
+    if (isHtmlAttributeDefinedLink(link) && link.from.element.hasAttribute('integrity')) {
         link.from.element.removeAttribute('integrity')
         // (we could also consider modifying or even adding integrity attributes..)
     }
+}
+
+function isHtmlAttributeDefinedLink(link: Link): link is HtmlAttributeDefinedLink {
+    return (link as HtmlAttributeDefinedLink).from.element
+        && (link as HtmlAttributeDefinedLink).from.attribute
 }

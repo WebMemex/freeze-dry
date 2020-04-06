@@ -2,10 +2,7 @@ import captureDom from './capture-dom'
 import crawlSubresourcesOfDom from './crawl-subresources'
 import dryResources from './dry-resources'
 import createSingleFile from './create-single-file'
-import { UrlString } from './types/index'
-
-type Fetchy = typeof self.fetch
-    | ((...args: Parameters<typeof self.fetch>) => { blob: Blob, url: UrlString })
+import { UrlString, Fetchy } from './types/index'
 
 /**
  * Freeze dry an HTML Document

@@ -5,7 +5,7 @@
  * @param {string} charsetDeclaration - the character set name (usually 'utf8')
  * @returns nothing; doc is mutated.
  */
-export default function setCharsetDeclaration(doc, charsetDeclaration) {
+export default function setCharsetDeclaration(doc: Document, charsetDeclaration: string | null) {
     // Ensure a head element exists.
     if (!doc.head) {
         const head = doc.createElement('head')
@@ -14,7 +14,7 @@ export default function setCharsetDeclaration(doc, charsetDeclaration) {
 
     // Remove any existing <meta charset> elements
     const existingElements = doc.head.querySelectorAll('meta[charset]')
-    existingElements.forEach(element => element.parentNode.removeChild(element))
+    existingElements.forEach(element => element.parentNode?.removeChild(element))
 
     // Create a new <meta charset> element if a value for it has been given.
     if (charsetDeclaration !== null && charsetDeclaration !== '') {

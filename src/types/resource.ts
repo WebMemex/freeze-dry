@@ -1,7 +1,9 @@
 import { UrlString } from './util'
-import { Link } from '../extract-links/types'
+import { Link, CssLink } from '../extract-links/types'
 
-export interface Resource {
+export type Resource = DomResource | StylesheetResource | LeafResource
+
+interface Resource_base {
     // URL of the resource.
     readonly url: UrlString;
 
@@ -15,7 +17,7 @@ export interface Resource {
     readonly links: Link[];
 }
 
-export interface DomResource extends Resource {
+export interface DomResource extends Resource_base {
     // Holds the Document object.
     readonly doc: Document;
 
@@ -23,6 +25,12 @@ export interface DomResource extends Resource {
     readonly string: string;
 }
 
-export interface StylesheetResource extends Resource {
+export interface StylesheetResource extends Resource_base {
     readonly string: string;
+    readonly links: CssLink[];
+    readonly doc?: undefined; // (explicitly undefined to make .doc a discriminant for DomResource)
+}
+
+export interface LeafResource extends Resource_base {
+    readonly doc?: undefined; // (explicitly undefined to make .doc a discriminant for DomResource)
 }
