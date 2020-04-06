@@ -1,4 +1,4 @@
-import { blobToDataURL, whenAllSettled } from './package'
+import { blobToDataURL } from './package'
 
 import setMementoTags from './set-memento-tags'
 import setCharsetDeclaration from './set-charset-declaration'
@@ -61,7 +61,7 @@ export default async function createSingleFile(resource: DomResource, {
  * @returns nothing; the resource will be mutated.
  */
 async function deepInlineSubresources(resource: Resource, options: CreateSingleFileOptions = {}) {
-    await whenAllSettled(
+    await Promise.allSettled(
         (resource.links as Link[]).map(async link => {
             if (!link.isSubresource) {
                 // Nothing to do.

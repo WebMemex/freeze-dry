@@ -1,4 +1,4 @@
-import { whenAllSettled, postcss, documentOuterHTML } from './package'
+import { postcss, documentOuterHTML } from './package'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
 import { Resource, UrlString, DomResource, Fetchy, StylesheetResource } from './types/index'
@@ -33,7 +33,7 @@ async function crawlSubresourcesOfDom(resource: DomResource, options: crawlSubre
 export default crawlSubresourcesOfDom
 
 async function crawlSubresources(links: SubresourceLink[], options: crawlSubresourcesOptions) {
-    await whenAllSettled(links.map(link => crawlSubresource(link, options)))
+    await Promise.allSettled(links.map(link => crawlSubresource(link, options)))
 }
 
 async function crawlSubresource(link: SubresourceLink, options: crawlSubresourcesOptions) {

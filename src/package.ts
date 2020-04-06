@@ -17,5 +17,3 @@ import postcss from 'postcss'
 export { postcss }
 import postCssValuesParser from 'postcss-values-parser'
 export { postCssValuesParser }
-import whenAllSettled from 'when-all-settled'
-export { whenAllSettled }

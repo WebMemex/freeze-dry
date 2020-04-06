@@ -29,7 +29,7 @@
     "jest-cli": "^24.8.0",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
-    "typescript": "^3.7.4"
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "@babel/runtime": "^7.4.5",
@@ -41,8 +41,7 @@
     "mutable-proxy": "^1.0.0",
     "path-to-domnode": "^1.0.1",
     "postcss": "^7.0.1",
-    "postcss-values-parser": "^1.5.0",
-    "when-all-settled": "^0.1.1"
+    "postcss-values-parser": "^1.5.0"
   },
   "jest": {
     "testURL": "https://example.com/test/page"
