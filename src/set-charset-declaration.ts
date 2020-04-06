@@ -17,7 +17,7 @@ export default function setCharsetDeclaration(doc, charsetDeclaration) {
     existingElements.forEach(element => element.parentNode.removeChild(element))
 
     // Create a new <meta charset> element if a value for it has been given.
-    if (charsetDeclaration !== '') {
+    if (charsetDeclaration !== null && charsetDeclaration !== '') {
         const metaEl = doc.createElement('meta')
         metaEl.setAttribute('charset', charsetDeclaration)
         doc.head.insertBefore(metaEl, doc.head.firstChild)

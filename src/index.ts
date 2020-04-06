@@ -16,7 +16,7 @@ type Fetchy = typeof self.fetch
  * @param {string} [options.docUrl] - URL to override doc.URL.
  * @param {string} [options.charsetDeclaration='utf-8'] - The value put into the <meta charset="…">
  * element of the snapshot. If you will store/serve the returned string using an encoding other than
- * UTF8, pass its name here; or pass an empty string to omit the declaration altogether.
+ * UTF8, pass its name here; or pass null or an empty string to omit the declaration altogether.
  * @param {boolean} [options.addMetadata=true] - Whether to note the snapshotting time and the
  * document's URL in an extra meta and link tag.
  * @param {boolean} [options.keepOriginalAttributes=true] - Whether to preserve the value of an
@@ -40,7 +40,7 @@ export default async function freezeDry(doc: Document = window.document, {
 } : {
     timeout?: number,
     docUrl?: UrlString,
-    charsetDeclaration?: string,
+    charsetDeclaration?: string | null,
     addMetadata?: boolean,
     keepOriginalAttributes?: boolean,
     fetchResource?: Fetchy,
