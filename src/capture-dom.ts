@@ -47,7 +47,7 @@ export default function captureDom(
         const originalFrameElement = domNodeAtPath(
             pathForDomNode(clonedFrameElement, clonedDoc),
             originalDoc,
-        )
+        ) as FrameElement
 
         // Get the document inside the frame.
         const innerDoc = getDocInFrame(originalFrameElement)
