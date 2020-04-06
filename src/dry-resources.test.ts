@@ -1,4 +1,5 @@
 import { allResourcesInTree, makeLinksAbsolute } from './dry-resources'
+import { Resource } from './types'
 
 let testResource
 
@@ -9,12 +10,14 @@ beforeEach(() => {
             {
                 target: 'aa',
                 absoluteTarget: 'abs:aa',
+                isSubresource: true,
                 resource: {
                     url: 'abs:aa',
                     links: [
                         {
                             target: 'aaa',
                             absoluteTarget: 'abs:aaa',
+                            isSubresource: true,
                             resource: { url: 'abs:aaa', links: [] },
                         },
                     ],
@@ -23,6 +26,7 @@ beforeEach(() => {
             {
                 target: 'ab',
                 absoluteTarget: 'abs:ab',
+                isSubresource: true,
                 resource: { url: 'abs:ab', links: [] },
             },
             {
@@ -60,7 +64,7 @@ describe('makeLinksAbsolute', () => {
                 },
             ],
         }
-        makeLinksAbsolute(testResource)
+        makeLinksAbsolute(testResource as Resource)
 
         expect(testResource.links[0].target).toEqual('#top')
     })
@@ -79,7 +83,7 @@ describe('makeLinksAbsolute', () => {
                 },
             ],
         }
-        makeLinksAbsolute(testResource)
+        makeLinksAbsolute(testResource as Resource)
 
         expect(testResource.links[0].target).toEqual('#top')
         expect(testResource.links[1].target).toEqual('#top')

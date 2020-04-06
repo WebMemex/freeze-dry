@@ -3,9 +3,10 @@ import jsdom from 'jsdom'
 import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Request, ...
 import { dataURLToBlob } from 'blob-util'
 
-import freezeDry from '../src/index.ts'
+import freezeDry from '../src/index'
 
-global.fetch = jestFetchMock
+const fetch = jestFetchMock
+Object.assign(global, { fetch })
 beforeEach(() => {
     fetch.mockImplementation(mockFetch)
 })
@@ -79,7 +80,7 @@ test('should use the given docUrl', async () => {
 })
 
 test('should respect the addMetadata option', async () => {
-    const testWithOption = async addMetadata => {
+    const testWithOption = async (addMetadata?) => {
         const doc = await getExampleDoc()
 
         const result = await freezeDry(doc, { addMetadata })
@@ -94,7 +95,7 @@ test('should respect the addMetadata option', async () => {
 })
 
 test('should respect the keepOriginalAttributes option', async () => {
-    const testWithOption = async keepOriginalAttributes => {
+    const testWithOption = async (keepOriginalAttributes?) => {
         const doc = await getExampleDoc()
 
         const result = await freezeDry(doc, { keepOriginalAttributes })
@@ -142,14 +143,14 @@ test('should work if the custom fetchResource function returns a simple object',
     expect(result).toEqual(expectedResult)
 })
 
-async function getExampleDoc() {
+async function getExampleDoc(): Promise<Document> {
     const docUrl = 'https://example.com/main/page.html'
     const docHtml = await (await fetch(docUrl)).text()
     const doc = await makeDom(docHtml, docUrl)
     return doc
 }
 
-async function makeDom(docHtml, docUrl) {
+async function makeDom(docHtml: string, docUrl: string = undefined): Promise<Document> {
     const dom = new jsdom.JSDOM(docHtml, {
         url: docUrl,
         resources: new MockResourceLoader(),
@@ -170,7 +171,7 @@ async function makeDom(docHtml, docUrl) {
 }
 
 class MockResourceLoader extends jsdom.ResourceLoader {
-    async fetch(url, options) {
+    async fetch(url: string, options) {
         const response = await mockFetch(url)
         const text = await response.text()
         return Buffer.from(text)
@@ -178,7 +179,7 @@ class MockResourceLoader extends jsdom.ResourceLoader {
 }
 
 // A fetch function that reads the subresources from local files.
-async function mockFetch(url) {
+async function mockFetch(url: string) {
     const websiteOrigin = 'https://example.com'
     const basedir = __dirname + '/example-page'
 
@@ -196,14 +197,14 @@ async function mockFetch(url) {
         const mimeType = extensionTypes[url.split('.').reverse()[0]]
         const blob = new Blob([content], { type: mimeType })
         const response = new Response(blob, { status: 200 })
-        response.url = url
+        Object.assign(response, { url })
         return response
     }
 
     if (url.startsWith('data:')) {
         const blob = await dataURLToBlob(url)
         const response = new Response(blob, { status: 200 })
-        response.url = url
+        Object.assign(response, { url })
         return response
     }
 

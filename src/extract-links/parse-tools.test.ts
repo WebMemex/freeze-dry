@@ -300,7 +300,7 @@ describe('makeListenerProxy', () => {
         const after = jest.fn((method, [target, ...args]) => { xAfter = target.x })
 
         const object = { x: 1, y: 2 }
-        const proxy = makeListenerProxy(before, after)(object)
+        const proxy = makeListenerProxy<typeof object>(before, after)(object)
 
         proxy.x = 4
 
