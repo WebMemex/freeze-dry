@@ -25,9 +25,9 @@
     "@babel/preset-typescript": "^7.9.0",
     "@types/jest": "^24.0.25",
     "@types/node": "^13.11.0",
-    "babel-jest": "^24.8.0",
-    "jest": "^24.8.0",
-    "jest-cli": "^24.8.0",
+    "babel-jest": "^25.2.6",
+    "jest": "^25.2.7",
+    "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
     "typescript": "^3.8.3"
