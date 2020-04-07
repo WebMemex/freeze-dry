@@ -1,0 +1,13 @@
+{
+  "env": {
+    "es2020": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "ignorePatterns": ["*.test.ts"],
+  "rules": {
+    "no-undef": "error"
+  }
+}

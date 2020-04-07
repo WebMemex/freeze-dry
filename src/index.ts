@@ -1,3 +1,4 @@
+/* global window */
 import { flatOptions } from './package'
 
 import captureDom from './capture-dom'
