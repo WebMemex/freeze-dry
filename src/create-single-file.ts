@@ -3,16 +3,15 @@ import { blobToDataURL } from './package'
 import setMementoTags from './set-memento-tags'
 import setCharsetDeclaration from './set-charset-declaration'
 import setContentSecurityPolicy from './set-content-security-policy/index'
-import { DomResource, Resource } from './types'
+import { DomResource, Resource, GlobalConfig } from './types'
 import { Link, HtmlAttributeDefinedLink } from './extract-links/types'
 
-
-interface CreateSingleFileOptions {
-    charsetDeclaration?: string | null,
-    addMetadata?: boolean,
-    keepOriginalAttributes?: boolean,
-    snapshotTime?: Date,
-}
+type CreateSingleFileConfig = Pick<GlobalConfig,
+    | 'charsetDeclaration'
+    | 'addMetadata'
+    | 'keepOriginalAttributes'
+    | 'now'
+>
 
 /**
  * Serialises the DOM resource+subresources into a single, self-contained string of HTML.
@@ -20,22 +19,20 @@ interface CreateSingleFileOptions {
  * be mutated.
  * @returns {string} html - the resulting HTML.
  */
-export default async function createSingleFile(resource: DomResource, {
-    charsetDeclaration,
-    addMetadata,
-    keepOriginalAttributes,
-    snapshotTime,
-}: CreateSingleFileOptions = {}) {
-    await deepInlineSubresources(resource, { keepOriginalAttributes })
+export default async function createSingleFile(
+    resource: DomResource,
+    config: CreateSingleFileConfig
+): Promise<string> {
+    await deepInlineSubresources(resource, config)
 
     // Create/replace the <meta charset> element.
-    if (charsetDeclaration !== undefined) {
-        setCharsetDeclaration(resource.doc, charsetDeclaration)
+    if (config.charsetDeclaration !== undefined) {
+        setCharsetDeclaration(resource.doc, config.charsetDeclaration)
     }
 
-    if (addMetadata) {
+    if (config.addMetadata) {
         // Add metadata about the snapshot to the snapshot itself.
-        setMementoTags(resource.doc, { originalUrl: resource.url, datetime: snapshotTime })
+        setMementoTags(resource.doc, { originalUrl: resource.url, datetime: config.now })
     }
 
     // Set a strict Content Security Policy in a <meta> tag.
@@ -60,7 +57,7 @@ export default async function createSingleFile(resource: DomResource, {
  * @param {Object} options
  * @returns nothing; the resource will be mutated.
  */
-async function deepInlineSubresources(resource: Resource, options: CreateSingleFileOptions = {}) {
+async function deepInlineSubresources(resource: Resource, config: CreateSingleFileConfig) {
     await Promise.allSettled(
         (resource.links as Link[]).map(async link => {
             if (!link.isSubresource) {
@@ -74,12 +71,12 @@ async function deepInlineSubresources(resource: Resource, options: CreateSingleF
             }
 
             // First recurse into the linked subresource, so we start at the tree's leaves.
-            await deepInlineSubresources(link.resource, options)
+            await deepInlineSubresources(link.resource, config)
 
             // Convert the (now self-contained) subresource into a data URL.
             const dataUrl = await blobToDataURL(link.resource.blob)
 
-            setLinkTarget(link, dataUrl, options)
+            setLinkTarget(link, dataUrl, config)
         }),
     )
 }
@@ -87,7 +84,7 @@ async function deepInlineSubresources(resource: Resource, options: CreateSingleF
 function setLinkTarget(
     link: Link,
     target: string,
-    { keepOriginalAttributes }: CreateSingleFileOptions = {},
+    { keepOriginalAttributes }: CreateSingleFileConfig,
 ) {
     // Optionally, remember the attribute's original value (if applicable).
     // TODO should this be done elsewhere? Perhaps the link.target setter?

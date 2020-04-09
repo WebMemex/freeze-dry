@@ -1,8 +1,10 @@
+import { flatOptions } from './package'
+
 import captureDom from './capture-dom'
 import crawlSubresourcesOfDom from './crawl-subresources'
 import dryResources from './dry-resources'
 import createSingleFile from './create-single-file'
-import { UrlString, Fetchy } from './types/index'
+import { GlobalConfig } from './types/index'
 
 /**
  * Freeze dry an HTML Document
@@ -26,42 +28,35 @@ import { UrlString, Fetchy } from './types/index'
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
-export default async function freezeDry(doc: Document = window.document, {
-    timeout = Infinity,
-    docUrl,
-    charsetDeclaration = 'utf-8',
-    addMetadata = true,
-    keepOriginalAttributes = true,
-    fetchResource,
-    now = new Date(),
-} : {
-    timeout?: number,
-    docUrl?: UrlString,
-    charsetDeclaration?: string | null,
-    addMetadata?: boolean,
-    keepOriginalAttributes?: boolean,
-    fetchResource?: Fetchy,
-    now?: Date,
-} = {}): Promise<string> {
+export default async function freezeDry(
+    doc: Document = window.document,
+    options: Partial<GlobalConfig> = {},
+): Promise<string> {
+    const defaultOptions: GlobalConfig = {
+        timeout: Infinity,
+        docUrl: undefined,
+        charsetDeclaration: 'utf-8',
+        addMetadata: true,
+        keepOriginalAttributes: true,
+        now: new Date(),
+        fetchResource: undefined,
+    }
+    const config: GlobalConfig = flatOptions(options, defaultOptions)
+
     // Step 1: Capture the DOM (as well as DOMs inside frames).
-    const resource = captureDom(doc, { docUrl })
+    const resource = captureDom(doc, config)
 
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
     // Step 2: Fetch subresources, recursively.
-    await maxWait(timeout)(crawlSubresourcesOfDom(resource, { fetchResource }))
+    await maxWait(config.timeout)(crawlSubresourcesOfDom(resource, config))
     // TODO Upon timeout, abort the pending fetches on platforms that support this.
 
     // Step 3: "Dry" the resources to make them static and context-free.
     dryResources(resource)
 
     // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
-    const html = await createSingleFile(resource, {
-        charsetDeclaration,
-        addMetadata,
-        keepOriginalAttributes,
-        snapshotTime: now,
-    })
+    const html = await createSingleFile(resource, config)
 
     return html
 }

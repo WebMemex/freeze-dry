@@ -5,6 +5,8 @@ import documentOuterHTML from 'document-outerhtml'
 export { documentOuterHTML }
 import domNodeAtPath from 'domnode-at-path'
 export { domNodeAtPath }
+import flatOptions from 'flat-options'
+export { flatOptions }
 import memoizeOne from 'memoize-one'
 export { memoizeOne }
 import memoize from 'memoize-weak'

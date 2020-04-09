@@ -1,24 +1,21 @@
 import { postcss, documentOuterHTML } from './package'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
-import { Resource, UrlString, DomResource, Fetchy, StylesheetResource } from './types/index'
+import { UrlString, DomResource, StylesheetResource, GlobalConfig } from './types'
 import { Link, SubresourceLink, HtmlDocumentLink, CssLink } from './extract-links/types'
 import { SubresourceType } from './extract-links/url-attributes/types'
 
-interface crawlSubresourcesOptions {
-    fetchResource?: Fetchy,
-}
-
-type LinkCrawlerFunction = (link: SubresourceLink, options: crawlSubresourcesOptions) => Promise<void>
+type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource'>
+type LinkCrawlerFunction = (link: SubresourceLink, config: CrawlSubresourcesConfig) => Promise<void>
 
 /**
  * Recursively fetch the subresources of a DOM resource.
  * @param {Object} resource - the resource object representing the DOM with its subresources.
- * @param {Function} [options.fetchResource] - custom function for fetching resources; should be
+ * @param {Function} [config.fetchResource] - custom function for fetching resources; should be
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
  * @returns nothing; subresources are stored in the links of the given resource.
  */
-async function crawlSubresourcesOfDom(resource: DomResource, options: crawlSubresourcesOptions) {
+async function crawlSubresourcesOfDom(resource: DomResource, config: CrawlSubresourcesConfig) {
     const supportedSubresourceTypes: Array<String | undefined>
         = ['image', 'document', 'style', 'video', 'font']
 
@@ -28,15 +25,15 @@ async function crawlSubresourcesOfDom(resource: DomResource, options: crawlSubre
         .filter(link => supportedSubresourceTypes.includes(link.subresourceType))
 
     // Start recursively and concurrently crawling the resources.
-    await crawlSubresources(linksToCrawl, options)
+    await crawlSubresources(linksToCrawl, config)
 }
 export default crawlSubresourcesOfDom
 
-async function crawlSubresources(links: SubresourceLink[], options: crawlSubresourcesOptions) {
-    await Promise.allSettled(links.map(link => crawlSubresource(link, options)))
+async function crawlSubresources(links: SubresourceLink[], config: CrawlSubresourcesConfig) {
+    await Promise.allSettled(links.map(link => crawlSubresource(link, config)))
 }
 
-async function crawlSubresource(link: SubresourceLink, options: crawlSubresourcesOptions) {
+async function crawlSubresource(link: SubresourceLink, config: CrawlSubresourcesConfig) {
     const crawlers: { [Key in SubresourceType]?: LinkCrawlerFunction } = {
         image: crawlLeafSubresource, // Images cannot have subresources (actually, SVGs can! TODO)
         document: crawlFrame,
@@ -48,11 +45,11 @@ async function crawlSubresource(link: SubresourceLink, options: crawlSubresource
     if (crawler === undefined) {
         throw new Error(`Not sure how to crawl subresource of type ${link.subresourceType}`)
     }
-    await crawler(link, options)
+    await crawler(link, config)
 }
 
-async function crawlLeafSubresource(link: SubresourceLink, options: crawlSubresourcesOptions) {
-    const fetchedResource = await fetchSubresource(link, options)
+async function crawlLeafSubresource(link: SubresourceLink, config: CrawlSubresourcesConfig) {
+    const fetchedResource = await fetchSubresource(link, config)
     link.resource = {
         url: fetchedResource.url,
         blob: fetchedResource.blob,
@@ -60,12 +57,12 @@ async function crawlLeafSubresource(link: SubresourceLink, options: crawlSubreso
     }
 }
 
-async function crawlFrame(link: HtmlDocumentLink, options: crawlSubresourcesOptions) {
+async function crawlFrame(link: HtmlDocumentLink, config: CrawlSubresourcesConfig) {
     // Maybe this link already has a resource: we try to capture (i)frame content in captureDom().
     if (!link.resource) {
         // Apparently we could not capture the frame's DOM in the initial step. To still do the best
         // we can, we fetch and parse the framed document's html source and work with that.
-        const fetchedResource = await fetchSubresource(link, options)
+        const fetchedResource = await fetchSubresource(link, config)
         const html = await blobToText(fetchedResource.blob)
         const parser = new DOMParser()
         const innerDoc = parser.parseFromString(html, 'text/html')
@@ -87,11 +84,11 @@ async function crawlFrame(link: HtmlDocumentLink, options: crawlSubresourcesOpti
         link.resource = innerDocResource
     }
 
-    await crawlSubresourcesOfDom(link.resource, options)
+    await crawlSubresourcesOfDom(link.resource, config)
 }
 
-async function crawlStylesheet(link: SubresourceLink, options: crawlSubresourcesOptions) {
-    const fetchedResource = await fetchSubresource(link, options)
+async function crawlStylesheet(link: SubresourceLink, config: CrawlSubresourcesConfig) {
+    const fetchedResource = await fetchSubresource(link, config)
     // Note that the final URL may differ from link.absoluteTarget in case of redirects.
     const stylesheetUrl = fetchedResource.url
     const originalStylesheetText = await blobToText(fetchedResource.blob)
@@ -118,19 +115,19 @@ async function crawlStylesheet(link: SubresourceLink, options: crawlSubresources
     link.resource = stylesheetResource
 
     // Recurse to crawl the subresources of this stylesheet.
-    await crawlSubresources(stylesheetResource.links, options)
+    await crawlSubresources(stylesheetResource.links, config)
 }
 
 async function fetchSubresource(
     link: SubresourceLink,
-    options: crawlSubresourcesOptions
+    config: CrawlSubresourcesConfig
 ): Promise<{ url: UrlString, blob: Blob }> {
     if (link.absoluteTarget === undefined) {
         throw new Error(`Cannot fetch invalid target: ${link.target}`)
     }
     const url = link.absoluteTarget
 
-    const fetchFunction = options.fetchResource || self.fetch
+    const fetchFunction = config.fetchResource || self.fetch
     // TODO investigate whether we should supply origin, credentials, ...
     const resourceOrResponse = await fetchFunction(url, {
         cache: 'force-cache',
