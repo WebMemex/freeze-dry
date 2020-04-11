@@ -1,4 +1,9 @@
 import removeScripts from './remove-scripts'
+import { GlobalConfig } from '../types'
+
+const config = {
+    glob: window,
+}
 
 describe('removeScripts', () => {
     test('should remove script tags from the document', () => {
@@ -9,7 +14,7 @@ describe('removeScripts', () => {
         )
         const rootElement = doc.documentElement
 
-        removeScripts(rootElement)
+        removeScripts(rootElement, config)
 
         expect(rootElement.getElementsByTagName('script').length).toEqual(0)
     })
@@ -22,7 +27,7 @@ describe('removeScripts', () => {
         )
         const rootElement = doc.documentElement
 
-        removeScripts(rootElement)
+        removeScripts(rootElement, config)
 
         expect(rootElement.querySelector('div').attributes.length).toEqual(0)
     })
@@ -35,7 +40,7 @@ describe('removeScripts', () => {
         )
         const rootElement = doc.documentElement
 
-        removeScripts(rootElement)
+        removeScripts(rootElement, config)
 
         expect(rootElement.querySelector('a').href).toEqual('javascript:')
     })

@@ -1,6 +1,4 @@
 // External dependencies are imported via this file, to ease remapping them in setups without npm.
-import { blobToDataURL } from 'blob-util'
-export { blobToDataURL }
 import documentOuterHTML from 'document-outerhtml'
 export { documentOuterHTML }
 import domNodeAtPath from 'domnode-at-path'
@@ -19,3 +17,5 @@ import postcss from 'postcss'
 export { postcss }
 import postCssValuesParser from 'postcss-values-parser'
 export { postCssValuesParser }
+import { resolve as relativeToAbsoluteIri } from 'relative-to-absolute-iri'
+export { relativeToAbsoluteIri }

@@ -5,7 +5,7 @@ import { UrlString, DomResource, StylesheetResource, GlobalConfig } from './type
 import { Link, SubresourceLink, HtmlDocumentLink, CssLink } from './extract-links/types'
 import { SubresourceType } from './extract-links/url-attributes/types'
 
-type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource'>
+type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource' | 'glob'>
 type LinkCrawlerFunction = (link: SubresourceLink, config: CrawlSubresourcesConfig) => Promise<void>
 
 /**
@@ -63,8 +63,8 @@ async function crawlFrame(link: HtmlDocumentLink, config: CrawlSubresourcesConfi
         // Apparently we could not capture the frame's DOM in the initial step. To still do the best
         // we can, we fetch and parse the framed document's html source and work with that.
         const fetchedResource = await fetchSubresource(link, config)
-        const html = await blobToText(fetchedResource.blob)
-        const parser = new DOMParser()
+        const html = await blobToText(fetchedResource.blob, config)
+        const parser = new config.glob.DOMParser()
         const innerDoc = parser.parseFromString(html, 'text/html')
         // Note that the final URL may differ from link.absoluteTarget in case of redirects.
         const innerDocUrl = fetchedResource.url
@@ -73,7 +73,7 @@ async function crawlFrame(link: HtmlDocumentLink, config: CrawlSubresourcesConfi
         const innerDocResource: DomResource = {
             url: innerDocUrl,
             doc: innerDoc,
-            get blob() { return new Blob([this.string], { type: 'text/html' }) },
+            get blob() { return new config.glob.Blob([this.string], { type: 'text/html' }) },
             get string() {
                 // TODO Add <meta charset> if absent? Or html-encode characters as needed?
                 return documentOuterHTML(innerDoc)
@@ -91,7 +91,7 @@ async function crawlStylesheet(link: SubresourceLink, config: CrawlSubresourcesC
     const fetchedResource = await fetchSubresource(link, config)
     // Note that the final URL may differ from link.absoluteTarget in case of redirects.
     const stylesheetUrl = fetchedResource.url
-    const originalStylesheetText = await blobToText(fetchedResource.blob)
+    const originalStylesheetText = await blobToText(fetchedResource.blob, config)
 
     let links: CssLink[]
     let getCurrentStylesheetText: () => string
@@ -107,7 +107,7 @@ async function crawlStylesheet(link: SubresourceLink, config: CrawlSubresourcesC
 
     const stylesheetResource: StylesheetResource = {
         url: stylesheetUrl,
-        get blob() { return new Blob([this.string], { type: 'text/css' }) },
+        get blob() { return new config.glob.Blob([this.string], { type: 'text/css' }) },
         get string() { return getCurrentStylesheetText() },
         links,
     }
@@ -127,7 +127,7 @@ async function fetchSubresource(
     }
     const url = link.absoluteTarget
 
-    const fetchFunction = config.fetchResource || self.fetch
+    const fetchFunction = config.fetchResource || config.glob.fetch
     // TODO investigate whether we should supply origin, credentials, ...
     const resourceOrResponse = await fetchFunction(url, {
         cache: 'force-cache',
@@ -144,9 +144,9 @@ async function fetchSubresource(
     return resource
 }
 
-async function blobToText(blob: Blob): Promise<string> {
+async function blobToText(blob: Blob, config: Pick<GlobalConfig, 'glob'>): Promise<string> {
     const text = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
+        const reader = new config.glob.FileReader()
         reader.onload = () => resolve(reader.result as string)
         reader.onerror = () => reject(reader.error)
         reader.readAsText(blob) // TODO should we know&tell which encoding to use?

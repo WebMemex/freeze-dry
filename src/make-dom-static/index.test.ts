@@ -1,5 +1,9 @@
 import makeDomStatic from './index'
 
+const config = {
+    glob: window,
+}
+
 function makeExampleDoc() {
     const html = `<html>
         <head>
@@ -19,7 +23,7 @@ describe('makeDomStatic', () => {
     test('should remove all <noscript> elements from the document', () => {
         const doc = makeExampleDoc()
 
-        makeDomStatic(doc)
+        makeDomStatic(doc, config)
 
         expect(doc.querySelector('noscript')).toBeNull()
     })

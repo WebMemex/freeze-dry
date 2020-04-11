@@ -26,10 +26,13 @@ import { GlobalConfig } from './types/index'
  * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
  * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
+ * @param {Window} [options.glob] - Overrides the global window object that is used for accessing
+ * global DOM interfaces. Defaults to doc.defaultView or (if that is absent) the global `window`.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
  */
 export default async function freezeDry(
-    doc: Document = window.document,
+    doc: Document = typeof window !== 'undefined' && window.document
+        || fail('No document given to freeze-dry'),
     options: Partial<GlobalConfig> = {},
 ): Promise<string> {
     const defaultOptions: GlobalConfig = {
@@ -40,6 +43,10 @@ export default async function freezeDry(
         keepOriginalAttributes: true,
         now: new Date(),
         fetchResource: undefined,
+        glob: options.glob // (not actually a 'default' value; but easiest to typecheck this way)
+            || (doc.defaultView as typeof window | null)
+            || (typeof window !== 'undefined' ? window : undefined)
+            || fail('Lacking a global window object'),
     }
     const config: GlobalConfig = flatOptions(options, defaultOptions)
 
@@ -49,11 +56,11 @@ export default async function freezeDry(
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
     // Step 2: Fetch subresources, recursively.
-    await maxWait(config.timeout)(crawlSubresourcesOfDom(resource, config))
+    await withTimeout(config)(crawlSubresourcesOfDom(resource, config))
     // TODO Upon timeout, abort the pending fetches on platforms that support this.
 
     // Step 3: "Dry" the resources to make them static and context-free.
-    dryResources(resource)
+    dryResources(resource, config)
 
     // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
     const html = await createSingleFile(resource, config)
@@ -61,10 +68,18 @@ export default async function freezeDry(
     return html
 }
 
-const maxWait: (timeout: number) => <T>(promise: Promise<T>) => Promise<T | undefined> =
-    timeout => timeout === Infinity
-        ? promise => promise
-        : promise => Promise.race([
+function withTimeout(config: GlobalConfig): <T>(promise: Promise<T>) => Promise<T | undefined> {
+    if (config.timeout === Infinity)
+        return promise => promise
+    else
+        return promise => Promise.race([
             promise,
-            new Promise(resolve => setTimeout(resolve, timeout)) as Promise<undefined>,
+            new Promise(
+                resolve => config.glob.setTimeout(resolve, config.timeout)
+            ) as Promise<undefined>,
         ])
+}
+
+function fail(message: string): never {
+    throw new Error(message)
+}

@@ -18,7 +18,7 @@ import { FrameElement, DomResource, GlobalConfig } from './types'
 
 export default function captureDom(
     originalDoc: Document,
-    config: Pick<GlobalConfig, 'docUrl' | 'getDocInFrame'>,
+    config: Pick<GlobalConfig, 'docUrl' | 'getDocInFrame' | 'glob'>,
 ): DomResource {
     // The first step is about grabbing everything that we need access to the original DOM for.
     // Think documents in frames, current values of form inputs, canvas state..
@@ -69,7 +69,7 @@ export default function captureDom(
     return {
         url: config.docUrl || originalDoc.URL,
         doc: clonedDoc,
-        get blob() { return new Blob([this.string], { type: 'text/html' }) },
+        get blob() { return new config.glob.Blob([this.string], { type: 'text/html' }) },
         get string() {
             // TODO Add <meta charset> if absent? Or html-encode characters as needed?
             return documentOuterHTML(clonedDoc)

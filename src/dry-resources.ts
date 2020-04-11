@@ -1,19 +1,22 @@
 import makeDomStatic from './make-dom-static/index'
-import { DomResource, Resource } from './types'
+import { DomResource, Resource, GlobalConfig } from './types'
 
 /**
  * "Dry" the resource+subresources to make them static and context-free.
  * @param {Object} rootResource - the resource object including its subresources.
  * @returns nothing; the resource will be mutated.
  */
-export default function dryResources(rootResource: DomResource) {
+export default function dryResources(
+    rootResource: DomResource,
+    config: Pick<GlobalConfig, 'glob'>,
+) {
     for (const resource of allResourcesInTree(rootResource)) {
         // Make all (possibly relative) URLs absolute.
         makeLinksAbsolute(resource)
 
         // If the resource is a DOM, remove scripts, contentEditable, etcetera.
         if (resource.doc) {
-            makeDomStatic(resource.doc)
+            makeDomStatic(resource.doc, config)
         }
     }
 }
@@ -32,17 +35,20 @@ function* allResourcesInTree(resource: Resource): Iterable<Resource> {
 function makeLinksAbsolute(resource: Resource) {
     resource.links.forEach(link => {
         // If target is invalid (hence absoluteTarget undefined), leave it untouched.
-        if (link.absoluteTarget === undefined) return
+        const absoluteTarget = link.absoluteTarget
+        if (absoluteTarget === undefined) return
 
-        const targetHash = new URL(link.absoluteTarget).hash
+        const targetHash = absoluteTarget.includes('#')
+            ? absoluteTarget.substring(absoluteTarget.indexOf('#'))
+            : undefined
         const urlWithoutHash = (url: string) => url.split('#')[0]
-        if (targetHash && urlWithoutHash(link.absoluteTarget) === urlWithoutHash(resource.url)) {
+        if (targetHash && urlWithoutHash(absoluteTarget) === urlWithoutHash(resource.url)) {
             // The link points to a fragment inside the resource itself. We make it relative.
             link.target = targetHash
         }
         else {
             // The link points outside the resource (or to the resource itself). We make it absolute.
-            link.target = link.absoluteTarget
+            link.target = absoluteTarget
         }
     })
 }

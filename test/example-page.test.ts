@@ -156,6 +156,13 @@ async function makeDom(docHtml: string, docUrl: string = undefined): Promise<Doc
         resources: new MockResourceLoader(),
     })
 
+    // Make code ‘inside’ jsdom use these ‘outside’ implementations to simplify their interaction.
+    // (note we could probably enable mockFetch to use ‘inside’ implementations instead, but at
+    // time of writing jsdom lacks an implementation of Response)
+    dom.window.fetch = fetch
+    dom.window.Blob = Blob
+    dom.window.FileReader = FileReader
+
     const doc = dom.window.document
 
     // Wait until JSDOM has completed loading the page (including frames).

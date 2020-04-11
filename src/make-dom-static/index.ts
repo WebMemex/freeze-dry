@@ -1,13 +1,14 @@
 import removeScripts from './remove-scripts'
+import { GlobalConfig } from '../types'
 
 /**
  * Remove interactivity from a document.
  * @param {Document} doc - the Document to be modified.
  * @returns nothing; doc is mutated.
  */
-export default function makeDomStatic(doc: Document) {
+export default function makeDomStatic(doc: Document, config: Pick<GlobalConfig, 'glob'>) {
     // Remove all javascript.
-    removeScripts(doc.documentElement)
+    removeScripts(doc.documentElement, config)
 
     // If noscript content was not shown, we do not want it to show in the snapshot either. Also, we
     // capture pages after scripts executed (presumably), so noscript content is likely undesired.
@@ -18,7 +19,7 @@ export default function makeDomStatic(doc: Document) {
 
     // Disable editing on editable elements
     const editableElements = Array.from(doc.querySelectorAll('*[contenteditable]'))
-        .filter((element: Element): element is HTMLElement => element instanceof HTMLElement)
+        .filter((element: Element): element is HTMLElement => element instanceof config.glob.HTMLElement)
     editableElements.forEach(element => {
         element.contentEditable = 'false'
         // TODO Reapply any style rules that matched only when contenteditable was set.

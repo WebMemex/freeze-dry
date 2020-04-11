@@ -45,6 +45,9 @@ to `window.document`. Possible options are:
   intended for testing purposes.
 - `fetchResource`: custom function for fetching resources; should be API-compatible with the global
   `fetch()`, but may also return an object `{ blob, url }` instead of a `Response`.
+- `glob`: Overrides the global window object that is used for accessing global DOM interfaces.
+  Defaults to `doc.defaultView` or (if that is absent) the global `window`. Intended for (testing)
+  environments where `freezeDry` is not run ‘in’ but ‘on’ a DOM (e.g. some [jsdom][] setups).
 
 Note that the resulting string can easily be several megabytes when pages contain images, videos,
 fonts, etcetera.
@@ -52,3 +55,4 @@ fonts, etcetera.
 
 [DOMParser]: https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
 [Memento]: https://tools.ietf.org/html/rfc7089
+[jsdom]: https://github.com/jsdom/jsdom/

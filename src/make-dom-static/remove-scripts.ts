@@ -1,12 +1,17 @@
+import { GlobalConfig } from "../types"
+
 /**
  * Tries to remove all kinds of scripts contained in the given rootElement.
  * @param {Element} rootElement
  * @returns nothing; rootElement is mutated.
  */
-export default function removeScripts(rootElement: Element) {
+export default function removeScripts(
+    rootElement: Element,
+    config: Pick<GlobalConfig, 'glob'>,
+) {
     removeScriptElements(rootElement)
     removeEventHandlers(rootElement)
-    removeJavascriptHrefs(rootElement)
+    removeJavascriptHrefs(rootElement, config)
 }
 
 // Removes all <script> elements in rootElement.
@@ -29,9 +34,9 @@ function removeEventHandlers(rootElement: Element) {
 }
 
 // Disables all links with a 'javascript:' href.
-function removeJavascriptHrefs(rootElement: Element) {
+function removeJavascriptHrefs(rootElement: Element, config: Pick<GlobalConfig, 'glob'>) {
     const linkElements = Array.from(rootElement.querySelectorAll('a, area'))
-        .filter(element => element instanceof HTMLElement) as Array<HTMLAnchorElement | HTMLAreaElement>
+        .filter(element => element instanceof config.glob.HTMLElement) as Array<HTMLAnchorElement | HTMLAreaElement>
     linkElements
         .filter(element => element.href.startsWith('javascript:'))
         // .filter(element => element.getAttribute('href').trim().toLowerCase().startsWith('javascript:'))

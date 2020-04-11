@@ -1,5 +1,3 @@
-import { blobToDataURL } from './package'
-
 import setMementoTags from './set-memento-tags'
 import setCharsetDeclaration from './set-charset-declaration'
 import setContentSecurityPolicy from './set-content-security-policy/index'
@@ -11,6 +9,7 @@ type CreateSingleFileConfig = Pick<GlobalConfig,
     | 'addMetadata'
     | 'keepOriginalAttributes'
     | 'now'
+    | 'glob'
 >
 
 /**
@@ -74,7 +73,7 @@ async function deepInlineSubresources(resource: Resource, config: CreateSingleFi
             await deepInlineSubresources(link.resource, config)
 
             // Convert the (now self-contained) subresource into a data URL.
-            const dataUrl = await blobToDataURL(link.resource.blob)
+            const dataUrl = await blobToDataUrl(link.resource.blob, config)
 
             setLinkTarget(link, dataUrl, config)
         }),
@@ -116,4 +115,15 @@ function setLinkTarget(
 function isHtmlAttributeDefinedLink(link: Link): link is HtmlAttributeDefinedLink {
     return (link as HtmlAttributeDefinedLink).from.element
         && (link as HtmlAttributeDefinedLink).from.attribute
+}
+
+async function blobToDataUrl(blob: Blob, config: Pick<GlobalConfig, 'glob'>): Promise<string> {
+    const binaryString = await new Promise<string>((resolve, reject) => {
+        const reader = new config.glob.FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(reader.error)
+        reader.readAsBinaryString(blob)
+    })
+    const dataUrl = `data:${blob.type};base64,${config.glob.btoa(binaryString)}`
+    return dataUrl
 }
