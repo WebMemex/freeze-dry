@@ -143,6 +143,20 @@ test('should work if the custom fetchResource function returns a simple object',
     expect(result).toEqual(expectedResult)
 })
 
+test('should use interfaces of a custom global object', async () => {
+    const now = new Date(1545671350764)
+    const doc = await getExampleDoc()
+    const expectedResult = await freezeDry(doc, { now })
+
+    // Create a clone of the window object, replacing some function freezeDry will invoke.
+    const glob = Object.create(doc.defaultView)
+    glob.btoa = jest.fn(glob.btoa)
+
+    const result = await freezeDry(doc, { now, glob })
+    expect(result).toEqual(expectedResult)
+    expect(glob.btoa).toHaveBeenCalled()
+})
+
 async function getExampleDoc(): Promise<Document> {
     const docUrl = 'https://example.com/main/page.html'
     const docHtml = await (await fetch(docUrl)).text()
