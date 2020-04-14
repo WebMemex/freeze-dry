@@ -1,12 +1,13 @@
 import { postcss, documentOuterHTML } from './package'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
-import { UrlString, DomResource, StylesheetResource, GlobalConfig } from './types'
-import { Link, SubresourceLink, HtmlDocumentLink, CssLink } from './extract-links/types'
+import { UrlString, Resource, DomResource, StylesheetResource, GlobalConfig } from './types'
+import { Link, SubresourceLink, CssLink } from './extract-links/types'
 import { SubresourceType } from './extract-links/url-attributes/types'
 
 type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource' | 'glob'>
-type LinkCrawlerFunction = (link: SubresourceLink, config: CrawlSubresourcesConfig) => Promise<void>
+type ResourceParser = (fetchResult: FetchyResult, config: CrawlSubresourcesConfig) => Promise<Resource>
+type FetchyResult = { url: UrlString, blob: Blob }
 
 /**
  * Recursively fetch the subresources of a DOM resource.
@@ -15,83 +16,85 @@ type LinkCrawlerFunction = (link: SubresourceLink, config: CrawlSubresourcesConf
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
  * @returns nothing; subresources are stored in the links of the given resource.
  */
-async function crawlSubresourcesOfDom(resource: DomResource, config: CrawlSubresourcesConfig) {
-    const supportedSubresourceTypes: Array<String | undefined>
-        = ['image', 'document', 'style', 'video', 'font']
-
-    // TODO Avoid fetching all resolutions&formats of the same image/video?
-    const linksToCrawl: SubresourceLink[] = resource.links
-        .filter((link: Link): link is SubresourceLink => link.isSubresource)
-        .filter(link => supportedSubresourceTypes.includes(link.subresourceType))
-
-    // Start recursively and concurrently crawling the resources.
-    await crawlSubresources(linksToCrawl, config)
-}
-export default crawlSubresourcesOfDom
-
-async function crawlSubresources(links: SubresourceLink[], config: CrawlSubresourcesConfig) {
+async function crawlSubresources(resource: Resource, config: CrawlSubresourcesConfig) {
+    const links = getLinksToCrawl(resource)
     await Promise.allSettled(links.map(link => crawlSubresource(link, config)))
+}
+export default crawlSubresources
+
+function getLinksToCrawl(resource: Resource): SubresourceLink[] {
+    // TODO Avoid fetching all resolutions&formats of the same image/video?
+    const linksToCrawl: SubresourceLink[] = (resource.links
+        .filter((link: Link): link is SubresourceLink => link.isSubresource) as SubresourceLink[])
+        .filter(link => link.subresourceType && link.subresourceType in parsers)
+
+    return linksToCrawl
 }
 
 async function crawlSubresource(link: SubresourceLink, config: CrawlSubresourcesConfig) {
-    const crawlers: { [Key in SubresourceType]?: LinkCrawlerFunction } = {
-        image: crawlLeafSubresource, // Images cannot have subresources (actually, SVGs can! TODO)
-        document: crawlFrame,
-        style: crawlStylesheet,
-        video: crawlLeafSubresource, // Videos cannot have subresources (afaik; maybe they can?)
-        font: crawlLeafSubresource, // Fonts cannot have subresources (afaik; maybe they can?)
+    if (!link.resource) {
+        const parser = link.subresourceType && parsers[link.subresourceType]
+        if (parser === undefined) {
+            throw new Error(`Not sure how to crawl subresource of type ${link.subresourceType}`)
+        }
+
+        const fetchResult = await fetchSubresource(link, config)
+
+        link.resource = await parser(fetchResult, config)
     }
-    const crawler = link.subresourceType && crawlers[link.subresourceType]
-    if (crawler === undefined) {
-        throw new Error(`Not sure how to crawl subresource of type ${link.subresourceType}`)
-    }
-    await crawler(link, config)
+    await crawlSubresources(link.resource as Resource, config)
 }
 
-async function crawlLeafSubresource(link: SubresourceLink, config: CrawlSubresourcesConfig) {
-    const fetchedResource = await fetchSubresource(link, config)
-    link.resource = {
-        url: fetchedResource.url,
-        blob: fetchedResource.blob,
+const parsers: { [Key in SubresourceType]?: ResourceParser } = {
+    document: parseDocumentResource,
+    style: parseStylesheet,
+    image: parseLeafResource, // Images cannot have subresources (actually, SVGs can! TODO)
+    video: parseLeafResource, // Videos cannot have subresources (afaik; maybe they can?)
+    font: parseLeafResource, // Fonts cannot have subresources (afaik; maybe they can?)
+}
+
+async function parseLeafResource(
+    fetchResult: FetchyResult,
+    config: CrawlSubresourcesConfig,
+): Promise<Resource> {
+    return {
+        url: fetchResult.url,
+        blob: fetchResult.blob,
         links: [],
     }
 }
 
-async function crawlFrame(link: HtmlDocumentLink, config: CrawlSubresourcesConfig) {
-    // Maybe this link already has a resource: we try to capture (i)frame content in captureDom().
-    if (!link.resource) {
-        // Apparently we could not capture the frame's DOM in the initial step. To still do the best
-        // we can, we fetch and parse the framed document's html source and work with that.
-        const fetchedResource = await fetchSubresource(link, config)
-        const html = await blobToText(fetchedResource.blob, config)
-        const parser = new config.glob.DOMParser()
-        const innerDoc = parser.parseFromString(html, 'text/html')
-        // Note that the final URL may differ from link.absoluteTarget in case of redirects.
-        const innerDocUrl = fetchedResource.url
+async function parseDocumentResource(
+    fetchResult: FetchyResult,
+    config: CrawlSubresourcesConfig,
+): Promise<DomResource> {
+    const html = await blobToText(fetchResult.blob, config)
+    const parser = new config.glob.DOMParser()
+    const innerDoc = parser.parseFromString(html, 'text/html')
+    // Note that the final URL may differ from link.absoluteTarget in case of redirects.
+    const innerDocUrl = fetchResult.url
 
-        // Create a mutable resource for this frame, similar to the resource captureDom() returns.
-        const innerDocResource: DomResource = {
-            url: innerDocUrl,
-            doc: innerDoc,
-            get blob() { return new config.glob.Blob([this.string], { type: 'text/html' }) },
-            get string() {
-                // TODO Add <meta charset> if absent? Or html-encode characters as needed?
-                return documentOuterHTML(innerDoc)
-            },
-            links: extractLinksFromDom(innerDoc, { docUrl: innerDocUrl }),
-        }
-
-        link.resource = innerDocResource
+    // Create a mutable resource for this frame, similar to the resource captureDom() returns.
+    const innerDocResource: DomResource = {
+        url: innerDocUrl,
+        doc: innerDoc,
+        get blob() { return new config.glob.Blob([this.string], { type: 'text/html' }) },
+        get string() {
+            // TODO Add <meta charset> if absent? Or html-encode characters as needed?
+            return documentOuterHTML(innerDoc)
+        },
+        links: extractLinksFromDom(innerDoc, { docUrl: innerDocUrl }),
     }
-
-    await crawlSubresourcesOfDom(link.resource, config)
+    return innerDocResource
 }
 
-async function crawlStylesheet(link: SubresourceLink, config: CrawlSubresourcesConfig) {
-    const fetchedResource = await fetchSubresource(link, config)
+async function parseStylesheet(
+    fetchResult: FetchyResult,
+    config: CrawlSubresourcesConfig,
+): Promise<StylesheetResource> {
     // Note that the final URL may differ from link.absoluteTarget in case of redirects.
-    const stylesheetUrl = fetchedResource.url
-    const originalStylesheetText = await blobToText(fetchedResource.blob, config)
+    const stylesheetUrl = fetchResult.url
+    const originalStylesheetText = await blobToText(fetchResult.blob, config)
 
     let links: CssLink[]
     let getCurrentStylesheetText: () => string
@@ -112,16 +115,13 @@ async function crawlStylesheet(link: SubresourceLink, config: CrawlSubresourcesC
         links,
     }
 
-    link.resource = stylesheetResource
-
-    // Recurse to crawl the subresources of this stylesheet.
-    await crawlSubresources(stylesheetResource.links, config)
+    return stylesheetResource
 }
 
 async function fetchSubresource(
     link: SubresourceLink,
     config: CrawlSubresourcesConfig
-): Promise<{ url: UrlString, blob: Blob }> {
+): Promise<FetchyResult> {
     if (link.absoluteTarget === undefined) {
         throw new Error(`Cannot fetch invalid target: ${link.target}`)
     }
