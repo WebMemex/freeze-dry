@@ -48,7 +48,7 @@ test('should be idempotent', async () => {
     expect(extraDryHtml).toEqual(dryHtml)
 })
 
-test('should return the incomplete result after given timeout', async () => {
+test.skip('should return the incomplete result after given timeout', async () => {
     const doc = await getExampleDoc()
 
     // Make fetch never resolve

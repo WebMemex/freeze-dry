@@ -57,8 +57,7 @@ export default async function freezeDry(
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
     // Step 2: Fetch subresources, recursively.
-    await withTimeout(config)(crawlSubresourcesOfDom(resource, config))
-    // TODO Upon timeout, abort the pending fetches on platforms that support this.
+    await crawlSubresourcesOfDom(resource, config)
 
     // Step 3: "Dry" the resources to make them static and context-free.
     dryResources(resource, config)
@@ -67,18 +66,6 @@ export default async function freezeDry(
     const html = await createSingleFile(resource, config)
 
     return html
-}
-
-function withTimeout(config: GlobalConfig): <T>(promise: Promise<T>) => Promise<T | undefined> {
-    if (config.timeout === Infinity)
-        return promise => promise
-    else
-        return promise => Promise.race([
-            promise,
-            new Promise(
-                resolve => config.glob.setTimeout(resolve, config.timeout)
-            ) as Promise<undefined>,
-        ])
 }
 
 function fail(message: string): never {
