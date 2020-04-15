@@ -1,4 +1,4 @@
-import { postcss, documentOuterHTML } from './package'
+import { postcss, documentOuterHTML, mergeIterator } from './package'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
 import { UrlString, Resource, DomResource, StylesheetResource, GlobalConfig } from './types'
@@ -16,9 +16,11 @@ type FetchyResult = { url: UrlString, blob: Blob }
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
  * @returns nothing; subresources are stored in the links of the given resource.
  */
-async function crawlSubresources(resource: Resource, config: CrawlSubresourcesConfig) {
+async function * crawlSubresources(resource: Resource, config: CrawlSubresourcesConfig): AsyncIterable<Resource> {
+    yield resource
     const links = getLinksToCrawl(resource)
-    await Promise.allSettled(links.map(link => crawlSubresource(link, config)))
+    const crawlers = links.map(link => crawlSubresource(link, config))
+    yield * mergeIterator(crawlers)
 }
 export default crawlSubresources
 
@@ -31,7 +33,7 @@ function getLinksToCrawl(resource: Resource): SubresourceLink[] {
     return linksToCrawl
 }
 
-async function crawlSubresource(link: SubresourceLink, config: CrawlSubresourcesConfig) {
+async function * crawlSubresource(link: SubresourceLink, config: CrawlSubresourcesConfig): AsyncIterable<Resource> {
     if (!link.resource) {
         const parser = link.subresourceType && parsers[link.subresourceType]
         if (parser === undefined) {
@@ -42,7 +44,7 @@ async function crawlSubresource(link: SubresourceLink, config: CrawlSubresources
 
         link.resource = await parser(fetchResult, config)
     }
-    await crawlSubresources(link.resource as Resource, config)
+    yield * crawlSubresources(link.resource as Resource, config)
 }
 
 const parsers: { [Key in SubresourceType]?: ResourceParser } = {

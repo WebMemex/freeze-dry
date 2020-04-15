@@ -3,7 +3,7 @@ import { flatOptions } from './package'
 
 import captureDom from './capture-dom'
 import crawlSubresourcesOfDom from './crawl-subresources'
-import dryResources from './dry-resources'
+import dryResource from './dry-resources'
 import createSingleFile from './create-single-file'
 import { GlobalConfig } from './types/index'
 
@@ -57,17 +57,26 @@ export default async function freezeDry(
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
     // Step 2: Fetch subresources, recursively.
-    await crawlSubresourcesOfDom(resource, config)
+    const crawledResources = crawlSubresourcesOfDom(resource, config)
 
     // Step 3: "Dry" the resources to make them static and context-free.
-    dryResources(resource, config)
+    const driedResources = pipe(crawledResources, resource => {
+        dryResource(resource, config)
+        return resource
+    })
 
     // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
-    const html = await createSingleFile(resource, config)
+    const html = await createSingleFile(driedResources, config)
 
     return html
 }
 
 function fail(message: string): never {
     throw new Error(message)
+}
+
+async function * pipe<T,U>(source: AsyncIterable<T>, transform: (x: T) => U): AsyncIterable<U> {
+    for await (const value of source) {
+        yield transform(value)
+    }
 }

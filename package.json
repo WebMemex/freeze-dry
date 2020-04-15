@@ -43,6 +43,7 @@
     "flat-options": "^0.1.3",
     "memoize-one": "^5.1.1",
     "memoize-weak": "^1.0.2",
+    "mergeiterator": "^1.4.4",
     "mutable-proxy": "^1.0.0",
     "path-to-domnode": "^1.0.1",
     "postcss": "^7.0.1",

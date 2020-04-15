@@ -9,6 +9,8 @@ import memoizeOne from 'memoize-one'
 export { memoizeOne }
 import memoize from 'memoize-weak'
 export { memoize }
+import mergeIterator from 'mergeiterator'
+export { mergeIterator }
 import mutableProxyFactory from 'mutable-proxy'
 export { mutableProxyFactory }
 import pathForDomNode from 'path-to-domnode'

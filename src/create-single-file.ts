@@ -19,9 +19,15 @@ type CreateSingleFileConfig = Pick<GlobalConfig,
  * @returns {string} html - the resulting HTML.
  */
 export default async function createSingleFile(
-    resource: DomResource,
+    resourceStream: AsyncIterable<Resource>,
     config: CreateSingleFileConfig
 ): Promise<string> {
+    const resources = []
+    for await (const resource of resourceStream) {
+        resources.push(resource)
+    }
+    const resource = resources[0] as DomResource
+
     await deepInlineSubresources(resource, config)
 
     // Create/replace the <meta charset> element.

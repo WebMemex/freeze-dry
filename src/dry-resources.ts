@@ -1,33 +1,21 @@
 import makeDomStatic from './make-dom-static/index'
-import { DomResource, Resource, GlobalConfig } from './types'
+import { Resource, GlobalConfig } from './types'
 
 /**
  * "Dry" the resource+subresources to make them static and context-free.
  * @param {Object} rootResource - the resource object including its subresources.
  * @returns nothing; the resource will be mutated.
  */
-export default function dryResources(
-    rootResource: DomResource,
+export default function dryResource(
+    resource: Resource,
     config: Pick<GlobalConfig, 'glob'>,
 ) {
-    for (const resource of allResourcesInTree(rootResource)) {
-        // Make all (possibly relative) URLs absolute.
-        makeLinksAbsolute(resource)
+    // Make all (possibly relative) URLs absolute.
+    makeLinksAbsolute(resource)
 
-        // If the resource is a DOM, remove scripts, contentEditable, etcetera.
-        if (resource.doc) {
-            makeDomStatic(resource.doc, config)
-        }
-    }
-}
-
-// A depth-first iterator through the tree of resource+subresources
-function* allResourcesInTree(resource: Resource): Iterable<Resource> {
-    yield resource
-    for (const link of resource.links) {
-        if (link.isSubresource && link.resource) {
-            yield* allResourcesInTree(link.resource)
-        }
+    // If the resource is a DOM, remove scripts, contentEditable, etcetera.
+    if (resource.doc) {
+        makeDomStatic(resource.doc, config)
     }
 }
 
@@ -53,4 +41,4 @@ function makeLinksAbsolute(resource: Resource) {
     })
 }
 
-export { allResourcesInTree, makeLinksAbsolute } // only for tests
+export { makeLinksAbsolute } // only for tests

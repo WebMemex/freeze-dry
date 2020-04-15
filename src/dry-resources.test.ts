@@ -1,4 +1,4 @@
-import { allResourcesInTree, makeLinksAbsolute } from './dry-resources'
+import { makeLinksAbsolute } from './dry-resources'
 import { Resource } from './types'
 
 let testResource
@@ -36,13 +36,6 @@ beforeEach(() => {
             },
         ],
     }
-})
-
-test('allResourcesInTree', () => {
-    const result = allResourcesInTree(testResource)
-    const urls = Array.from(result).map(resource => resource.url)
-
-    expect(urls).toEqual(['abs:a', 'abs:aa', 'abs:aaa', 'abs:ab'])
 })
 
 describe('makeLinksAbsolute', () => {
