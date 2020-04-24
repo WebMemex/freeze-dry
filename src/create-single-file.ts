@@ -19,14 +19,13 @@ type CreateSingleFileConfig = Pick<GlobalConfig,
  * @returns {string} html - the resulting HTML.
  */
 export default async function createSingleFile(
-    resourceStream: AsyncIterable<Resource>,
+    resource: DomResource,
+    subresources: AsyncIterable<Resource>,
     config: CreateSingleFileConfig
 ): Promise<string> {
-    const resources = []
-    for await (const resource of resourceStream) {
-        resources.push(resource)
+    for await (const subresource of subresources) {
+        // Just wait for all the subresources to arrive.
     }
-    const resource = resources[0] as DomResource
 
     await deepInlineSubresources(resource, config)
 

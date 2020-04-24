@@ -52,21 +52,22 @@ export default async function freezeDry(
     const config: GlobalConfig = flatOptions(options, defaultOptions)
 
     // Step 1: Capture the DOM (as well as DOMs inside frames).
-    const resource = captureDom(doc, config)
+    const domResource = captureDom(doc, config)
 
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
     // Step 2: Fetch subresources, recursively.
-    const crawledResources = crawlSubresourcesOfDom(resource, config)
+    const subresources = crawlSubresourcesOfDom(domResource, config)
 
     // Step 3: "Dry" the resources to make them static and context-free.
-    const driedResources = pipe(crawledResources, resource => {
+    dryResource(domResource, config)
+    const driedSubresources = pipe(subresources, resource => {
         dryResource(resource, config)
         return resource
     })
 
     // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
-    const html = await createSingleFile(driedResources, config)
+    const html = await createSingleFile(domResource, driedSubresources, config)
 
     return html
 }

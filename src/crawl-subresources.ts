@@ -17,7 +17,6 @@ type FetchyResult = { url: UrlString, blob: Blob }
  * @returns nothing; subresources are stored in the links of the given resource.
  */
 async function * crawlSubresources(resource: Resource, config: CrawlSubresourcesConfig): AsyncIterable<Resource> {
-    yield resource
     const links = getLinksToCrawl(resource)
     const crawlers = links.map(link => crawlSubresource(link, config))
     yield * mergeIterator(crawlers)
@@ -44,6 +43,7 @@ async function * crawlSubresource(link: SubresourceLink, config: CrawlSubresourc
 
         link.resource = await parser(fetchResult, config)
     }
+    yield link.resource
     yield * crawlSubresources(link.resource as Resource, config)
 }
 
