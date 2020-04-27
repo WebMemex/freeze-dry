@@ -1,8 +1,9 @@
 import setMementoTags from './set-memento-tags'
 import setCharsetDeclaration from './set-charset-declaration'
 import setContentSecurityPolicy from './set-content-security-policy/index'
-import { DomResource, Resource, GlobalConfig } from './types'
+import { GlobalConfig } from './types'
 import { Link, HtmlAttributeDefinedLink } from './extract-links/types'
+import { DomResource, Resource } from './resource'
 
 type CreateSingleFileConfig = Pick<GlobalConfig,
     | 'charsetDeclaration'

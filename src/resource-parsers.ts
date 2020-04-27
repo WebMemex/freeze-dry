@@ -1,7 +1,8 @@
 import { postcss, documentOuterHTML } from './package'
 
 import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
-import { UrlString, Resource, DomResource, StylesheetResource, GlobalConfig } from './types'
+import { UrlString, GlobalConfig } from './types'
+import { Resource, DomResource, StylesheetResource, LeafResource } from './resource'
 import { CssLink } from './extract-links/types'
 import { SubresourceType } from './extract-links/url-attributes/types'
 
@@ -22,7 +23,7 @@ export default parsers
 async function parseLeafResource(
     fetchResult: FetchyResult,
     config: CrawlSubresourcesConfig,
-): Promise<Resource> {
+): Promise<LeafResource> {
     return {
         url: fetchResult.url,
         blob: fetchResult.blob,

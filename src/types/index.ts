@@ -1,6 +1,5 @@
 import { UrlString, Fetchy, FrameElement } from './util'
 
-export * from './resource'
 export * from './util'
 
 export interface GlobalConfig {

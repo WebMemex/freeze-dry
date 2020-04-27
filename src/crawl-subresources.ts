@@ -1,8 +1,9 @@
 import { mergeIterator } from './package'
 
 import parsers from './resource-parsers'
-import { UrlString, Resource, GlobalConfig } from './types'
+import { UrlString, GlobalConfig } from './types'
 import { Link, SubresourceLink } from './extract-links/types'
+import { Resource } from './resource'
 
 type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource' | 'glob'>
 type FetchyResult = { url: UrlString, blob: Blob }

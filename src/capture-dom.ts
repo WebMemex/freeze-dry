@@ -2,7 +2,8 @@ import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package'
 
 import { extractLinksFromDom } from './extract-links/index'
 import { HtmlDocumentLink, HtmlLink } from './extract-links/types'
-import { FrameElement, DomResource, GlobalConfig } from './types'
+import { FrameElement, GlobalConfig } from './types'
+import { DomResource } from './resource'
 
 /**
  * Clones the DOM and DOMs inside its frames (recursively), wraps them in a resource object.

@@ -1,5 +1,5 @@
 import { makeLinksAbsolute } from './dry-resources'
-import { Resource } from './types'
+import { Resource } from './resource'
 
 let testResource
 

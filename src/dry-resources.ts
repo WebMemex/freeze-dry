@@ -1,5 +1,6 @@
 import makeDomStatic from './make-dom-static/index'
-import { Resource, GlobalConfig } from './types'
+import { GlobalConfig } from './types'
+import { Resource } from './resource'
 
 /**
  * "Dry" the resource+subresources to make them static and context-free.
