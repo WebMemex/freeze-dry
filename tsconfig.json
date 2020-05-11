@@ -2,6 +2,7 @@
     "compilerOptions": {
         "noImplicitAny": true,
         "strictNullChecks": true,
+        "strictPropertyInitialization": true,
         "target": "ES2017",
         "lib": [
             "es2020",

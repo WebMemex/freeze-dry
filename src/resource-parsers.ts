@@ -1,9 +1,5 @@
-import { postcss, documentOuterHTML } from './package'
-
-import { extractLinksFromDom, extractLinksFromCss } from './extract-links/index'
 import { UrlString, GlobalConfig } from './types'
 import { Resource, DomResource, StylesheetResource, LeafResource } from './resource'
-import { CssLink } from './extract-links/types'
 import { SubresourceType } from './extract-links/url-attributes/types'
 
 type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource' | 'glob'>
@@ -22,13 +18,11 @@ export default parsers
 
 async function parseLeafResource(
     fetchResult: FetchyResult,
-    config: CrawlSubresourcesConfig,
 ): Promise<LeafResource> {
-    return {
+    return new LeafResource({
         url: fetchResult.url,
         blob: fetchResult.blob,
-        links: [],
-    }
+    })
 }
 
 async function parseDocumentResource(
@@ -36,53 +30,15 @@ async function parseDocumentResource(
     config: CrawlSubresourcesConfig,
 ): Promise<DomResource> {
     const html = await blobToText(fetchResult.blob, config)
-    const parser = new config.glob.DOMParser()
-    const innerDoc = parser.parseFromString(html, 'text/html')
-    // Note that the final URL may differ from link.absoluteTarget in case of redirects.
-    const innerDocUrl = fetchResult.url
-
-    // Create a mutable resource for this frame, similar to the resource captureDom() returns.
-    const innerDocResource: DomResource = {
-        url: innerDocUrl,
-        doc: innerDoc,
-        get blob() { return new config.glob.Blob([this.string], { type: 'text/html' }) },
-        get string() {
-            // TODO Add <meta charset> if absent? Or html-encode characters as needed?
-            return documentOuterHTML(innerDoc)
-        },
-        links: extractLinksFromDom(innerDoc, { docUrl: innerDocUrl }),
-    }
-    return innerDocResource
+    return new DomResource(html, { ...config, docUrl: fetchResult.url })
 }
 
 async function parseStylesheet(
     fetchResult: FetchyResult,
     config: CrawlSubresourcesConfig,
 ): Promise<StylesheetResource> {
-    // Note that the final URL may differ from link.absoluteTarget in case of redirects.
-    const stylesheetUrl = fetchResult.url
-    const originalStylesheetText = await blobToText(fetchResult.blob, config)
-
-    let links: CssLink[]
-    let getCurrentStylesheetText: () => string
-    try {
-        const parsedCss = postcss.parse(originalStylesheetText)
-        links = extractLinksFromCss(parsedCss, stylesheetUrl)
-        getCurrentStylesheetText = () => parsedCss.toResult().css
-    } catch (err) {
-        // CSS is corrupt. Pretend there are no links.
-        links = []
-        getCurrentStylesheetText = () => originalStylesheetText
-    }
-
-    const stylesheetResource: StylesheetResource = {
-        url: stylesheetUrl,
-        get blob() { return new config.glob.Blob([this.string], { type: 'text/css' }) },
-        get string() { return getCurrentStylesheetText() },
-        links,
-    }
-
-    return stylesheetResource
+    const stylesheetText = await blobToText(fetchResult.blob, config)
+    return new StylesheetResource(fetchResult.url, stylesheetText, config)
 }
 
 async function blobToText(blob: Blob, config: Pick<GlobalConfig, 'glob'>): Promise<string> {

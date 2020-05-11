@@ -1,6 +1,5 @@
-import { documentOuterHTML, pathForDomNode, domNodeAtPath } from './package'
+import { pathForDomNode, domNodeAtPath } from './package'
 
-import { extractLinksFromDom } from './extract-links/index'
 import { HtmlDocumentLink, HtmlLink } from './extract-links/types'
 import { FrameElement, GlobalConfig } from './types'
 import { DomResource } from './resource'
@@ -29,12 +28,10 @@ export default function captureDom(
     // Clone the document
     const clonedDoc = originalDoc.cloneNode(/* deep = */ true) as Document
 
-    // Extract all links. With links we mean both the usual 'hyperlinks' and links to subresources.
-    // We only really need the frame links in this step, but extract all as we will need them later.
-    const links = extractLinksFromDom(clonedDoc, { docUrl: config.docUrl })
+    const domResource = new DomResource(clonedDoc, config)
 
     // Capture the DOM inside every frame (recursively).
-    const frameLinks: HtmlDocumentLink[] = links.filter((
+    const frameLinks: HtmlDocumentLink[] = domResource.links.filter((
         link => link.isSubresource && link.subresourceType === 'document'
     ) as (link: HtmlLink) => link is HtmlDocumentLink) // (this type assertion should not be necessary; bug in TypeScript?)
     frameLinks.forEach(link => {
@@ -64,19 +61,12 @@ export default function captureDom(
         }
     })
 
-    // TODO Capture form input values
-    // TODO Extract images from canvasses
+    // TODO change frame grabbing approach to also get frames with srcdoc instead of src (issue #25)
+    // TODO Capture form input values (issue #19)
+    // TODO Extract images from canvasses (issue #18)
+    // etc..
 
-    return {
-        url: config.docUrl || originalDoc.URL,
-        doc: clonedDoc,
-        get blob() { return new config.glob.Blob([this.string], { type: 'text/html' }) },
-        get string() {
-            // TODO Add <meta charset> if absent? Or html-encode characters as needed?
-            return documentOuterHTML(clonedDoc)
-        },
-        links, // TODO should links be a getter that extracts the links again?
-    }
+    return domResource
 }
 
 function defaultGetDocInFrame(frameElement: FrameElement): Document | null {
