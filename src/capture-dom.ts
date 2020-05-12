@@ -1,15 +1,14 @@
 import { pathForDomNode, domNodeAtPath } from './package'
 
 import { HtmlDocumentLink, HtmlLink } from './extract-links/types'
-import { FrameElement, GlobalConfig } from './types'
+import { FrameElement, GlobalConfig, UrlString } from './types'
 import { DomResource } from './resource'
 
 /**
  * Clones the DOM and DOMs inside its frames (recursively), wraps them in a resource object.
  * @param {Document} doc - the DOM to be captured; remains unmodified.
+ * @param {string} [docUrl] - URL to override doc.URL, to influence interpretation of relative URLs.
  * @param {Object} [config]
- * @param {string} [config.docUrl] - URL to override doc.URL, to influence interpretation of
- * relative URLs.
  * @param {(frame: Element) => ?Document} [getDocInFrame] - customises how to obtain an (i)frame's
  * contentDocument. Defaults to simply trying to access frame.contentDocument. Should return null if
  * accessing the contentDocument fails.
@@ -18,7 +17,8 @@ import { DomResource } from './resource'
 
 export default function captureDom(
     originalDoc: Document,
-    config: Pick<GlobalConfig, 'docUrl' | 'getDocInFrame' | 'glob'>,
+    docUrl: UrlString | undefined,
+    config: Pick<GlobalConfig, 'getDocInFrame' | 'glob'>,
 ): DomResource {
     // The first step is about grabbing everything that we need access to the original DOM for.
     // Think documents in frames, current values of form inputs, canvas state..
@@ -28,7 +28,7 @@ export default function captureDom(
     // Clone the document
     const clonedDoc = originalDoc.cloneNode(/* deep = */ true) as Document
 
-    const domResource = new DomResource(clonedDoc, config)
+    const domResource = new DomResource(docUrl, clonedDoc, config)
 
     // Capture the DOM inside every frame (recursively).
     const frameLinks: HtmlDocumentLink[] = domResource.links.filter((
@@ -46,13 +46,12 @@ export default function captureDom(
         const { getDocInFrame = defaultGetDocInFrame } = config
         const innerDoc = getDocInFrame(originalFrameElement)
         if (innerDoc) {
+            // If our docUrl was overridden, override the frame's URL too. Might be wrong in
+            // case of redirects however. TODO Figure out desired behaviour.
+            const innerDocUrl = docUrl !== undefined ? link.absoluteTarget : undefined
+
             // Recurse!
-            const innerDocResource = captureDom(innerDoc, {
-                ...config,
-                // If our docUrl was overridden, override the frame's URL too. Might be wrong in
-                // case of redirects however. TODO Figure out desired behaviour.
-                docUrl: config.docUrl !== undefined ? link.absoluteTarget : undefined,
-            })
+            const innerDocResource = captureDom(innerDoc, innerDocUrl, config)
             // Associate this subresource with the link object.
             link.resource = innerDocResource
         } else {

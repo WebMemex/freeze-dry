@@ -52,7 +52,7 @@ export default async function freezeDry(
     const config: GlobalConfig = flatOptions(options, defaultOptions)
 
     // Step 1: Capture the DOM (as well as DOMs inside frames).
-    const domResource = captureDom(doc, config)
+    const domResource = captureDom(doc, config.docUrl, config)
 
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 

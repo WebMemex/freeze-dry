@@ -30,7 +30,7 @@ async function parseDocumentResource(
     config: CrawlSubresourcesConfig,
 ): Promise<DomResource> {
     const html = await blobToText(fetchResult.blob, config)
-    return new DomResource(html, { ...config, docUrl: fetchResult.url })
+    return new DomResource(fetchResult.url, html, config)
 }
 
 async function parseStylesheet(
