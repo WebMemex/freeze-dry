@@ -1,5 +1,6 @@
 import makeDomStatic from './make-dom-static/index'
 import { GlobalConfig } from './types'
+import { Link } from './extract-links/types'
 import { Resource, DomResource } from './resource'
 
 /**
@@ -22,7 +23,7 @@ export default function dryResource(
 
 // Make links absolute. Except within-document links: keep/make those relative (e.g. href="#top").
 function makeLinksAbsolute(resource: Resource) {
-    resource.links.forEach(link => {
+    resource.links.forEach((link: Link) => {
         // If target is invalid (hence absoluteTarget undefined), leave it untouched.
         const absoluteTarget = link.absoluteTarget
         if (absoluteTarget === undefined) return
