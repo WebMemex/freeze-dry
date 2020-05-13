@@ -1,6 +1,6 @@
 import makeDomStatic from './make-dom-static/index'
 import { GlobalConfig } from './types'
-import { Resource } from './resource'
+import { Resource, DomResource } from './resource'
 
 /**
  * "Dry" the resource+subresources to make them static and context-free.
@@ -15,7 +15,7 @@ export default function dryResource(
     makeLinksAbsolute(resource)
 
     // If the resource is a DOM, remove scripts, contentEditable, etcetera.
-    if (resource.doc) {
+    if (resource instanceof DomResource) {
         makeDomStatic(resource.doc, config)
     }
 }

@@ -48,6 +48,4 @@ export class StylesheetResource extends BaseResource {
     get links(): CssLink[] {
         return this.#links
     }
-
-    readonly doc?: undefined // (explicitly undefined to make .doc a discriminant for DomResource)
 }

@@ -23,6 +23,4 @@ export class LeafResource extends BaseResource {
     get links(): [] {
         return [];
     }
-
-    readonly doc?: undefined // (explicitly undefined to make .doc a discriminant for DomResource)
 }
