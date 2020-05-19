@@ -8,10 +8,10 @@ import { extractLinksFromCss } from "../extract-links"
 type StylesheetResourceConfig = Pick<GlobalConfig, 'glob'>
 
 export class StylesheetResource extends BaseResource {
-    #url: UrlString
-    #links: CssLink[]
-    #config: StylesheetResourceConfig
-    #getString: () => string
+    private _url: UrlString
+    private _links: CssLink[]
+    private _config: StylesheetResourceConfig
+    private _getString: () => string
 
     constructor(
         url: UrlString,
@@ -19,33 +19,33 @@ export class StylesheetResource extends BaseResource {
         config: StylesheetResourceConfig,
     ) {
         super()
-        this.#url = url
-        this.#config = config
+        this._url = url
+        this._config = config
         try {
             const parsedCss = postcss.parse(stylesheetContent)
-            this.#links = extractLinksFromCss(parsedCss, url)
+            this._links = extractLinksFromCss(parsedCss, url)
             // Whenever the stylesheet content is accessed, we serialise its AST.
-            this.#getString = () => parsedCss.toResult().css
+            this._getString = () => parsedCss.toResult().css
         } catch (err) {
             // CSS is corrupt. Pretend there are no links.
-            this.#links = []
-            this.#getString = () => stylesheetContent
+            this._links = []
+            this._getString = () => stylesheetContent
         }
     }
 
     get url() {
-        return this.#url
+        return this._url
     }
 
     get blob() {
-        return new this.#config.glob.Blob([this.string], { type: 'text/css' })
+        return new this._config.glob.Blob([this.string], { type: 'text/css' })
     }
 
     get string() {
-        return this.#getString()
+        return this._getString()
     }
 
     get links(): CssLink[] {
-        return this.#links
+        return this._links
     }
 }
