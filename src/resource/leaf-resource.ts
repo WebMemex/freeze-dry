@@ -1,5 +1,6 @@
 import { BaseResource } from "./base-resource"
 import { UrlString } from "../types"
+import { Link } from "../extract-links/types"
 
 export class LeafResource extends BaseResource {
     private _url: UrlString
@@ -20,7 +21,7 @@ export class LeafResource extends BaseResource {
     }
 
     // A leaf resource has zero links by definition.
-    get links(): [] {
-        return [];
+    get links(): Link[] & [] {
+        return [] as Link[] & [];
     }
 }
