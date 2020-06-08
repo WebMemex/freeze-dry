@@ -7,11 +7,10 @@ import { extractLinksFromDom } from "../extract-links"
 type DomResourceConfig = Pick<GlobalConfig, 'glob'>
 
 export class DomResource extends BaseResource {
-    readonly links: HtmlLink[] // TODO should links be a getter that extracts the links again?
-
     private _url: UrlString | undefined
     private _doc: Document
     private _config: DomResourceConfig
+    private _links: HtmlLink[]
 
     /**
      * @param url - Since the passed Document already has a property doc.URL, the url parameter is optional; if
@@ -29,7 +28,7 @@ export class DomResource extends BaseResource {
         this._url = url
         this._doc = doc
         this._config = config
-        this.links = extractLinksFromDom(doc, { docUrl: url })
+        this._links = extractLinksFromDom(doc, { docUrl: url })
     }
 
     // Holds the Document object.
@@ -49,5 +48,10 @@ export class DomResource extends BaseResource {
     get string(): string {
         // TODO Add <meta charset> if absent? Or html-encode characters as needed?
         return documentOuterHTML(this._doc)
+    }
+
+    get links(): HtmlLink[] {
+        // TODO should we extract the links again, in case the document changed?
+        return this._links
     }
 }
