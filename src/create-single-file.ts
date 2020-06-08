@@ -89,38 +89,33 @@ async function deepInlineSubresources(resource: Resource, config: CreateSingleFi
 function setLinkTarget(
     link: Link,
     target: string,
-    { keepOriginalAttributes }: CreateSingleFileConfig,
+    config: Pick<CreateSingleFileConfig, 'keepOriginalAttributes'>,
 ) {
     // Optionally, remember the attribute's original value (if applicable).
-    // TODO should this be done elsewhere? Perhaps the link.target setter?
-    if (isHtmlAttributeDefinedLink(link) && keepOriginalAttributes) {
+    if (isHtmlAttributeDefinedLink(link) && config.keepOriginalAttributes) {
         const noteAttribute = `data-original-${link.from.attribute}`
         // Multiple links may be contained in one attribute (e.g. a srcset); we must act
         // only at the first one, therefore we check for existence of the noteAttribute.
         // XXX This also means that if the document already had 'data-original-...' attributes,
         // we leave them as is; this may or may not be desirable (e.g. it helps toward idempotency).
         if (!link.from.element.hasAttribute(noteAttribute)) {
-            const originalValue = link.from.element.getAttribute(link.from.attribute)
+            const originalValue = link.from.element.getAttribute(link.from.attribute) ?? ''
             link.from.element.setAttribute(noteAttribute, originalValue)
         }
     }
 
-    // Replace the link target with the data URL. Note that link.target is a setter that will update
-    // the resource itself.
+    // Replace the link target with the data URL. Note that this will update the resource itself.
     link.target = target
 
-    // Remove integrity attribute, if any. (should only be necessary if the content of the
-    // subresource has been modified, but we keep things simple and blunt)
-    // TODO should this be done elsewhere? Perhaps the link.target setter?
+    // Remove integrity attribute, if any (not always necessary, but we keep things simple for now)
     if (isHtmlAttributeDefinedLink(link) && link.from.element.hasAttribute('integrity')) {
         link.from.element.removeAttribute('integrity')
-        // (we could also consider modifying or even adding integrity attributes..)
     }
 }
 
 function isHtmlAttributeDefinedLink(link: Link): link is HtmlAttributeDefinedLink {
-    return (link as HtmlAttributeDefinedLink).from.element
-        && (link as HtmlAttributeDefinedLink).from.attribute
+    const from = link.from as HtmlAttributeDefinedLink['from']
+    return from.element !== undefined && from.attribute !== undefined
 }
 
 async function blobToDataUrl(blob: Blob, config: Pick<GlobalConfig, 'glob'>): Promise<string> {

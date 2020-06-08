@@ -76,7 +76,7 @@ export interface CssAnchor extends Anchor {
 export type HtmlLink = HtmlNonSubresourceLink | HtmlSubresourceLink
 
 interface HtmlLink_base extends Link_base {
-    readonly from: AttributeAnchor<any, any> | TextContentAnchor<any>;
+    readonly from: AttributeAnchor<Element, string> | TextContentAnchor<any>;
 }
 
 export type HtmlNonSubresourceLink = HtmlLink_base & NonSubresourceLink
@@ -165,7 +165,7 @@ export interface HtmlVideoLink extends HtmlSubresourceLink_base {
         ;
 }
 
-export type HtmlAttributeDefinedLink = HtmlLink & { from: AttributeAnchor<any, any> }
+export type HtmlAttributeDefinedLink = HtmlLink & { from: AttributeAnchor<Element, string> }
 
 
 export type CssLink = CssSubresourceLink // (all links in CSS define subresources)
