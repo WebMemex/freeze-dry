@@ -1,12 +1,13 @@
 import { documentOuterHTML } from "../package"
-import { BaseResource } from "./base-resource"
+import { Resource } from "./resource"
 import { HtmlLink } from "../extract-links/types"
 import { GlobalConfig, UrlString } from "../types"
 import { extractLinksFromDom } from "../extract-links"
+import { blobToText } from "./util"
 
 type DomResourceConfig = Pick<GlobalConfig, 'glob'>
 
-export class DomResource extends BaseResource {
+export class DomResource extends Resource {
     private _url: UrlString | undefined
     private _doc: Document
     private _config: DomResourceConfig
@@ -53,5 +54,14 @@ export class DomResource extends BaseResource {
     get links(): HtmlLink[] {
         // TODO should we extract the links again, in case the document changed?
         return this._links
+    }
+
+    static async fromBlob({ url, blob, config }: {
+        url: UrlString,
+        blob: Blob,
+        config: DomResourceConfig
+    }): Promise<DomResource> { // Should be Promise<this>; see TS issue #5863
+        const html = await blobToText(blob, config)
+        return new this(url, html, config)
     }
 }

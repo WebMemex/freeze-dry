@@ -1,6 +1,5 @@
 import { mergeIterator } from './package'
 
-import parsers from './resource-parsers'
 import { UrlString, GlobalConfig } from './types'
 import { Link, SubresourceLink } from './extract-links/types'
 import { Resource } from './resource'
@@ -29,7 +28,7 @@ function getLinksToCrawl(resource: Resource): SubresourceLink[] {
     // TODO Avoid fetching all resolutions&formats of the same image/video?
     const linksToCrawl: SubresourceLink[] = (resource.links
         .filter((link: Link): link is SubresourceLink => link.isSubresource) as SubresourceLink[])
-        .filter(link => link.subresourceType && link.subresourceType in parsers)
+        .filter(link => link.subresourceType && Resource.getResourceClass(link.subresourceType))
 
     return linksToCrawl
 }
@@ -39,17 +38,16 @@ async function * crawlSubresource(
     config: CrawlSubresourcesConfig
 ): AsyncIterable<Resource> {
     if (!link.resource) {
-        const parser = link.subresourceType && parsers[link.subresourceType]
-        if (parser === undefined) {
-            throw new Error(`Not sure how to crawl subresource of type ${link.subresourceType}`)
-        }
-
-        const fetchResult = await fetchSubresource(link, config)
-
-        link.resource = await parser(fetchResult, config)
+        const { url, blob } = await fetchSubresource(link, config)
+        link.resource = await Resource.fromBlob({
+            url,
+            blob,
+            subresourceType: link.subresourceType,
+            config
+        })
     }
     yield link.resource
-    yield * crawlSubresources(link.resource as Resource, config)
+    yield * crawlSubresources(link.resource, config)
 }
 
 async function fetchSubresource(

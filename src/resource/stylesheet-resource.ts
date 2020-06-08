@@ -1,13 +1,14 @@
 import { postcss } from "../package"
 
-import { BaseResource } from "./base-resource"
+import { Resource } from "./resource"
 import { CssLink } from "../extract-links/types"
 import { GlobalConfig, UrlString } from "../types"
 import { extractLinksFromCss } from "../extract-links"
+import { blobToText } from "./util"
 
 type StylesheetResourceConfig = Pick<GlobalConfig, 'glob'>
 
-export class StylesheetResource extends BaseResource {
+export class StylesheetResource extends Resource {
     private _url: UrlString
     private _links: CssLink[]
     private _config: StylesheetResourceConfig
@@ -47,5 +48,14 @@ export class StylesheetResource extends BaseResource {
 
     get links(): CssLink[] {
         return this._links
+    }
+
+    static async fromBlob({ url, blob, config }: {
+        url: UrlString,
+        blob: Blob,
+        config: StylesheetResourceConfig,
+    }): Promise<StylesheetResource> { // Should be Promise<this>; see TS issue #5863
+        const stylesheetText = await blobToText(blob, config)
+        return new this(url, stylesheetText, config)
     }
 }
