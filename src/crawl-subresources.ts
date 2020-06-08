@@ -15,7 +15,10 @@ type FetchyResult = { url: UrlString, blob: Blob }
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
  * @returns nothing; subresources are stored in the links of the given resource.
  */
-async function * crawlSubresources(resource: Resource, config: CrawlSubresourcesConfig): AsyncIterable<Resource> {
+async function * crawlSubresources(
+    resource: Resource,
+    config: CrawlSubresourcesConfig
+): AsyncIterable<Resource> {
     const links = getLinksToCrawl(resource)
     const crawlers = links.map(link => crawlSubresource(link, config))
     yield * mergeIterator(crawlers)
@@ -31,7 +34,10 @@ function getLinksToCrawl(resource: Resource): SubresourceLink[] {
     return linksToCrawl
 }
 
-async function * crawlSubresource(link: SubresourceLink, config: CrawlSubresourcesConfig): AsyncIterable<Resource> {
+async function * crawlSubresource(
+    link: SubresourceLink,
+    config: CrawlSubresourcesConfig
+): AsyncIterable<Resource> {
     if (!link.resource) {
         const parser = link.subresourceType && parsers[link.subresourceType]
         if (parser === undefined) {
