@@ -13,6 +13,27 @@ beforeEach(() => {
 
 jest.useFakeTimers()
 
+const noNonsenseConfig = {
+    charsetDeclaration: '',
+    addMetadata: false,
+    keepOriginalAttributes: false,
+    setContentSecurityPolicy: false,
+}
+
+test('should freeze-dry a trivial example', async () => {
+    const inputHtml = `<html><head></head><body><h1>tada!</h1></body></html>`
+    const doc = await makeDom(inputHtml, 'https://example.com/main/page.html')
+    const result = await freezeDry(doc, noNonsenseConfig)
+    expect(result).toBe(inputHtml)
+})
+
+test('should freeze-dry an example with an image', async () => {
+    const inputHtml = `<html><head></head><body><img src="/imgs/8x8.png"></body></html>`
+    const doc = await makeDom(inputHtml, 'https://example.com/main/page.html')
+    const result = await freezeDry(doc, noNonsenseConfig)
+    expect(result).toBe(`<html><head></head><body><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAEUlEQVQYlWNgaGD4jxePDAUAE0dfwfSqhOEAAAAASUVORK5CYII="></body></html>`)
+})
+
 test('should freeze-dry an example page as expected', async () => {
     const doc = await getExampleDoc()
 
