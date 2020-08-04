@@ -9,6 +9,7 @@ type CreateSingleFileConfig = Pick<GlobalConfig,
     | 'charsetDeclaration'
     | 'addMetadata'
     | 'keepOriginalAttributes'
+    | 'setContentSecurityPolicy'
     | 'now'
     | 'glob'
 >
@@ -40,16 +41,18 @@ export default async function createSingleFile(
         setMementoTags(resource.doc, { originalUrl: resource.url, datetime: config.now })
     }
 
-    // Set a strict Content Security Policy in a <meta> tag.
-    const csp = [
-        "default-src 'none'", // By default, block all connectivity and scripts.
-        "img-src data:", // Allow inlined images.
-        "media-src data:", // Allow inlined audio/video.
-        "style-src data: 'unsafe-inline'", // Allow inlined styles.
-        "font-src data:", // Allow inlined fonts.
-        "frame-src data:", // Allow inlined iframes.
-    ].join('; ')
-    setContentSecurityPolicy(resource.doc, csp)
+    if (config.setContentSecurityPolicy) {
+        // Set a strict Content Security Policy in a <meta> tag.
+        const csp = [
+            "default-src 'none'", // By default, block all connectivity and scripts.
+            "img-src data:", // Allow inlined images.
+            "media-src data:", // Allow inlined audio/video.
+            "style-src data: 'unsafe-inline'", // Allow inlined styles.
+            "font-src data:", // Allow inlined fonts.
+            "frame-src data:", // Allow inlined iframes.
+        ].join('; ')
+        setContentSecurityPolicy(resource.doc, csp)
+    }
 
     // Return the resulting DOM as a string
     const html = resource.string

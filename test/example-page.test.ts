@@ -108,6 +108,20 @@ test('should respect the keepOriginalAttributes option', async () => {
     await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
 })
 
+test('should respect the setContentSecurityPolicy option', async () => {
+    const testWithOption = async (setContentSecurityPolicy?) => {
+        const doc = await getExampleDoc()
+
+        const result = await freezeDry(doc, { setContentSecurityPolicy })
+
+        const dryDoc = await makeDom(result)
+        expect(dryDoc.querySelector('meta[http-equiv=Content-Security-Policy]')).not.toBeNull()
+    }
+    await expect(testWithOption(true)).resolves.toEqual(undefined)
+    await expect(testWithOption(false)).rejects.toEqual(expect.anything())
+    await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
+})
+
 test('should use the custom fetchResource function', async () => {
     const now = new Date(1545671350764)
     const doc = await getExampleDoc()

@@ -24,6 +24,8 @@ import { GlobalConfig } from './types/index'
  * For example, <img src="bg.png"> would become <img src="data:..." data-original-src="bg.png">.
  * Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
  * URLs inside stylesheets are still lost.
+ * @param {boolean} [options.setContentSecurityPolicy] - Whether to add a <meta> tag with a content
+ * security policy that disallows the page to load any external resources.
  * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
  * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
@@ -42,6 +44,7 @@ export default async function freezeDry(
         charsetDeclaration: 'utf-8',
         addMetadata: true,
         keepOriginalAttributes: true,
+        setContentSecurityPolicy: true,
         now: new Date(),
         fetchResource: undefined,
         glob: options.glob // (not actually a 'default' value; but easiest to typecheck this way)

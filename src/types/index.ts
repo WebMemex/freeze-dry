@@ -8,6 +8,7 @@ export interface GlobalConfig {
     charsetDeclaration: string | null,
     addMetadata: boolean,
     keepOriginalAttributes: boolean,
+    setContentSecurityPolicy: boolean,
     now: Date,
     fetchResource?: Fetchy,
     getDocInFrame?: (frameElement: FrameElement) => Document | null, // TODO expose to user & test.
