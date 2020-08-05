@@ -1,7 +1,7 @@
 import { pathForDomNode, domNodeAtPath } from './package'
 
 import { HtmlDocumentLink, HtmlLink } from './extract-links/types'
-import { FrameElement, GlobalConfig, UrlString } from './types'
+import { FrameElement, GlobalConfig } from './types'
 import { DomResource } from './resource'
 
 /**
@@ -24,7 +24,7 @@ export default function captureDom(
 
     const domResource = DomResource.clone({ url: config.docUrl, doc: originalDoc, config })
 
-    const framedDocuments = crawlFramedDocuments(domResource, originalDoc, config.docUrl, config)
+    const framedDocuments = crawlFramedDocuments(domResource, originalDoc, config)
     for (const framedDocument of framedDocuments) {
     }
 
@@ -34,14 +34,13 @@ export default function captureDom(
 function * crawlFramedDocuments(
     domResource: DomResource,
     originalDoc: Document,
-    docUrl: UrlString | undefined,
     config: CaptureDomConfig,
 ): Iterable<DomResource> {
     // Capture the DOM inside every frame (recursively).
     // TODO change frame grabbing approach to also get frames with srcdoc instead of src (issue #25)
     const frameLinks = getLinksToCrawl(domResource)
     for (const link of frameLinks) {
-        yield * crawlFrameLink(link, originalDoc, docUrl, config)
+        yield * crawlFrameLink(link, originalDoc, config)
     }
 }
 
@@ -56,7 +55,6 @@ function getLinksToCrawl(domResource: DomResource) {
 function * crawlFrameLink(
     link: HtmlDocumentLink,
     originalDoc: Document,
-    docUrl: UrlString | undefined,
     config: CaptureDomConfig,
 ): Iterable<DomResource> {
     // Find the corresponding frame element in original document.
@@ -74,16 +72,11 @@ function * crawlFrameLink(
         // We will fall back to refetching the inner document while crawling the subresources.
         return
     }
-
-    // If our docUrl was overridden, override the frame's URL too. Might be wrong in
-    // case of redirects however. TODO Figure out desired behaviour.
-    const innerDocUrl = docUrl !== undefined ? link.absoluteTarget : undefined
-
-    link.resource = DomResource.clone({ url: innerDocUrl, doc: innerDoc, config })
+    link.resource = DomResource.clone({ doc: innerDoc, config })
 
     // Yield this document and recurse to yield any others inside of it.
     yield link.resource
-    yield * crawlFramedDocuments(link.resource, innerDoc, innerDocUrl, config)
+    yield * crawlFramedDocuments(link.resource, innerDoc, config)
 }
 
 function defaultGetDocInFrame(frameElement: FrameElement): Document | null {
