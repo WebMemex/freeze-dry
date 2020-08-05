@@ -64,4 +64,16 @@ export class DomResource extends Resource {
         const html = await blobToText(blob, config)
         return new this(url, html, config)
     }
+
+    static clone({ url, doc, config }: {
+        url?: UrlString,
+        doc: Document,
+        config: DomResourceConfig,
+    }): DomResource { // Should be `this`; see TS issue #5863
+        const clonedDoc = doc.cloneNode(/* deep = */ true) as Document
+        // TODO Capture form input values (issue #19)
+        // TODO Extract images from canvasses (issue #18)
+        // etc..
+        return new this(url, clonedDoc, config)
+    }
 }

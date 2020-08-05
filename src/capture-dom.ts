@@ -22,18 +22,10 @@ export default function captureDom(
     // We make clones of everything we need, so in the next step we can do async stuff without
     // worrying about the DOM changing.
 
-    // Clone the document
-    const clonedDoc = originalDoc.cloneNode(/* deep = */ true) as Document
-
-    const domResource = new DomResource(config.docUrl, clonedDoc, config)
+    const domResource = DomResource.clone({ url: config.docUrl, doc: originalDoc, config })
 
     const framedDocuments = crawlFramedDocuments(domResource, originalDoc, config.docUrl, config)
-
-    // For each doc, capture DOM state that got lost by cloning.
     for (const framedDocument of framedDocuments) {
-        // TODO Capture form input values (issue #19)
-        // TODO Extract images from canvasses (issue #18)
-        // etc..
     }
 
     return domResource
@@ -87,8 +79,7 @@ function * crawlFrameLink(
     // case of redirects however. TODO Figure out desired behaviour.
     const innerDocUrl = docUrl !== undefined ? link.absoluteTarget : undefined
 
-    const clonedInnerDoc = innerDoc.cloneNode(/* deep = */ true) as Document
-    link.resource = new DomResource(innerDocUrl, clonedInnerDoc, config)
+    link.resource = DomResource.clone({ url: innerDocUrl, doc: innerDoc, config })
 
     // Yield this document and recurse to yield any others inside of it.
     yield link.resource
