@@ -1,5 +1,11 @@
 # Changelog for freeze-dry
 
+## 0.2.5 (2021-07-16)
+
+- Fix failure on invalid itemProp/itemType attributes.
+- Support bringing your own globalThis (for e.g. use in JSDOM)
+- Provide TypeScript declarations (whole codebase is TS now)
+
 ## 0.2.4 (2019-06-04)
 
 - Fix tiny but fatal error in previous release.
