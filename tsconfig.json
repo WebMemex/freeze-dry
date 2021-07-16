@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "target": "ES2017",
+        "lib": [
+            "es2020",
+            "dom"
+        ],
+        "moduleResolution": "Node",
+        "allowSyntheticDefaultImports": true,
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/@types"
+        ]
+    },
+    "files": [
+        "src/index.ts"
+    ]
+}

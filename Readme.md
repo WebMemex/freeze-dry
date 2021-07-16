@@ -21,6 +21,9 @@ to `window.document`. Possible options are:
 - `docUrl` (string): overrides the documents's URL. This will influence the expansion of relative
   URLs, and is useful for cases where the document was constructed dynamically (e.g. using
   [DOMParser][]).
+- `charsetDeclaration` (string): The value put into the <meta charset="…"> element of the snapshot.
+   Default is 'utf-8'. If you will store/serve the returned string using an encoding other than
+   UTF8, pass its name here; or pass null or an empty string to omit the declaration altogether.
 - `addMetadata` (boolean): If true (the default), a `meta` and `link` tag will be added to the
   returned html, noting the documents URL and time of snapshotting (that is, the current time).
   <details>
@@ -42,6 +45,9 @@ to `window.document`. Possible options are:
   intended for testing purposes.
 - `fetchResource`: custom function for fetching resources; should be API-compatible with the global
   `fetch()`, but may also return an object `{ blob, url }` instead of a `Response`.
+- `glob`: Overrides the global window object that is used for accessing global DOM interfaces.
+  Defaults to `doc.defaultView` or (if that is absent) the global `window`. Intended for (testing)
+  environments where `freezeDry` is not run ‘in’ but ‘on’ a DOM (e.g. some [jsdom][] setups).
 
 Note that the resulting string can easily be several megabytes when pages contain images, videos,
 fonts, etcetera.
@@ -49,3 +55,4 @@ fonts, etcetera.
 
 [DOMParser]: https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
 [Memento]: https://tools.ietf.org/html/rfc7089
+[jsdom]: https://github.com/jsdom/jsdom/
