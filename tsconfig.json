@@ -12,7 +12,9 @@
         "typeRoots": [
             "./node_modules/@types",
             "./src/@types"
-        ]
+        ],
+        "declaration": true,
+        "outDir": "lib"
     },
     "files": [
         "src/index.ts"

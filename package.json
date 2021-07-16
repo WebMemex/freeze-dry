@@ -13,8 +13,10 @@
   "main": "lib/index.js",
   "scripts": {
     "check-globals": "eslint --config .eslintrc-check-globals.json 'src/**/*.ts'",
-    "prepare": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts'",
-    "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts' -w",
+    "prepare": "npm run build:types && npm run build:js",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:js": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.d.ts,**/*.test.js,**/*.test.ts'",
+    "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.d.ts,**/*.test.js,**/*.test.ts' -w",
     "test": "jest --verbose",
     "typecheck": "tsc --noEmit || true"
   },
