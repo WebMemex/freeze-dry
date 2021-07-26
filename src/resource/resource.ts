@@ -1,5 +1,5 @@
 import { UrlString, GlobalConfig } from '../types'
-import { Link } from '../extract-links/types'
+import { Link, SubresourceLink } from '../extract-links/types'
 import { DomResource, StylesheetResource, LeafResource } from './index'
 import { SubresourceType } from '../extract-links/url-attributes/types'
 
@@ -21,6 +21,14 @@ export abstract class Resource {
     // remembered as a property `resource` on the corresponding link object, thus forming a tree of
     // resources.
     abstract readonly links: Link[]
+
+    // An array of links (subset of `this.links`) containing only links that define a subresource,
+    // and for which a Resource subclass exists.
+    get subresourceLinks(): SubresourceLink[] {
+        return this.links
+            .filter((link: Link): link is SubresourceLink => link.isSubresource)
+            .filter(link => Resource.getResourceClass(link.subresourceType))
+    }
 
     // Create a Resource from a Blob object plus URL; returns an instance of a subclass of Resource
     // matching the given subresource type.

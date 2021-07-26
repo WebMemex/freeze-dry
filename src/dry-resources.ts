@@ -3,7 +3,7 @@ import { GlobalConfig } from './types'
 import { Resource, DomResource } from './resource'
 
 /**
- * "Dry" the resource+subresources to make them static and context-free.
+ * "Dry" the resource to make it static and context-free.
  * @param {Object} rootResource - the resource object including its subresources.
  * @returns nothing; the resource will be mutated.
  */

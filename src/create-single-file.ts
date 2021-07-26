@@ -3,7 +3,7 @@ import setCharsetDeclaration from './set-charset-declaration'
 import setContentSecurityPolicy from './set-content-security-policy/index'
 import { GlobalConfig } from './types'
 import { Link, HtmlAttributeDefinedLink } from './extract-links/types'
-import { DomResource, Resource } from './resource'
+import { DomResource } from './resource'
 
 type CreateSingleFileConfig = Pick<GlobalConfig,
     | 'charsetDeclaration'
@@ -15,22 +15,15 @@ type CreateSingleFileConfig = Pick<GlobalConfig,
 >
 
 /**
- * Serialises the DOM resource+subresources into a single, self-contained string of HTML.
+ * Add relevant metadata to the DOM, as instructed by the `config`.
  * @param {Object} resource - the resource object representing the DOM with its subresources. Will
  * be mutated.
- * @returns {string} html - the resulting HTML.
+ * @returns nothing; the resource will be mutated.
  */
-export default async function createSingleFile(
+export default async function finaliseSnapshot(
     resource: DomResource,
-    subresources: AsyncIterable<Resource>,
     config: CreateSingleFileConfig
-): Promise<string> {
-    for await (const subresource of subresources) {
-        // Just wait for all the subresources to arrive.
-    }
-
-    await deepInlineSubresources(resource, config)
-
+) {
     // Create/replace the <meta charset> element.
     if (config.charsetDeclaration !== undefined) {
         setCharsetDeclaration(resource.doc, config.charsetDeclaration)
@@ -53,43 +46,16 @@ export default async function createSingleFile(
         ].join('; ')
         setContentSecurityPolicy(resource.doc, csp)
     }
-
-    // Return the resulting DOM as a string
-    const html = resource.string
-    return html
 }
 
 /**
- * Recursively inlines all subresources as data URLs.
- * @param {Object} resource - the resource object representing the DOM with its subresources.
- * @param {Object} options
- * @returns nothing; the resource will be mutated.
+ * Set the link’s target to a new URL.
+ * @param {Object} link - the link to modify.
+ * @param {string} target - the link’s new target.
+ * @param {boolean} [config.keepOriginalAttributes=false] - Whether to preserve the value of an
+ * element attribute if its URLs are inlined, by noting it as a new 'data-original-...' attribute.
  */
-async function deepInlineSubresources(resource: Resource, config: CreateSingleFileConfig) {
-    await Promise.allSettled(
-        (resource.links as Link[]).map(async link => {
-            if (!link.isSubresource) {
-                // Nothing to do.
-                return
-            } else if (!link.resource) {
-                // The link defines a subresource, but we do not have the resource's content.
-                // TODO we may want to do something here. Turn target into about:invalid? For
-                // now, we rely on the content security policy to prevent loading this resource.
-                return
-            }
-
-            // First recurse into the linked subresource, so we start at the tree's leaves.
-            await deepInlineSubresources(link.resource, config)
-
-            // Convert the (now self-contained) subresource into a data URL.
-            const dataUrl = await blobToDataUrl(link.resource.blob, config)
-
-            setLinkTarget(link, dataUrl, config)
-        }),
-    )
-}
-
-function setLinkTarget(
+export function setLinkTarget(
     link: Link,
     target: string,
     config: Pick<CreateSingleFileConfig, 'keepOriginalAttributes'>,
@@ -107,7 +73,7 @@ function setLinkTarget(
         }
     }
 
-    // Replace the link target with the data URL. Note that this will update the resource itself.
+    // Replace the link target. Note that this will update the resource itself.
     link.target = target
 
     // Remove integrity attribute, if any (not always necessary, but we keep things simple for now)
@@ -121,7 +87,12 @@ function isHtmlAttributeDefinedLink(link: Link): link is HtmlAttributeDefinedLin
     return from.element !== undefined && from.attribute !== undefined
 }
 
-async function blobToDataUrl(blob: Blob, config: Pick<GlobalConfig, 'glob'>): Promise<string> {
+/**
+ * Turn a Blob into a base64-encoded data URL.
+ * @param {boolean} blob - the blob to serialise.
+ * @returns {string} dataUrl - the data URL.
+ */
+export async function blobToDataUrl(blob: Blob, config: Pick<GlobalConfig, 'glob'>): Promise<string> {
     const binaryString = await new Promise<string>((resolve, reject) => {
         const reader = new config.glob.FileReader()
         reader.onload = () => resolve(reader.result as string)

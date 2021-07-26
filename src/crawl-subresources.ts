@@ -1,42 +1,21 @@
-import { mergeIterator } from './package'
-
 import { UrlString, GlobalConfig } from './types'
-import { Link, SubresourceLink } from './extract-links/types'
+import { SubresourceLink } from './extract-links/types'
 import { Resource } from './resource'
 
 type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource' | 'glob'>
 type FetchyResult = { url: UrlString, blob: Blob }
 
 /**
- * Recursively fetch the subresources of a DOM resource.
- * @param {Object} resource - the resource object representing the DOM with its subresources.
+ * Fetch & cache (if not already available) the resource a given `link` points to, and return it.
+ * @param {Object} link - the link pointing to the resource.
  * @param {Function} [config.fetchResource] - custom function for fetching resources; should be
  * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
  * @returns nothing; subresources are stored in the links of the given resource.
  */
-async function * crawlSubresources(
-    resource: Resource,
-    config: CrawlSubresourcesConfig
-): AsyncIterable<Resource> {
-    const links = getLinksToCrawl(resource)
-    const crawlers = links.map(link => crawlSubresource(link, config))
-    yield * mergeIterator(crawlers)
-}
-export default crawlSubresources
-
-function getLinksToCrawl(resource: Resource): SubresourceLink[] {
-    // TODO Avoid fetching all resolutions&formats of the same image/video?
-    const linksToCrawl: SubresourceLink[] = (resource.links
-        .filter((link: Link): link is SubresourceLink => link.isSubresource) as SubresourceLink[])
-        .filter(link => link.subresourceType && Resource.getResourceClass(link.subresourceType))
-
-    return linksToCrawl
-}
-
-async function * crawlSubresource(
+export default async function getSubresource(
     link: SubresourceLink,
     config: CrawlSubresourcesConfig
-): AsyncIterable<Resource> {
+): Promise<Resource> {
     if (!link.resource) {
         const { url, blob } = await fetchSubresource(link, config)
         link.resource = await Resource.fromBlob({
@@ -46,8 +25,7 @@ async function * crawlSubresource(
             config
         })
     }
-    yield link.resource
-    yield * crawlSubresources(link.resource, config)
+    return link.resource
 }
 
 async function fetchSubresource(

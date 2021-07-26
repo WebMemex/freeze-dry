@@ -2,10 +2,12 @@
 import { flatOptions } from './package'
 
 import captureDom from './capture-dom'
-import crawlSubresourcesOfDom from './crawl-subresources'
 import dryResource from './dry-resources'
-import createSingleFile from './create-single-file'
 import { GlobalConfig } from './types/index'
+import { SubresourceLink } from './extract-links/types'
+import getSubresource from './crawl-subresources'
+import finaliseSnapshot, { blobToDataUrl, setLinkTarget } from './create-single-file'
+import { Resource } from './resource'
 
 /**
  * Freeze dry an HTML Document
@@ -39,6 +41,7 @@ export default async function freezeDry(
     options: Partial<GlobalConfig> = {},
 ): Promise<string> {
     const defaultOptions: GlobalConfig = {
+        processLink: defaultProcessLink,
         timeout: Infinity,
         docUrl: undefined,
         charsetDeclaration: 'utf-8',
@@ -48,7 +51,7 @@ export default async function freezeDry(
         now: new Date(),
         fetchResource: undefined,
         glob: options.glob // (not actually a 'default' value; but easiest to typecheck this way)
-            || (doc.defaultView as typeof window | null)
+            || doc.defaultView
             || (typeof window !== 'undefined' ? window : undefined)
             || fail('Lacking a global window object'),
     }
@@ -59,19 +62,22 @@ export default async function freezeDry(
 
     // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
 
-    // Step 2: Fetch subresources, recursively.
-    const subresources = crawlSubresourcesOfDom(domResource, config)
-
-    // Step 3: "Dry" the resources to make them static and context-free.
+    // Step 2: Make the DOM static and context-free.
     dryResource(domResource, config)
-    const driedSubresources = pipe(subresources, resource => {
-        dryResource(resource, config)
-        return resource
-    })
 
-    // Step 4: Compile the resource tree to produce a single, self-contained string of HTML.
-    const html = await createSingleFile(domResource, driedSubresources, config)
+    // Step 3: Recurse into subresources, converting them as needed.
+    async function processLink(link: SubresourceLink) {
+        await config.processLink(link, processLink, config)
+    }
+    await Promise.all(domResource.subresourceLinks.map(
+        link => processLink(link)
+    ))
 
+    // Step 4: Finalise (e.g. stamp some <meta> tags onto the page)
+    finaliseSnapshot(domResource, config)
+
+    // Return it as a single string of HTML
+    const html = domResource.string
     return html
 }
 
@@ -79,8 +85,32 @@ function fail(message: string): never {
     throw new Error(message)
 }
 
-async function * pipe<T,U>(source: AsyncIterable<T>, transform: (x: T) => U): AsyncIterable<U> {
-    for await (const value of source) {
-        yield transform(value)
+async function defaultProcessLink(
+    link: SubresourceLink,
+    recurse: (link: SubresourceLink) => void,
+    config: GlobalConfig,
+) {
+    // Get the linked resource.
+    let resource: Resource
+    try {
+        resource = await getSubresource(link, config)
+    } catch (err) {
+        // TODO we may want to do something here. Turn target into about:invalid? For
+        // now, we rely on the content security policy to prevent loading this resource.
+        return
     }
+
+    // Make the resource static and context-free.
+    dryResource(resource, config)
+
+    // Recurse: process this resource’s subresources.
+    await Promise.all(resource.subresourceLinks.map(
+        link => recurse(link)
+    ))
+
+    // Convert the (now self-contained) subresource into a data URL.
+    const dataUrl = await blobToDataUrl(resource.blob, config)
+
+    // Change the link’s target to the data URL.
+    setLinkTarget(link, dataUrl, config)
 }

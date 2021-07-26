@@ -1,8 +1,16 @@
 import { UrlString, Fetchy, FrameElement } from './util'
+import { SubresourceLink } from '../extract-links/types'
 
 export * from './util'
 
+type ProcessLinkCallback = (
+    link: SubresourceLink,
+    recurse: (link: SubresourceLink) => void,
+    config: GlobalConfig,
+) => void | Promise<void>
+
 export interface GlobalConfig {
+    processLink: ProcessLinkCallback,
     timeout: number,
     docUrl?: UrlString,
     charsetDeclaration: string | null,
