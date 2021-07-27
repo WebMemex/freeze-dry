@@ -50,6 +50,8 @@ export interface SubresourceLink extends Link_base {
 
 
 export interface Anchor {
+    // TODO Remove this ‘upward’ dependency.
+    resource?: Resource;
 }
 
 export interface AttributeAnchor<E extends Element, A extends string> extends Anchor {
@@ -107,7 +109,7 @@ export interface HtmlAudioLink extends HtmlSubresourceLink_base {
 
 export interface HtmlDocumentLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "document";
-    readonly from: AttributeAnchor<FrameElement, "src">;
+    readonly from: AttributeAnchor<FrameElement, "src"> & { resource: DomResource };
     resource?: DomResource;
 }
 

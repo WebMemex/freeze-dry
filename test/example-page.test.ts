@@ -50,11 +50,17 @@ test('should capture current state of documents inside frames', async () => {
     const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
     innerDoc.body.appendChild(innerDoc.createElement('hr'))
 
-    const result = await freezeDry(doc, { now: new Date(1534615340948) })
+    // Start freeze-dry
+    const resultP = freezeDry(doc, { now: new Date(1534615340948) })
+    // Add a second element inside the frame
+    innerDoc.body.appendChild(innerDoc.createElement('hr'))
+    // Wait for freeze-dry
+    const result = await resultP
 
     const dryDoc = await makeDom(result)
     const dryInnerDoc = dryDoc.querySelector('iframe').contentDocument
-    expect(dryInnerDoc.querySelector('hr')).not.toBeNull()
+    // We made the snapshot when one <hr> was in the document.
+    expect(dryInnerDoc.querySelectorAll('hr')).toHaveLength(1)
 })
 
 test('should be idempotent', async () => {

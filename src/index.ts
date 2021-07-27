@@ -1,15 +1,14 @@
 /* global window */
 import { flatOptions } from './package'
 
-import captureDom from './capture-dom'
 import dryResource from './dry-resources'
-import { GlobalConfig } from './types/index'
+import { GlobalConfig, ProcessLinkRecurse, ProcessLinkCallback } from './types/index'
 import { SubresourceLink } from './extract-links/types'
-import getSubresource from './get-subresource'
+import fetchSubresource from './fetch-subresource'
 import finaliseSnapshot from './finalise-snapshot'
 import blobToDataUrl from './blob-to-data-url'
 import setLinkTarget from './set-link-target'
-import { Resource } from './resource'
+import { DomResource } from './resource'
 
 /**
  * Freeze dry an HTML Document
@@ -59,20 +58,26 @@ export default async function freezeDry(
     }
     const config: GlobalConfig = flatOptions(options, defaultOptions)
 
-    // Step 1: Capture the DOM (as well as DOMs inside frames).
-    const domResource = captureDom(doc, config)
-
-    // TODO Allow continuing processing elsewhere (background script, worker, nodejs, ...)
+    // Step 1: Capture the DOM.
+    const domResource = DomResource.clone({ url: config.docUrl, doc, config })
 
     // Step 2: Make the DOM static and context-free.
     dryResource(domResource, config)
 
     // Step 3: Recurse into subresources, converting them as needed.
-    async function processLink(link: SubresourceLink) {
-        await config.processLink(link, processLink, config)
+    async function processLinkWrapper(link: SubresourceLink, config: GlobalConfig) {
+        // TODO some debug logging
+        // TODO some progress tick allowing to get the incomplete result
+
+        // Allow config to be modified during recursion, but default to pass it through.
+        async function recurse(link: SubresourceLink, _config = config) {
+            await processLinkWrapper(link, _config)
+        }
+
+        await config.processLink(link, config, recurse)
     }
     await Promise.all(domResource.subresourceLinks.map(
-        link => processLink(link)
+        link => processLinkWrapper(link, config)
     ))
 
     // Step 4: Finalise (e.g. stamp some <meta> tags onto the page)
@@ -89,29 +94,37 @@ function fail(message: string): never {
 
 async function defaultProcessLink(
     link: SubresourceLink,
-    recurse: (link: SubresourceLink) => void,
     config: GlobalConfig,
+    recurse: ProcessLinkRecurse,
 ) {
-    // Get the linked resource.
-    let resource: Resource
-    try {
-        resource = await getSubresource(link, config)
-    } catch (err) {
-        // TODO we may want to do something here. Turn target into about:invalid? For
-        // now, we rely on the content security policy to prevent loading this resource.
-        return
+    if (link.subresourceType === 'document') {
+        // If the link is a frame, first try if we can get its current contents.
+        let innerDoc = getFramedDoc(link)
+        if (innerDoc instanceof Promise) innerDoc = await innerDoc
+        link.resource = DomResource.clone({ doc: innerDoc, config })
+    }
+
+    // Get the linked resource if missing (from cache/internet).
+    if (!link.resource) {
+        try {
+            link.resource = await fetchSubresource(link, config)
+        } catch (err) {
+            // TODO we may want to do something here. Turn target into about:invalid? For
+            // now, we rely on the content security policy to prevent loading this resource.
+            return
+        }
     }
 
     // Make the resource static and context-free.
-    dryResource(resource, config)
+    dryResource(link.resource, config)
 
     // Recurse: process this resource’s subresources.
-    await Promise.all(resource.subresourceLinks.map(
+    await Promise.all(link.resource.subresourceLinks.map(
         link => recurse(link)
     ))
 
     // Convert the (now self-contained) subresource into a data URL.
-    const dataUrl = await blobToDataUrl(resource.blob, config)
+    const dataUrl = await blobToDataUrl(link.resource.blob, config)
 
     // Change the link’s target to the data URL.
     setLinkTarget(link, dataUrl, config)
