@@ -2,7 +2,7 @@ import { UrlString, GlobalConfig } from './types'
 import { SubresourceLink } from './extract-links/types'
 import { Resource } from './resource'
 
-type CrawlSubresourcesConfig = Pick<GlobalConfig, 'fetchResource' | 'glob'>
+type GetSubresourceConfig = Pick<GlobalConfig, 'fetchResource' | 'glob'>
 type FetchyResult = { url: UrlString, blob: Blob }
 
 /**
@@ -14,7 +14,7 @@ type FetchyResult = { url: UrlString, blob: Blob }
  */
 export default async function getSubresource(
     link: SubresourceLink,
-    config: CrawlSubresourcesConfig
+    config: GetSubresourceConfig
 ): Promise<Resource> {
     if (!link.resource) {
         const { url, blob } = await fetchSubresource(link, config)
@@ -30,7 +30,7 @@ export default async function getSubresource(
 
 async function fetchSubresource(
     link: SubresourceLink,
-    config: CrawlSubresourcesConfig
+    config: GetSubresourceConfig
 ): Promise<FetchyResult> {
     if (link.absoluteTarget === undefined) {
         throw new Error(`Cannot fetch invalid target: ${link.target}`)

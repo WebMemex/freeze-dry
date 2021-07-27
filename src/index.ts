@@ -5,8 +5,10 @@ import captureDom from './capture-dom'
 import dryResource from './dry-resources'
 import { GlobalConfig } from './types/index'
 import { SubresourceLink } from './extract-links/types'
-import getSubresource from './crawl-subresources'
-import finaliseSnapshot, { blobToDataUrl, setLinkTarget } from './create-single-file'
+import getSubresource from './get-subresource'
+import finaliseSnapshot from './finalise-snapshot'
+import blobToDataUrl from './blob-to-data-url'
+import setLinkTarget from './set-link-target'
 import { Resource } from './resource'
 
 /**

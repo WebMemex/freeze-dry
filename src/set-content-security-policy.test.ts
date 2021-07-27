@@ -1,4 +1,4 @@
-import setContentSecurityPolicy from './index'
+import setContentSecurityPolicy from './set-content-security-policy'
 
 const csp = `default-src 'none'; img-src data:`
 
