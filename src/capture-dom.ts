@@ -17,31 +17,28 @@ export default function captureDom(
     originalDoc: Document,
     config: CaptureDomConfig,
 ): DomResource {
-    // The first step is about grabbing everything that we need access to the original DOM for.
-    // Think documents in frames, current values of form inputs, canvas state..
-    // We make clones of everything we need, so in the next step we can do async stuff without
-    // worrying about the DOM changing.
+    // Grab everything that we need access to the original DOM for. Think documents in frames,
+    // current values of form inputs, canvas state.. We make clones of everything we need, so that
+    // after this we can do async stuff without worrying about the DOM changing.
 
     const domResource = DomResource.clone({ url: config.docUrl, doc: originalDoc, config })
 
-    const framedDocuments = crawlFramedDocuments(domResource, originalDoc, config)
-    for (const framedDocument of framedDocuments) {
-    }
+    crawlFramedDocuments(domResource, originalDoc, config)
 
     return domResource
 }
 
-function * crawlFramedDocuments(
+function crawlFramedDocuments(
     domResource: DomResource,
     originalDoc: Document,
     config: CaptureDomConfig,
-): Iterable<DomResource> {
+): DomResource[] {
     // Capture the DOM inside every frame (recursively).
     // TODO change frame grabbing approach to also get frames with srcdoc instead of src (issue #25)
     const frameLinks = getLinksToCrawl(domResource)
-    for (const link of frameLinks) {
-        yield * crawlFrameLink(link, originalDoc, config)
-    }
+    return frameLinks.flatMap(
+        link => crawlFrameLink(link, originalDoc, config)
+    )
 }
 
 function getLinksToCrawl(domResource: DomResource) {
@@ -52,11 +49,11 @@ function getLinksToCrawl(domResource: DomResource) {
     return frameLinks
 }
 
-function * crawlFrameLink(
+function crawlFrameLink(
     link: HtmlDocumentLink,
     originalDoc: Document,
     config: CaptureDomConfig,
-): Iterable<DomResource> {
+): DomResource[] {
     // Find the corresponding frame element in original document.
     const frameElement = link.from.element
     const originalFrameElement = domNodeAtPath(
@@ -69,14 +66,14 @@ function * crawlFrameLink(
     const innerDoc = getDocInFrame(originalFrameElement)
     if (!innerDoc) {
         // We cannot access the frame content's current state (e.g. due to same origin policy).
-        // We will fall back to refetching the inner document while crawling the subresources.
-        return
+        // We can later still refetch the inner document while crawling the subresources.
+        return []
     }
     link.resource = DomResource.clone({ doc: innerDoc, config })
 
-    // Yield this document and recurse to yield any others inside of it.
-    yield link.resource
-    yield * crawlFramedDocuments(link.resource, innerDoc, config)
+    // Return this document and any others inside of it (recursively).
+    const framedDocuments = crawlFramedDocuments(link.resource, innerDoc, config)
+    return [link.resource, ...framedDocuments]
 }
 
 function defaultGetDocInFrame(frameElement: FrameElement): Document | null {
