@@ -22,7 +22,7 @@ export class LeafResource extends Resource {
 
     // A leaf resource has zero links by definition.
     get links(): Link[] & [] {
-        return [] as Link[] & [];
+        return [] as Link[] & []
     }
 
     static async fromBlob({ url, blob }: {

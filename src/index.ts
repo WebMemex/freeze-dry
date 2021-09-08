@@ -12,7 +12,7 @@ import setLinkTarget from './set-link-target'
 import { DomCloneResource } from './resource/dom-clone-resource'
 
 /**
- * Freeze dry an HTML Document
+ * Freeze-dry an HTML Document
  * @param {Document} [doc=window.document] - HTML Document to be freeze-dried. Remains unmodified.
  * @param {Object} [options]
  * @param {number} [options.timeout=Infinity] - Maximum time (in milliseconds) spent on fetching the
@@ -28,11 +28,12 @@ import { DomCloneResource } from './resource/dom-clone-resource'
  * For example, <img src="bg.png"> would become <img src="data:..." data-original-src="bg.png">.
  * Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
  * URLs inside stylesheets are still lost.
- * @param {boolean} [options.setContentSecurityPolicy] - Whether to add a <meta> tag with a content
- * security policy that disallows the page to load any external resources.
+ * @param {boolean} [options.setContentSecurityPolicy=true] - Whether to add a <meta> tag with a
+ * content security policy that disallows the page to load any external resources.
  * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
  * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
- * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
+ * API-compatible with the global fetch(), but may also resolve to an object { blob, url } instead
+ * of a Response.
  * @param {Window} [options.glob] - Overrides the global window object that is used for accessing
  * global DOM interfaces. Defaults to doc.defaultView or (if that is absent) the global `window`.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
@@ -70,7 +71,7 @@ export default async function freezeDry(
         // TODO some debug logging
         // TODO some progress tick allowing to get the incomplete result
 
-        // Allow config to be modified during recursion, but default to pass it through.
+        // Allow config to be modified during recursion, but default to passing it through.
         async function recurse(link: SubresourceLink, _config = config) {
             await processLinkWrapper(link, _config)
         }
