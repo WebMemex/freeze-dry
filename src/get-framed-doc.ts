@@ -1,7 +1,6 @@
-import { pathForDomNode, domNodeAtPath } from './package'
-
 import { HtmlDocumentLink } from './extract-links/types'
 import { FrameElement, GlobalConfig } from './types'
+import { DomCloneResource } from './resource/dom-clone-resource'
 
 export default function getFramedDoc(
     link: HtmlDocumentLink,
@@ -9,18 +8,17 @@ export default function getFramedDoc(
 ) {
     // Find the corresponding frame element in original document.
     const parentResource = link.from.resource
-    const originalDoc = parentResource.originalDoc
-    const frameElement = link.from.element
+    if (parentResource instanceof DomCloneResource) {
+        const frameElement = link.from.element
+        const originalFrameElement = parentResource.getOriginalNode(frameElement)
 
-    const originalFrameElement = domNodeAtPath(
-        pathForDomNode(frameElement, frameElement.ownerDocument),
-        originalDoc,
-    ) as FrameElement
-
-    // Get the document inside the frame.
-    const { getDocInFrame = defaultGetDocInFrame } = config
-    const innerDoc = getDocInFrame(originalFrameElement)
-    return innerDoc
+        // Get the document inside the frame.
+        const { getDocInFrame = defaultGetDocInFrame } = config
+        const innerDoc = getDocInFrame(originalFrameElement)
+        return innerDoc
+    } else {
+        return null
+    }
 }
 
 function defaultGetDocInFrame(frameElement: FrameElement): Document | null {

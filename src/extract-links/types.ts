@@ -109,7 +109,7 @@ export interface HtmlAudioLink extends HtmlSubresourceLink_base {
 
 export interface HtmlDocumentLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "document";
-    readonly from: AttributeAnchor<FrameElement, "src"> & { resource: DomResource };
+    readonly from: AttributeAnchor<FrameElement, "src"> & { resource?: DomResource };
     resource?: DomResource;
 }
 
