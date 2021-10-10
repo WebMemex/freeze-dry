@@ -47,7 +47,7 @@ test('should capture current state of documents inside frames', async () => {
     const doc = await getExampleDoc()
 
     // Modify the iframe contents; the capture should include the modifications.
-    const innerDoc = doc.getElementsByTagName('iframe')[0].contentDocument
+    const innerDoc = doc.querySelector('iframe').contentDocument
     innerDoc.body.appendChild(innerDoc.createElement('hr'))
 
     // Start freeze-dry
@@ -61,6 +61,28 @@ test('should capture current state of documents inside frames', async () => {
     const dryInnerDoc = dryDoc.querySelector('iframe').contentDocument
     // We made the snapshot when one <hr> was in the document.
     expect(dryInnerDoc.querySelectorAll('hr')).toHaveLength(1)
+})
+
+test('should capture current state of documents inside frames, recursively', async () => {
+    const doc = await getExampleDoc()
+
+    // Modify the nested iframe contents; the capture should include the modifications.
+    const innerDoc = doc.querySelector('iframe').contentDocument
+    const innerInnerDoc = innerDoc.querySelector('iframe').contentDocument
+    innerInnerDoc.body.appendChild(innerDoc.createElement('hr'))
+
+    // Start freeze-dry
+    const resultP = freezeDry(doc, { now: new Date(1534615340948) })
+    // Add a second element inside the nested iframe
+    innerInnerDoc.body.appendChild(innerDoc.createElement('hr'))
+    // Wait for freeze-dry
+    const result = await resultP
+
+    const dryDoc = await makeDom(result)
+    const dryInnerDoc = dryDoc.querySelector('iframe').contentDocument
+    const dryInnerInnerDoc = dryInnerDoc.querySelector('iframe').contentDocument
+    // We made the snapshot when one <hr> was in the document.
+    expect(dryInnerInnerDoc.querySelectorAll('hr')).toHaveLength(1)
 })
 
 test('should be idempotent', async () => {

@@ -3,8 +3,7 @@ import { flatOptions } from './package'
 
 import dryResource from './dry-resources'
 import type { GlobalConfig, ProcessLinkRecurse } from './types/index'
-import type { SubresourceLink, HtmlDocumentLink } from './extract-links/types'
-import getFramedDoc from './get-framed-doc'
+import type { SubresourceLink } from './extract-links/types'
 import fetchSubresource from './fetch-subresource'
 import finaliseSnapshot from './finalise-snapshot'
 import blobToDataUrl from './blob-to-data-url'
@@ -62,6 +61,8 @@ export default async function freezeDry(
 
     // Step 1: Capture the DOM.
     const domResource = new DomCloneResource(config.docUrl, doc, config)
+    // TODO avoid recursing here, and let processLink recursion handle that?
+    domResource.cloneFramedDocs(/* deep = */ true)
 
     // Step 2: Make the DOM static and context-free.
     dryResource(domResource, config)
@@ -99,18 +100,6 @@ async function defaultProcessLink(
     config: GlobalConfig,
     recurse: ProcessLinkRecurse,
 ) {
-    if (isHtmlDocumentLink(link)) {
-        // If the link is a frame, first try if we can get its current contents.
-        let innerDoc = getFramedDoc(link, config)
-        if (innerDoc !== null) {
-            // Ideally we recurse synchronously to capture all subframes instantaneously, but in
-            // case we can only get a promise of the framed document, we’ll have to await it.
-            if ('then' in innerDoc) innerDoc = await innerDoc
-
-            link.resource = new DomCloneResource(undefined, innerDoc, config)
-        }
-    }
-
     // Get the linked resource if missing (from cache/internet).
     if (!link.resource) {
         try {
@@ -135,11 +124,4 @@ async function defaultProcessLink(
 
     // Change the link’s target to the data URL.
     setLinkTarget(link, dataUrl, config)
-}
-
-function isHtmlDocumentLink(link: SubresourceLink): link is HtmlDocumentLink {
-    return (
-        link.subresourceType === 'document'
-        && !!(link as HtmlDocumentLink).from.element
-    )
 }

@@ -10,7 +10,7 @@ type DomResourceConfig = Pick<GlobalConfig, 'glob'>
 export class DomResource extends Resource {
     private _url: UrlString | undefined
     private _doc: Document
-    private _config: DomResourceConfig
+    protected _config: DomResourceConfig
     private _links: HtmlLink[]
 
     /**

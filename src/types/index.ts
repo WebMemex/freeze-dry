@@ -25,6 +25,6 @@ export interface GlobalConfig {
     setContentSecurityPolicy: boolean,
     now: Date,
     fetchResource?: Fetchy,
-    getDocInFrame?: (frameElement: FrameElement) => Document | Promise<Document> | null, // TODO expose to user & test.
+    getDocInFrame?: (frameElement: FrameElement) => Document | null, // TODO expose to user & test.
     glob: typeof window, /* global window */
 }
