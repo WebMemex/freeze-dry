@@ -35,7 +35,7 @@ export abstract class Resource {
         this.makeLinksAbsolute()
     }
 
-    // Make links absolute. Except within-document links: keep/make those relative (e.g. href="#top").
+    // Make ‘outward’ links absolute, and ‘within-document’ links relative (e.g. href="#top").
     makeLinksAbsolute() {
         this.links.forEach(link => {
             // If target is invalid (hence absoluteTarget undefined), leave it untouched.
@@ -51,7 +51,7 @@ export abstract class Resource {
                 link.target = targetHash
             }
             else {
-                // The link points outside the resource (or to the resource itself). We make it absolute.
+                // The link points outside the resource (or to itself). We make it absolute.
                 link.target = absoluteTarget
             }
         })
@@ -75,7 +75,9 @@ export abstract class Resource {
 
     // Determine the Resource subclass to use for the given subresource type; returns undefined if
     // the type is not supported.
-    static getResourceClass(subresourceType: SubresourceType | undefined): ResourceFactory | undefined {
+    static getResourceClass(
+        subresourceType: SubresourceType | undefined
+    ): ResourceFactory | undefined {
         const resourceClasses: { [s: string]: ResourceFactory | undefined } = {
             document: DomResource,
             style: StylesheetResource,

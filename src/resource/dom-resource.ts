@@ -15,14 +15,19 @@ export class DomResource extends Resource {
     private _links: HtmlLink[]
 
     /**
-     * @param url - Since the passed Document already has a property doc.URL, the url parameter is optional; if
-     * passed it will override the value of doc.URL for determining the target of relative URLs.
+     * @param url - Since the passed Document already has a property doc.URL, the url parameter is
+     * optional; if passed it will override the value of doc.URL when determining the target of
+     * relative URLs.
      */
     constructor(url: UrlString | undefined, doc: Document, config: DomResourceConfig)
 
     constructor(url: UrlString, html: string, config: DomResourceConfig)
 
-    constructor(url: UrlString | undefined, docOrHtml: Document | string, config: DomResourceConfig) {
+    constructor(
+        url: UrlString | undefined,
+        docOrHtml: Document | string,
+        config: DomResourceConfig
+    ) {
         super()
         const doc = (typeof docOrHtml === 'string')
             ? (new config.glob.DOMParser()).parseFromString(docOrHtml, 'text/html')

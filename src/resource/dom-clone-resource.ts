@@ -12,8 +12,9 @@ export class DomCloneResource extends DomResource {
     private _originalDoc: Document
 
     /**
-     * @param url - Since the passed Document already has a property doc.URL, the url parameter is optional; if
-     * passed it will override the value of doc.URL for determining the target of relative URLs.
+     * @param url - Since the passed Document already has a property doc.URL, the url parameter is
+     * optional; if passed it will override the value of doc.URL when determining the target of
+     * relative URLs.
      */
     constructor(
         url: UrlString | undefined,
