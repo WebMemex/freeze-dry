@@ -4,6 +4,7 @@ import type { HtmlLink } from "../extract-links/types"
 import type { GlobalConfig, UrlString } from "../types"
 import { extractLinksFromDom } from "../extract-links"
 import { blobToText } from "./util"
+import makeDomStatic from "../make-dom-static"
 
 type DomResourceConfig = Pick<GlobalConfig, 'glob'>
 
@@ -54,6 +55,11 @@ export class DomResource extends Resource {
     get links(): HtmlLink[] {
         // TODO should we extract the links again, in case the document changed?
         return this._links
+    }
+
+    dry() {
+        super.dry()
+        makeDomStatic(this.doc, this._config)
     }
 
     static async fromBlob({ url, blob, config }: {

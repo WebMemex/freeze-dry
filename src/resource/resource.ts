@@ -30,6 +30,33 @@ export abstract class Resource {
             .filter(link => Resource.getResourceClass(link.subresourceType))
     }
 
+    // ‘Dry’ the resource, i.e. make it static and context-free.
+    dry() {
+        this.makeLinksAbsolute()
+    }
+
+    // Make links absolute. Except within-document links: keep/make those relative (e.g. href="#top").
+    makeLinksAbsolute() {
+        this.links.forEach(link => {
+            // If target is invalid (hence absoluteTarget undefined), leave it untouched.
+            const absoluteTarget = link.absoluteTarget
+            if (absoluteTarget === undefined) return
+
+            const targetHash = absoluteTarget.includes('#')
+                ? absoluteTarget.substring(absoluteTarget.indexOf('#'))
+                : undefined
+            const urlWithoutHash = (url: string) => url.split('#')[0]
+            if (targetHash && urlWithoutHash(absoluteTarget) === urlWithoutHash(this.url)) {
+                // The link points to a fragment inside the resource itself. We make it relative.
+                link.target = targetHash
+            }
+            else {
+                // The link points outside the resource (or to the resource itself). We make it absolute.
+                link.target = absoluteTarget
+            }
+        })
+    }
+
     // Create a Resource from a Blob object plus URL; returns an instance of a subclass of Resource
     // matching the given subresource type.
     static async fromBlob({ url, blob, subresourceType, config }: {

@@ -32,7 +32,7 @@ interface Link_base {
 // Note the WHATWG HTML spec calls such (and *only* such) links ‘hyperlinks’ <https://html.spec.whatwg.org/multipage/links.html#hyperlink>
 export interface NonSubresourceLink extends Link_base {
     readonly isSubresource: false;
-    readonly subresourceType: undefined;
+    readonly subresourceType?: undefined;
 }
 
 // Links that make their targets ‘part of’ the document.

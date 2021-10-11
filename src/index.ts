@@ -1,7 +1,6 @@
 /* global window */
 import { flatOptions } from './package'
 
-import dryResource from './dry-resources'
 import type { GlobalConfig, ProcessLinkRecurse } from './types/index'
 import type { SubresourceLink } from './extract-links/types'
 import fetchSubresource from './fetch-subresource'
@@ -65,7 +64,7 @@ export default async function freezeDry(
     domResource.cloneFramedDocs(/* deep = */ true)
 
     // Step 2: Make the DOM static and context-free.
-    dryResource(domResource, config)
+    domResource.dry()
 
     // Step 3: Recurse into subresources, converting them as needed.
     async function processLinkWrapper(link: SubresourceLink, config: GlobalConfig) {
@@ -112,7 +111,7 @@ async function defaultProcessLink(
     }
 
     // Make the resource static and context-free.
-    dryResource(link.resource, config)
+    link.resource.dry()
 
     // Recurse: process this resource’s subresources.
     await Promise.all(link.resource.subresourceLinks.map(
