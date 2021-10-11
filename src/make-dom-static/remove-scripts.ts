@@ -6,9 +6,13 @@ import { GlobalConfig } from "../types"
  * @returns nothing; rootElement is mutated.
  */
 export default function removeScripts(
-    rootElement: Element,
+    docOrElement: Element | Document,
     config: Pick<GlobalConfig, 'glob'>,
 ) {
+    const rootElement = 'documentElement' in docOrElement
+        ? docOrElement.documentElement
+        : docOrElement
+
     removeScriptElements(rootElement)
     removeEventHandlers(rootElement)
     removeJavascriptHrefs(rootElement, config)
