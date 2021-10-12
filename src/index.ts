@@ -63,10 +63,7 @@ export default async function freezeDry(
     // TODO avoid recursing here, and let processLink recursion handle that?
     domResource.cloneFramedDocs(/* deep = */ true)
 
-    // Step 2: Make the DOM static and context-free.
-    domResource.dry()
-
-    // Step 3: Recurse into subresources, converting them as needed.
+    // Step 2: Recurse into subresources, converting them as needed.
     async function processLinkWrapper(link: SubresourceLink, config: GlobalConfig) {
         // TODO some debug logging
         // TODO some progress tick allowing to get the incomplete result
@@ -81,6 +78,9 @@ export default async function freezeDry(
     await Promise.all(domResource.subresourceLinks.map(
         link => processLinkWrapper(link, config)
     ))
+
+    // Step 3: Make the DOM static and context-free.
+    domResource.dry()
 
     // Step 4: Finalise (e.g. stamp some <meta> tags onto the page)
     finaliseSnapshot(domResource, config)
@@ -110,13 +110,13 @@ async function defaultProcessLink(
         }
     }
 
-    // Make the resource static and context-free.
-    link.resource.dry()
-
     // Recurse: process this resource’s subresources.
     await Promise.all(link.resource.subresourceLinks.map(
         link => recurse(link)
     ))
+
+    // Make the resource static and context-free.
+    link.resource.dry()
 
     // Convert the (now self-contained) subresource into a data URL.
     const dataUrl = await blobToDataUrl(link.resource.blob, config)

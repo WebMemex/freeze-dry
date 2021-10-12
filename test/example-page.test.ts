@@ -45,29 +45,40 @@ test('should freeze-dry an example page as expected', async () => {
 
 test('should capture current state of documents inside frames', async () => {
     const doc = await getExampleDoc()
+    const iframeIds = ['iframe-src', 'iframe-src-srcdoc', 'iframe-srcdoc', 'iframe-empty']
 
     // Modify the iframe contents; the capture should include the modifications.
-    const innerDoc = doc.querySelector('iframe').contentDocument
-    innerDoc.body.appendChild(innerDoc.createElement('hr'))
+    const iframes = iframeIds.map(id => doc.getElementById(id)) as HTMLIFrameElement[]
+    const innerDocs = iframes.map(iframe => iframe.contentDocument)
+    for (const innerDoc of innerDocs) {
+        innerDoc.body.appendChild(innerDoc.createElement('hr'))
+    }
 
     // Start freeze-dry
     const resultP = freezeDry(doc, { now: new Date(1534615340948) })
     // Add a second element inside the frame
-    innerDoc.body.appendChild(innerDoc.createElement('hr'))
+    for (const innerDoc of innerDocs) {
+        innerDoc.body.appendChild(innerDoc.createElement('hr'))
+    }
     // Wait for freeze-dry
     const result = await resultP
 
     const dryDoc = await makeDom(result)
-    const dryInnerDoc = dryDoc.querySelector('iframe').contentDocument
-    // We made the snapshot when one <hr> was in the document.
-    expect(dryInnerDoc.querySelectorAll('hr')).toHaveLength(1)
+    const dryIframes = iframeIds.map(id => dryDoc.getElementById(id)) as HTMLIFrameElement[]
+    const dryInnerDocs = dryIframes.map(iframe => iframe.contentDocument)
+    // We made the snapshot when each framed document contained one <hr>.
+    expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // src
+    expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // src+srcdoc
+    expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // srcdoc
+    expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // empty
 })
 
 test('should capture current state of documents inside frames, recursively', async () => {
     const doc = await getExampleDoc()
 
     // Modify the nested iframe contents; the capture should include the modifications.
-    const innerDoc = doc.querySelector('iframe').contentDocument
+    const iframe = doc.getElementById('iframe-src') as HTMLIFrameElement
+    const innerDoc = iframe.contentDocument
     const innerInnerDoc = innerDoc.querySelector('iframe').contentDocument
     innerInnerDoc.body.appendChild(innerDoc.createElement('hr'))
 
@@ -79,7 +90,8 @@ test('should capture current state of documents inside frames, recursively', asy
     const result = await resultP
 
     const dryDoc = await makeDom(result)
-    const dryInnerDoc = dryDoc.querySelector('iframe').contentDocument
+    const dryIframe = dryDoc.getElementById('iframe-src') as HTMLIFrameElement
+    const dryInnerDoc = dryIframe.contentDocument
     const dryInnerInnerDoc = dryInnerDoc.querySelector('iframe').contentDocument
     // We made the snapshot when one <hr> was in the document.
     expect(dryInnerInnerDoc.querySelectorAll('hr')).toHaveLength(1)

@@ -1,7 +1,7 @@
 import { documentOuterHTML } from "../package"
 import { Resource } from "./resource"
 import type { HtmlLink } from "../extract-links/types"
-import type { GlobalConfig, UrlString } from "../types"
+import type { GlobalConfig, UrlString, FrameElement } from "../types"
 import { extractLinksFromDom } from "../extract-links"
 import { blobToText } from "./util"
 import makeDomStatic from "../make-dom-static"
@@ -12,7 +12,7 @@ export class DomResource extends Resource {
     private _url: UrlString | undefined
     private _doc: Document
     protected _config: DomResourceConfig
-    private _links: HtmlLink[]
+    private _linksInDom: HtmlLink[]
 
     /**
      * @param url - Since the passed Document already has a property doc.URL, the url parameter is
@@ -35,7 +35,8 @@ export class DomResource extends Resource {
         this._url = url
         this._doc = doc
         this._config = config
-        this._links = extractLinksFromDom(doc, { docUrl: url })
+        this._linksInDom = extractLinksFromDom(doc, { docUrl: url })
+        for (const link of this._linksInDom) link.from.resource = this
     }
 
     // Holds the Document object.
@@ -58,13 +59,65 @@ export class DomResource extends Resource {
     }
 
     get links(): HtmlLink[] {
+        // Return links directly contained in the document itself, as well as in its iframes with a
+        // srcdoc (because such iframes are not treated as subresources)
+        const allLinks = [
+            ...this.linksInDom,
+            ...this.iframeSrcDocs.flatMap(resource => resource.links),
+            // TODO Treat inline css, svg, and/or other URL-less ‘pseudo’-resources similarly?
+        ]
+        return allLinks
+    }
+
+    /**
+     * The links contained directly in the DOM itself, i.e. excluding those in documents in iframes.
+     */
+    get linksInDom(): HtmlLink[] {
         // TODO should we extract the links again, in case the document changed?
-        return this._links
+        return this._linksInDom
+    }
+
+    /**
+     * A list of DomResources corresponding to documents in iframes with the `srcdoc` attribute
+     * (note that these documents are not considered subresources).
+     */
+    get iframeSrcDocs(): DomResource[] {
+        // Get all iframes with a srcdoc attribute.
+        const frames: HTMLIFrameElement[] = Array.from(this.doc.querySelectorAll('iframe[srcdoc]'))
+        const resources = frames
+            .map(frame => this.getContentDocOfFrame(frame))
+            .filter(isNotNull)
+        return resources;
     }
 
     dry() {
         super.dry()
         makeDomStatic(this.doc, this._config)
+        // TODO update srcdoc values with current their DOM state. But this should happen only
+        // after the frame’s contents have been processed — which requires recursing into its
+        // subresources ⇒ perhaps we need to run the (or a second) dry function *after* the
+        // recursion into subresources?
+        this.updateSrcdocValues()
+    }
+
+    updateSrcdocValues() {
+        this.doc.querySelectorAll('iframe[srcdoc]').forEach((iframe: HTMLIFrameElement) => {
+            const innerDomResource = this.getContentDocOfFrame(iframe)
+            if (innerDomResource) {
+                const html = innerDomResource.string
+                iframe.srcdoc = attributeEncode(html)
+            }
+        })
+    }
+
+    getContentDocOfFrame(frameElement: FrameElement): DomResource | null {
+        // TODO memoise like in DomCloneResource
+        const innerDoc = frameElement.contentDocument
+        if (innerDoc !== null) {
+            return new DomResource(undefined, innerDoc, this._config)
+        } else {
+            return null
+        }
     }
 
     static async fromBlob({ url, blob, config }: {
@@ -75,4 +128,12 @@ export class DomResource extends Resource {
         const html = await blobToText(blob, config)
         return new this(url, html, config)
     }
+}
+
+function attributeEncode(string: string) {
+    return string.replace(/"/g, '&quot;') // TODO replace & ⇒ &amp; ?
+}
+
+function isNotNull<T extends null>(x: T): x is Exclude<T, null> {
+    return x !== null;
 }

@@ -50,21 +50,31 @@ export class DomCloneResource extends DomResource {
     }
 
     cloneFramedDocs(deep: boolean = false) {
-        // TODO Get frames without a 'src' too (issue #25)
+        // Get all (i)frames (filter by HTMLElement, just to be sure; did SVG invent frames yet?)
+        const clonedFrames: FrameElement[] = Array.from(
+            this.doc.querySelectorAll('frame,iframe')
+        ).filter(element => element instanceof this._config.glob.HTMLElement) as FrameElement[]
+
+        // Get all links defined by frames
         const frameLinks = this.subresourceLinks.filter(
             link => link.subresourceType === 'document'
         ) as HtmlDocumentLink[]
 
-        for (const link of frameLinks) {
-            const clonedInnerDoc = this.getContentDocOfFrame(link.from.element)
-
+        for (const clonedFrame of clonedFrames) {
+            // Capture the frame contents from the original document.
+            const clonedInnerDoc = this.getContentDocOfFrame(clonedFrame)
             if (clonedInnerDoc !== null) {
                 // Recurse to capture the framed document’s frames, if requested.
                 if (deep) clonedInnerDoc.cloneFramedDocs(true)
 
-                // Store the clone in link.resource. Unfortunately we cannot modify the read-only
-                // attribute clonedFrameElement.contentDocument (its value will remain null).
-                link.resource = clonedInnerDoc
+                // For frames that define a link (i.e. frames with a src attribute), tag the link
+                // with its target and source resources.
+                const link = frameLinks.find(link => link.from.element === clonedFrame)
+                if (link) {
+                    // If content doc is defined by the `srcdoc`, don’t tag it to the `src` link.
+                    if (clonedInnerDoc.url !== 'about:srcdoc') link.resource = clonedInnerDoc // TODO is this check correct?
+                    link.from.resource = this
+                }
             }
         }
     }

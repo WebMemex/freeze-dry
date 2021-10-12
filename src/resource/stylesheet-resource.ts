@@ -25,6 +25,7 @@ export class StylesheetResource extends Resource {
         try {
             const parsedCss = postcss.parse(stylesheetContent)
             this._links = extractLinksFromCss(parsedCss, url)
+            for (const link of this._links) link.from.resource = this
             // Whenever the stylesheet content is accessed, we serialise its AST.
             this._getString = () => parsedCss.toResult().css
         } catch (err) {
