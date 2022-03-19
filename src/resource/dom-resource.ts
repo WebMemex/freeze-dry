@@ -93,10 +93,6 @@ export class DomResource extends Resource {
     dry() {
         super.dry()
         makeDomStatic(this.doc, this._config)
-        // TODO update srcdoc values with current their DOM state. But this should happen only
-        // after the frame’s contents have been processed — which requires recursing into its
-        // subresources ⇒ perhaps we need to run the (or a second) dry function *after* the
-        // recursion into subresources?
         this.updateSrcdocValues()
     }
 
@@ -131,7 +127,7 @@ export class DomResource extends Resource {
 }
 
 function attributeEncode(string: string) {
-    return string.replace(/"/g, '&quot;') // TODO replace & ⇒ &amp; ?
+    return string.replace(/"/g, '&quot;')
 }
 
 function isNotNull<T extends null>(x: T): x is Exclude<T, null> {

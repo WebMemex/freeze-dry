@@ -72,7 +72,7 @@ export class DomCloneResource extends DomResource {
                 const link = frameLinks.find(link => link.from.element === clonedFrame)
                 if (link) {
                     // If content doc is defined by the `srcdoc`, don’t tag it to the `src` link.
-                    if (clonedInnerDoc.url !== 'about:srcdoc') link.resource = clonedInnerDoc // TODO is this check correct?
+                    if (clonedInnerDoc.url !== 'about:srcdoc') link.resource = clonedInnerDoc
                     link.from.resource = this
                 }
             }
