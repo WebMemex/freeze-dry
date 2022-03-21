@@ -15,7 +15,10 @@
     "check-globals": "eslint --config .eslintrc-check-globals.json 'src/**/*.ts'",
     "prepare": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts'",
     "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts' -w",
-    "test": "jest --verbose",
+    "test": "npm run test:jest && npm run test:playwright",
+    "test:jest": "jest --verbose",
+    "test:playwright": "playwright test",
+    "test-server": "static -a 0.0.0.0 -p 3000 test/example-website/",
     "typecheck": "tsc --noEmit || true"
   },
   "devDependencies": {
@@ -35,6 +38,7 @@
     "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
+    "node-static": "^0.7.11",
     "typescript": "^3.9.2"
   },
   "dependencies": {
@@ -51,6 +55,7 @@
     "relative-to-absolute-iri": "^1.0.5"
   },
   "jest": {
+    "testMatch": ["**/*test.[tj]s"],
     "testURL": "https://example.com/test/page"
   }
 }

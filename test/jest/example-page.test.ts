@@ -3,7 +3,7 @@ import jsdom from 'jsdom'
 import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Request, ...
 import { dataURLToBlob } from 'blob-util'
 
-import freezeDry from '../src/index'
+import freezeDry from '../../src/index'
 
 const fetch = jestFetchMock
 Object.assign(global, { fetch })
@@ -277,7 +277,7 @@ class MockResourceLoader extends jsdom.ResourceLoader {
 // A fetch function that reads the subresources from local files.
 async function mockFetch(url: string) {
     const websiteOrigin = 'https://example.com'
-    const basedir = __dirname + '/example-page'
+    const basedir = __dirname + '/../example-website'
 
     // We simply use the file extension to determine the mime type.
     const extensionTypes = {
