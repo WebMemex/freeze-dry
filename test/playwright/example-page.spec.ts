@@ -9,6 +9,10 @@ test.describe('Example page', () => {
     await expect(page.locator('h1')).toHaveText('Freeze me.');
   });
 
+  test('Precheck: freezeDry is injected', async ({ page }) => {
+    await expect(await page.evaluate('typeof window.freezeDry')).toBe('function');
+  });
+
   // test('', async ({ page }) => {
   // });
 });
