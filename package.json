@@ -50,7 +50,7 @@
     "memoize-weak": "^1.0.2",
     "mutable-proxy": "^1.0.0",
     "path-to-domnode": "^1.0.1",
-    "postcss": "^7.0.1",
+    "postcss": "^8.0.1",
     "postcss-values-parser": "^1.5.0",
     "relative-to-absolute-iri": "^1.0.5"
   },
