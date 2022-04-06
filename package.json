@@ -27,7 +27,7 @@
     "@babel/plugin-transform-runtime": "^7.9.6",
     "@babel/preset-env": "^7.9.6",
     "@babel/preset-typescript": "^7.9.0",
-    "@playwright/test": "^1.20.0",
+    "@playwright/test": "^1.20.1",
     "@types/jest": "^24.0.25",
     "@types/node": "^13.11.0",
     "@typescript-eslint/parser": "^2.27.0",
