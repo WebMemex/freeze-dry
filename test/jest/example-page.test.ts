@@ -13,6 +13,8 @@ beforeEach(() => {
 
 jest.useFakeTimers()
 
+const TEST_PAGE_URL = 'https://example.com/pages/example.html'
+
 const noNonsenseConfig = {
     charsetDeclaration: '',
     addMetadata: false,
@@ -22,14 +24,14 @@ const noNonsenseConfig = {
 
 test('should freeze-dry a trivial example', async () => {
     const inputHtml = `<html><head></head><body><h1>tada!</h1></body></html>`
-    const doc = await makeDom(inputHtml, 'https://example.com/main/page.html')
+    const doc = await makeDom(inputHtml, TEST_PAGE_URL)
     const result = await freezeDry(doc, noNonsenseConfig)
     expect(result).toBe(inputHtml)
 })
 
 test('should freeze-dry an example with an image', async () => {
     const inputHtml = `<html><head></head><body><img src="/imgs/8x8.png"></body></html>`
-    const doc = await makeDom(inputHtml, 'https://example.com/main/page.html')
+    const doc = await makeDom(inputHtml, TEST_PAGE_URL)
     const result = await freezeDry(doc, noNonsenseConfig)
     expect(result).toBe(`<html><head></head><body><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAEUlEQVQYlWNgaGD4jxePDAUAE0dfwfSqhOEAAAAASUVORK5CYII="></body></html>`)
 })
@@ -41,60 +43,6 @@ test('should freeze-dry an example page as expected', async () => {
     const result = await freezeDry(doc, { now: new Date(1534615340948) })
 
     expect(result).toMatchSnapshot() // compares to (or creates) snapshot in __snapshots__ folder
-})
-
-test('should capture current state of documents inside frames', async () => {
-    const doc = await getExampleDoc()
-    const iframeIds = ['iframe-src', 'iframe-src-srcdoc', 'iframe-srcdoc', 'iframe-empty']
-
-    // Modify the iframe contents; the capture should include the modifications.
-    const iframes = iframeIds.map(id => doc.getElementById(id)) as HTMLIFrameElement[]
-    const innerDocs = iframes.map(iframe => iframe.contentDocument)
-    for (const innerDoc of innerDocs) {
-        innerDoc.body.appendChild(innerDoc.createElement('hr'))
-    }
-
-    // Start freeze-dry
-    const resultP = freezeDry(doc, { now: new Date(1534615340948) })
-    // Add a second element inside the frame
-    for (const innerDoc of innerDocs) {
-        innerDoc.body.appendChild(innerDoc.createElement('hr'))
-    }
-    // Wait for freeze-dry
-    const result = await resultP
-
-    const dryDoc = await makeDom(result)
-    const dryIframes = iframeIds.map(id => dryDoc.getElementById(id)) as HTMLIFrameElement[]
-    const dryInnerDocs = dryIframes.map(iframe => iframe.contentDocument)
-    // We made the snapshot when each framed document contained one <hr>.
-    expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // src
-    expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // src+srcdoc
-    // expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // srcdoc
-    expect(dryInnerDocs.shift().querySelectorAll('hr')).toHaveLength(1) // empty
-})
-
-test('should capture current state of documents inside frames, recursively', async () => {
-    const doc = await getExampleDoc()
-
-    // Modify the nested iframe contents; the capture should include the modifications.
-    const iframe = doc.getElementById('iframe-src') as HTMLIFrameElement
-    const innerDoc = iframe.contentDocument
-    const innerInnerDoc = innerDoc.querySelector('iframe').contentDocument
-    innerInnerDoc.body.appendChild(innerDoc.createElement('hr'))
-
-    // Start freeze-dry
-    const resultP = freezeDry(doc, { now: new Date(1534615340948) })
-    // Add a second element inside the nested iframe
-    innerInnerDoc.body.appendChild(innerDoc.createElement('hr'))
-    // Wait for freeze-dry
-    const result = await resultP
-
-    const dryDoc = await makeDom(result)
-    const dryIframe = dryDoc.getElementById('iframe-src') as HTMLIFrameElement
-    const dryInnerDoc = dryIframe.contentDocument
-    const dryInnerInnerDoc = dryInnerDoc.querySelector('iframe').contentDocument
-    // We made the snapshot when one <hr> was in the document.
-    expect(dryInnerInnerDoc.querySelectorAll('hr')).toHaveLength(1)
 })
 
 test('should be idempotent', async () => {
@@ -126,7 +74,7 @@ test.skip('should return the incomplete result after given timeout', async () =>
 })
 
 test('should use the given docUrl', async () => {
-    const docUrl = 'https://example.com/main/page.html'
+    const docUrl = TEST_PAGE_URL
     const docHtml = await (await fetch(docUrl)).text()
     // This time, we use a DOMParser, and create a Document that lacks a URL.
     const doc = new DOMParser().parseFromString(docHtml, 'text/html')
@@ -135,7 +83,7 @@ test('should use the given docUrl', async () => {
 
     const dryDoc = await makeDom(result)
     expect(dryDoc.querySelector('a').getAttribute('href'))
-        .toEqual('https://example.com/main/something')
+        .toEqual('https://example.com/pages/something')
     expect(dryDoc.querySelector('img').getAttribute('src'))
         .toMatch(/^data:/)
 })
@@ -233,7 +181,7 @@ test('should use interfaces of a custom global object', async () => {
 })
 
 async function getExampleDoc(): Promise<Document> {
-    const docUrl = 'https://example.com/main/page.html'
+    const docUrl = TEST_PAGE_URL
     const docHtml = await (await fetch(docUrl)).text()
     const doc = await makeDom(docHtml, docUrl)
     return doc
