@@ -97,10 +97,17 @@ export class DomResource extends Resource {
     }
 
     updateSrcdocValues() {
-        this.doc.querySelectorAll('iframe[srcdoc]').forEach((iframe: HTMLIFrameElement) => {
+        // Find all iframes with `srcdoc`, but also those without `src` or `srcdoc` at all.
+        this.doc.querySelectorAll('iframe[srcdoc],iframe:not([src])').forEach((iframe: HTMLIFrameElement) => {
             const innerDomResource = this.getContentDocOfFrame(iframe)
             if (innerDomResource) {
                 const html = innerDomResource.string
+
+                // In case there was no srcdoc, and the frame is still empty, just leave it unset.
+                if (!iframe.srcdoc && html === '<html><head></head><body></body></html>') return;
+
+                // Set the srcdoc
+                // TODO Check if this escapes quotes correctly in recursive situations.
                 iframe.srcdoc = attributeEncode(html)
             }
         })
