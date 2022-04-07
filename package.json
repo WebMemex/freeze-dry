@@ -15,7 +15,10 @@
     "check-globals": "eslint --config .eslintrc-check-globals.json 'src/**/*.ts'",
     "prepare": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts'",
     "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts' -w",
-    "test": "jest --verbose",
+    "test": "npm run test:jest && npm run test:playwright",
+    "test:jest": "jest --verbose",
+    "test:playwright": "playwright test",
+    "test-server": "snowpack dev",
     "typecheck": "tsc --noEmit || true"
   },
   "devDependencies": {
@@ -24,6 +27,7 @@
     "@babel/plugin-transform-runtime": "^7.9.6",
     "@babel/preset-env": "^7.9.6",
     "@babel/preset-typescript": "^7.9.0",
+    "@playwright/test": "^1.20.1",
     "@types/jest": "^24.0.25",
     "@types/node": "^13.11.0",
     "@typescript-eslint/parser": "^2.27.0",
@@ -34,6 +38,7 @@
     "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
+    "snowpack": "^3.8.8",
     "typescript": "^3.9.2"
   },
   "dependencies": {
@@ -45,11 +50,14 @@
     "memoize-weak": "^1.0.2",
     "mutable-proxy": "^1.0.0",
     "path-to-domnode": "^1.0.1",
-    "postcss": "^7.0.1",
+    "postcss": "^8.0.1",
     "postcss-values-parser": "^1.5.0",
     "relative-to-absolute-iri": "^1.0.5"
   },
   "jest": {
+    "testMatch": [
+      "**/*test.[tj]s"
+    ],
     "testURL": "https://example.com/test/page"
   }
 }

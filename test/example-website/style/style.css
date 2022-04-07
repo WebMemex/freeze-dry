@@ -1,0 +1,15 @@
+@import './imported-sheet.css';
+
+@font-face {
+    font-family: 'My Font';
+    src: url('myfont.woff') format('woff');
+}
+
+.with-custom-font {
+    font-family: 'My Font';
+}
+
+.class-in-stylesheet {
+    color: yellow;
+    background: url('../imgs/background.png') repeat;
+}
