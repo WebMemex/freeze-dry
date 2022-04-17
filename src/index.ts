@@ -3,7 +3,6 @@ import { flatOptions } from './package'
 
 import type { GlobalConfig, ProcessLinkRecurse } from './types/index'
 import type { SubresourceLink } from './extract-links/types'
-import fetchSubresource from './fetch-subresource'
 import finaliseSnapshot from './finalise-snapshot'
 import blobToDataUrl from './blob-to-data-url'
 import setLinkTarget from './set-link-target'
@@ -101,7 +100,7 @@ async function defaultProcessLink(
     // Get the linked resource if missing (from cache/internet).
     if (!link.resource) {
         try {
-            link.resource = await fetchSubresource(link, config)
+            link.resource = await Resource.fromLink(link, config)
         } catch (err) {
             // TODO we may want to do something here. Turn target into about:invalid? For
             // now, we rely on the content security policy to prevent loading this resource.
