@@ -51,8 +51,7 @@ export default async function freezeDry(
         setContentSecurityPolicy: true,
         now: new Date(),
         fetchResource: undefined,
-        glob: options.glob // (not actually a 'default' value; but easiest to typecheck this way)
-            || doc.defaultView
+        glob: doc.defaultView
             || (typeof window !== 'undefined' ? window : undefined)
             || fail('Lacking a global window object'),
     }

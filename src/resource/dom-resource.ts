@@ -19,18 +19,19 @@ export class DomResource extends Resource {
      * optional; if passed it will override the value of doc.URL when determining the target of
      * relative URLs.
      */
-    constructor(url: UrlString | undefined, doc: Document, config: DomResourceConfig)
+    constructor(url: UrlString | undefined, doc: Document, config?: DomResourceConfig)
 
-    constructor(url: UrlString, html: string, config: DomResourceConfig)
+    constructor(url: UrlString, html: string, config?: DomResourceConfig)
 
     constructor(
         url: UrlString | undefined,
         docOrHtml: Document | string,
-        config: DomResourceConfig
+        config: DomResourceConfig = {},
     ) {
         super()
+        const glob = config.glob || globalThis
         const doc = (typeof docOrHtml === 'string')
-            ? (new config.glob.DOMParser()).parseFromString(docOrHtml, 'text/html')
+            ? (new glob.DOMParser()).parseFromString(docOrHtml, 'text/html')
             : docOrHtml
         this._url = url
         this._doc = doc
@@ -49,7 +50,8 @@ export class DomResource extends Resource {
     }
 
     get blob(): Blob {
-        return new this._config.glob.Blob([this.string], { type: 'text/html' })
+        const glob = this._config.glob || globalThis
+        return new glob.Blob([this.string], { type: 'text/html' })
     }
 
     // The DOM as a string (i.e. the document's outerHTML)

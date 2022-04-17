@@ -26,5 +26,5 @@ export interface GlobalConfig {
     now: Date,
     fetchResource?: Fetchy,
     getDocInFrame?: (frameElement: FrameElement) => Document | null, // TODO expose to user & test.
-    glob: typeof window, /* global window */
+    glob?: typeof window, /* global window */
 }

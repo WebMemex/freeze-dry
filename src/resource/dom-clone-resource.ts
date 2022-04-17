@@ -19,7 +19,7 @@ export class DomCloneResource extends DomResource {
     constructor(
         url: UrlString | undefined,
         originalDoc: Document,
-        config: DomCloneResourceConfig
+        config: DomCloneResourceConfig = {},
     ) {
         const clone = originalDoc.cloneNode(/* deep = */ true) as Document
 
@@ -51,9 +51,10 @@ export class DomCloneResource extends DomResource {
 
     cloneFramedDocs(deep: boolean = false) {
         // Get all (i)frames (filter by HTMLElement, just to be sure; did SVG invent frames yet?)
+        const glob = this._config.glob || globalThis
         const clonedFrames: FrameElement[] = Array.from(
             this.doc.querySelectorAll('frame,iframe')
-        ).filter(element => element instanceof this._config.glob.HTMLElement) as FrameElement[]
+        ).filter(element => element instanceof glob.HTMLElement) as FrameElement[]
 
         // Get all links defined by frames
         const frameLinks = this.subresourceLinks.filter(

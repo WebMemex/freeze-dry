@@ -38,9 +38,10 @@ function removeEventHandlers(rootElement: Element) {
 }
 
 // Disables all links with a 'javascript:' href.
-function removeJavascriptHrefs(rootElement: Element, config: Pick<GlobalConfig, 'glob'>) {
+function removeJavascriptHrefs(rootElement: Element, config: Pick<GlobalConfig, 'glob'> = {}) {
+    const glob = config.glob || globalThis
     const linkElements = Array.from(rootElement.querySelectorAll('a, area'))
-        .filter(element => element instanceof config.glob.HTMLElement) as Array<HTMLAnchorElement | HTMLAreaElement>
+        .filter(element => element instanceof glob.HTMLElement) as Array<HTMLAnchorElement | HTMLAreaElement>
     linkElements
         .filter(element => element.href.startsWith('javascript:'))
         // .filter(element => element.getAttribute('href').trim().toLowerCase().startsWith('javascript:'))
