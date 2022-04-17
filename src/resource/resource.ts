@@ -1,4 +1,4 @@
-import { UrlString, GlobalConfig } from '../types'
+import { UrlString, GlobalConfig, ProcessSubresourceCallback } from '../types'
 import { Link, SubresourceLink } from '../extract-links/types'
 import { DomResource, StylesheetResource, LeafResource } from './index'
 import { SubresourceType } from '../extract-links/url-attributes/types'
@@ -28,6 +28,16 @@ export abstract class Resource {
         return this.links
             .filter((link: Link): link is SubresourceLink => link.isSubresource)
             .filter(link => Resource.getResourceClass(link.subresourceType))
+    }
+
+    async processSubresources(processSubresource: ProcessSubresourceCallback) {
+        async function processSubresourceWrapper(link: SubresourceLink) {
+            // TODO emit an event?
+            await processSubresource(link, processSubresourceWrapper)
+        }
+        await Promise.all(this.subresourceLinks.map(
+            link => processSubresourceWrapper(link)
+        ))
     }
 
     // ‘Dry’ the resource, i.e. make it static and context-free.

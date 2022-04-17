@@ -1,7 +1,7 @@
 /* global window */
 import { flatOptions } from './package'
 
-import type { GlobalConfig, ProcessLinkRecurse } from './types/index'
+import type { GlobalConfig, ProcessSubresourceRecurse } from './types/index'
 import type { SubresourceLink } from './extract-links/types'
 import finaliseSnapshot from './finalise-snapshot'
 import blobToDataUrl from './blob-to-data-url'
@@ -41,7 +41,6 @@ export default async function freezeDry(
     options: Partial<GlobalConfig> = {},
 ): Promise<string> {
     const defaultOptions: GlobalConfig = {
-        processLink: defaultProcessLink,
         timeout: Infinity,
         docUrl: undefined,
         charsetDeclaration: 'utf-8',
@@ -50,32 +49,49 @@ export default async function freezeDry(
         setContentSecurityPolicy: true,
         now: new Date(),
         fetchResource: undefined,
+        processSubresource: defaultProcessSubresource,
         glob: doc.defaultView
             || (typeof window !== 'undefined' ? window : undefined)
             || fail('Lacking a global window object'),
     }
     const config: GlobalConfig = flatOptions(options, defaultOptions)
 
+    async function defaultProcessSubresource(
+        link: SubresourceLink,
+        recurse: ProcessSubresourceRecurse,
+    ) {
+        // Get the linked resource if missing (from cache/internet).
+        if (!link.resource) {
+            try {
+                link.resource = await Resource.fromLink(link, config)
+            } catch (err) {
+                // TODO we may want to do something here. Turn target into about:invalid? For
+                // now, we rely on the content security policy to prevent loading this resource.
+                return
+            }
+        }
+
+        // Recurse into this subresource’s subresources.
+        // (`recurse` ≈ current function itself, but also facilitates logging progress etc.)
+        await link.resource.processSubresources(recurse)
+
+        // Make the resource static and context-free.
+        link.resource.dry()
+
+        // Convert the (now self-contained) subresource into a data URL.
+        const dataUrl = await blobToDataUrl(link.resource.blob, config)
+
+        // Change the link’s target to the data URL.
+        setLinkTarget(link, dataUrl, config)
+    }
+
     // Step 1: Capture the DOM.
     const domResource = new DomCloneResource(config.docUrl, doc, config)
-    // TODO avoid recursing here, and let processLink recursion handle that?
+    // TODO avoid recursing here, and handle that in the next step?
     domResource.cloneFramedDocs(/* deep = */ true)
 
     // Step 2: Recurse into subresources, converting them as needed.
-    async function processLinkWrapper(link: SubresourceLink, config: GlobalConfig) {
-        // TODO some debug logging
-        // TODO some progress tick allowing to get the incomplete result
-
-        // Allow config to be modified during recursion, but default to passing it through.
-        async function recurse(link: SubresourceLink, _config = config) {
-            await processLinkWrapper(link, _config)
-        }
-
-        await config.processLink(link, config, recurse)
-    }
-    await Promise.all(domResource.subresourceLinks.map(
-        link => processLinkWrapper(link, config)
-    ))
+    await domResource.processSubresources(config.processSubresource)
 
     // Step 3: Make the DOM static and context-free.
     domResource.dry()
@@ -90,35 +106,4 @@ export default async function freezeDry(
 
 function fail(message: string): never {
     throw new Error(message)
-}
-
-async function defaultProcessLink(
-    link: SubresourceLink,
-    config: GlobalConfig,
-    recurse: ProcessLinkRecurse,
-) {
-    // Get the linked resource if missing (from cache/internet).
-    if (!link.resource) {
-        try {
-            link.resource = await Resource.fromLink(link, config)
-        } catch (err) {
-            // TODO we may want to do something here. Turn target into about:invalid? For
-            // now, we rely on the content security policy to prevent loading this resource.
-            return
-        }
-    }
-
-    // Recurse: process this resource’s subresources.
-    await Promise.all(link.resource.subresourceLinks.map(
-        link => recurse(link)
-    ))
-
-    // Make the resource static and context-free.
-    link.resource.dry()
-
-    // Convert the (now self-contained) subresource into a data URL.
-    const dataUrl = await blobToDataUrl(link.resource.blob, config)
-
-    // Change the link’s target to the data URL.
-    setLinkTarget(link, dataUrl, config)
 }
