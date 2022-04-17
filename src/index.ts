@@ -6,7 +6,7 @@ import type { SubresourceLink } from './extract-links/types'
 import finaliseSnapshot from './finalise-snapshot'
 import blobToDataUrl from './blob-to-data-url'
 import setLinkTarget from './set-link-target'
-import { DomCloneResource } from './resource/dom-clone-resource'
+import { Resource, DomCloneResource } from './resource'
 
 /**
  * Freeze-dry an HTML Document
@@ -31,6 +31,11 @@ import { DomCloneResource } from './resource/dom-clone-resource'
  * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
  * API-compatible with the global fetch(), but may also resolve to an object { blob, url } instead
  * of a Response.
+ * @param {Function} [options.processSubresource] - Callback invoked for each of `doc`’s subresources.
+ * Default behaviour is to recursively ‘dry’ subresources and turn each into a data URL.
+ * @param {Function} [options.newUrlForResource] - Callback to determine the replacement URL for a
+ * (processed, dried) subresource; defaults to creating a data URL. If `processSubresource` is
+ * also given, this option is ignored.
  * @param {Window} [options.glob] - Overrides the global window object that is used for accessing
  * global DOM interfaces. Defaults to doc.defaultView or (if that is absent) the global `window`.
  * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
@@ -41,13 +46,19 @@ export default async function freezeDry(
     options: Partial<GlobalConfig> = {},
 ): Promise<string> {
     const defaultOptions: GlobalConfig = {
+        // General options
         timeout: Infinity,
+
         docUrl: undefined,
+
+        // Finalisation
         charsetDeclaration: 'utf-8',
         addMetadata: true,
         keepOriginalAttributes: true,
         setContentSecurityPolicy: true,
         now: new Date(),
+
+        // Dealing with subresources
         fetchResource: undefined,
         processSubresource: defaultProcessSubresource,
         newUrlForResource: defaultNewUrlForResource,
@@ -61,6 +72,9 @@ export default async function freezeDry(
         link: SubresourceLink,
         recurse: ProcessSubresourceRecurse,
     ) {
+        // TODO Something like this, for synchronously cloning frame contents?
+        // if (link.resource) link.resource.freeze?.()
+
         // Get the linked resource if missing (from cache/internet).
         if (!link.resource) {
             try {
@@ -79,6 +93,7 @@ export default async function freezeDry(
         // Make the resource static and context-free.
         link.resource.dry()
 
+        // TODO Should the below go into the parent resource’s dry() function?
         // Change the link’s target to a new URL for the (now self-contained) subresource.
         const newUrl = await config.newUrlForResource(link.resource)
         if (newUrl !== link.target) setLinkTarget(link, newUrl, config)

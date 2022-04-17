@@ -17,7 +17,6 @@ export type ProcessSubresourceRecurse = (
 export type NewUrlForResourceCallback = (resource: Resource) => string | Promise<string>
 
 export interface GlobalConfig {
-    processSubresource: ProcessSubresourceCallback,
     timeout: number,
     docUrl?: UrlString,
     charsetDeclaration: string | null,
@@ -26,6 +25,7 @@ export interface GlobalConfig {
     setContentSecurityPolicy: boolean,
     now: Date,
     fetchResource?: Fetchy,
+    processSubresource: ProcessSubresourceCallback,
     newUrlForResource: NewUrlForResourceCallback,
     getDocInFrame?: (frameElement: FrameElement) => Document | null, // TODO expose to user & test.
     glob?: typeof window, /* global window */
