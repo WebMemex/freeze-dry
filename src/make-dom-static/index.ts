@@ -37,9 +37,10 @@ export function removeNoscript(doc: Document) {
  * Disable editing on editable elements
  * @param doc the Document to be modified
  */
-export function removeContentEditable(doc: Document, config: Pick<GlobalConfig, 'glob'>) {
+export function removeContentEditable(doc: Document, config: Pick<GlobalConfig, 'glob'> = {}) {
+    const glob = config.glob || globalThis
     const editableElements = Array.from(doc.querySelectorAll('*[contenteditable]'))
-        .filter((element: Element): element is HTMLElement => element instanceof config.glob.HTMLElement)
+        .filter((element: Element): element is HTMLElement => element instanceof glob.HTMLElement)
     editableElements.forEach(element => {
         element.contentEditable = 'false'
         // TODO Reapply any style rules that matched only when contenteditable was set.

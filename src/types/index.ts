@@ -1,22 +1,22 @@
 import { UrlString, Fetchy, FrameElement } from './util'
 import { SubresourceLink } from '../extract-links/types'
+import { Resource } from '../resource'
 
 export * from './util'
 
 // The callback that is run for each encountered subresource link
-export type ProcessLinkCallback = (
+export type ProcessSubresourceCallback = (
     link: SubresourceLink,
-    config: GlobalConfig,
-    recurse: ProcessLinkRecurse,
+    recurse: ProcessSubresourceRecurse,
 ) => void | Promise<void>
 
-export type ProcessLinkRecurse = (
+export type ProcessSubresourceRecurse = (
     link: SubresourceLink,
-    config?: GlobalConfig,
 ) => void | Promise<void>
+
+export type NewUrlForResourceCallback = (resource: Resource) => string | Promise<string>
 
 export interface GlobalConfig {
-    processLink: ProcessLinkCallback,
     timeout: number,
     docUrl?: UrlString,
     charsetDeclaration: string | null,
@@ -25,6 +25,8 @@ export interface GlobalConfig {
     setContentSecurityPolicy: boolean,
     now: Date,
     fetchResource?: Fetchy,
+    processSubresource: ProcessSubresourceCallback,
+    newUrlForResource: NewUrlForResourceCallback,
     getDocInFrame?: (frameElement: FrameElement) => Document | null, // TODO expose to user & test.
-    glob: typeof window, /* global window */
+    glob?: typeof window, /* global window */
 }

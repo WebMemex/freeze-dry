@@ -17,7 +17,7 @@ export class StylesheetResource extends Resource {
     constructor(
         url: UrlString,
         stylesheetContent: string,
-        config: StylesheetResourceConfig,
+        config: StylesheetResourceConfig = {},
     ) {
         super()
         this._url = url
@@ -40,7 +40,8 @@ export class StylesheetResource extends Resource {
     }
 
     get blob() {
-        return new this._config.glob.Blob([this.string], { type: 'text/css' })
+        const glob = this._config.glob || globalThis
+        return new glob.Blob([this.string], { type: 'text/css' })
     }
 
     get string() {
