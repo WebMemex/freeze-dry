@@ -50,6 +50,7 @@ export default async function freezeDry(
         now: new Date(),
         fetchResource: undefined,
         processSubresource: defaultProcessSubresource,
+        newUrlForResource: defaultNewUrlForResource,
         glob: doc.defaultView
             || (typeof window !== 'undefined' ? window : undefined)
             || fail('Lacking a global window object'),
@@ -78,11 +79,13 @@ export default async function freezeDry(
         // Make the resource static and context-free.
         link.resource.dry()
 
-        // Convert the (now self-contained) subresource into a data URL.
-        const dataUrl = await blobToDataUrl(link.resource.blob, config)
+        // Change the link’s target to a new URL for the (now self-contained) subresource.
+        const newUrl = await config.newUrlForResource(link.resource)
+        if (newUrl !== link.target) setLinkTarget(link, newUrl, config)
+    }
 
-        // Change the link’s target to the data URL.
-        setLinkTarget(link, dataUrl, config)
+    async function defaultNewUrlForResource(resource: Resource) {
+        return await blobToDataUrl(resource.blob, config)
     }
 
     // Step 1: Capture the DOM.
