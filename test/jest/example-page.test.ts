@@ -4,6 +4,7 @@ import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Req
 import { dataURLToBlob } from 'blob-util'
 
 import freezeDry from '../../src/index'
+import { NewUrlForResourceCallback, ProcessSubresourceCallback } from '../../src/types'
 
 const fetch = jestFetchMock
 Object.assign(global, { fetch })
@@ -179,6 +180,25 @@ test('should use interfaces of a custom global object', async () => {
     expect(result).toEqual(expectedResult)
     expect(glob.btoa).toHaveBeenCalled()
 })
+
+test('should use custom processSubresource', async () => {
+    const doc = await getExampleDoc()
+    const processSubresource: ProcessSubresourceCallback = (link, recurse) => {
+        link.target = 'about:invalid'
+    }
+    const result = await freezeDry(doc, { processSubresource })
+    expect([...result.matchAll(/about:invalid/g)]).toHaveLength(5)
+})
+
+test('should use custom newUrlForResource', async () => {
+    const doc = await getExampleDoc()
+    const newUrlForResource: NewUrlForResourceCallback = resource => 'about:invalid'
+    const result = await freezeDry(doc, { newUrlForResource })
+    expect([...result.matchAll(/about:invalid/g)]).toHaveLength(5)
+})
+
+
+//////////////// Helper functions ////////////////
 
 async function getExampleDoc(): Promise<Document> {
     const docUrl = TEST_PAGE_URL
