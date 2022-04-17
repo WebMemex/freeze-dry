@@ -91,13 +91,19 @@ export class DomResource extends Resource {
     }
 
     dry() {
+        // Usual resource drying (e.g. change relative to absolute links)
         super.dry()
+
+        // DOM-specific transformations
         makeDomStatic(this.doc, this._config)
+
+        // Reflect the current content of iframes that are not subresources
         this.updateSrcdocValues()
     }
 
     updateSrcdocValues() {
         // Find all iframes with `srcdoc`, but also those without `src` or `srcdoc` at all.
+        // (iframes with a `src` are subresources, thus processed by crawling the subresource tree)
         this.doc.querySelectorAll('iframe[srcdoc],iframe:not([src])').forEach((iframe: HTMLIFrameElement) => {
             const innerDomResource = this.getContentDocOfFrame(iframe)
             if (innerDomResource) {
