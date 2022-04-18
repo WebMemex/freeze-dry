@@ -36,13 +36,13 @@ to `window.document`. Possible options are:
 
   </details>
 
-- `keepOriginalAttributes` (boolean): If true (the default), preserves the original value of an
+- `rememberOriginalUrls` (boolean): If true (the default), preserves the original value of an
   element attribute if its URLs are inlined, by noting it as a new `data-original-...` attribute.
   For example, `<img src="bg.png">` would become `<img src="data:..." data-original-src="bg.png">`.
   Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
   URLs inside stylesheets are still lost.
-- `setContentSecurityPolicy` (boolean): If true (the default), adds a `<meta>` tag with a content
-  security policy that disallows the page to load any external resources.
+- `contentSecurityPolicy` (string or object): Add a `<meta>` tag with the given content security
+  policy to the snapshot. The default value disallows loading any external resources.
 - `now` (Date): Overrides the snapshot time (only relevant when `addMetadata` is true). Mainly
   intended for testing purposes.
 - `fetchResource`: custom function for fetching resources; should be API-compatible with the global

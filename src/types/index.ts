@@ -16,13 +16,17 @@ export type ProcessSubresourceRecurse = (
 
 export type NewUrlForResourceCallback = (resource: Resource) => string | Promise<string>
 
+export type ContentSecurityPolicy = string | {
+    [directive: string]: string | string[] | undefined | null,
+}
+
 export interface GlobalConfig {
     timeout: number,
     docUrl?: UrlString,
     charsetDeclaration: string | null,
     addMetadata: boolean,
-    keepOriginalAttributes: boolean,
-    setContentSecurityPolicy: boolean,
+    rememberOriginalUrls: boolean,
+    contentSecurityPolicy: ContentSecurityPolicy | null,
     now: Date,
     fetchResource?: Fetchy,
     processSubresource: ProcessSubresourceCallback,

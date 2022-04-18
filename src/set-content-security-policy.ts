@@ -1,10 +1,14 @@
+import { ContentSecurityPolicy } from "./types"
+
 /**
  * Puts the given CSP directives into a <meta> tag of the given document.
  * @param {Document} doc - the Document to be modified.
- * @param {string} csp - the desired value of the Content Security Policy.
+ * @param {ContentSecurityPolicy} csp - the desired value of the Content Security Policy.
  * @returns nothing; doc is mutated.
  */
-export default function setContentSecurityPolicy(doc: Document, csp: string) {
+export default function setContentSecurityPolicy(doc: Document, csp: ContentSecurityPolicy) {
+    const cspString = cspToString(csp)
+
     // Ensure a head element exists.
     if (!doc.head) {
         const head = doc.createElement('head')
@@ -18,7 +22,7 @@ export default function setContentSecurityPolicy(doc: Document, csp: string) {
     // Insert a <meta> tag with the CSP at the start of the <head>
     const cspMetaEl = doc.createElement('meta')
     cspMetaEl.setAttribute('http-equiv', 'Content-Security-Policy')
-    cspMetaEl.setAttribute('content', csp)
+    cspMetaEl.setAttribute('content', cspString)
     doc.head.insertBefore(cspMetaEl, doc.head.firstChild)
 
     // Move the <meta charset> element (if any) in front of the CSP, to do our best effort to keep
@@ -36,4 +40,18 @@ export default function setContentSecurityPolicy(doc: Document, csp: string) {
     // Remove <head>'s profile attribute (HTML 4). I would be surprised if any browsers resolve
     // this URL, but staying on the safe side for now (possibly at the cost of metadata semantics).
     doc.head.removeAttribute('profile')
+}
+
+export function cspToString(csp: ContentSecurityPolicy) {
+    if (typeof csp === 'string') return csp
+
+    function sourcesToString(sources: string | string[] | undefined | null) {
+        if (sources === undefined || sources === null) return ''
+        if (typeof sources === 'string') return sources
+        return sources.join(' ')
+    }
+
+    return Object.entries(csp).map(([directive, sources]) =>
+        `${directive} ${sourcesToString(sources)}`
+    ).join('; ')
 }

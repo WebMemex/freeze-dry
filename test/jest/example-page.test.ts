@@ -19,8 +19,8 @@ const TEST_PAGE_URL = 'https://example.com/pages/example.html'
 const noNonsenseConfig = {
     charsetDeclaration: '',
     addMetadata: false,
-    keepOriginalAttributes: false,
-    setContentSecurityPolicy: false,
+    rememberOriginalUrls: false,
+    contentSecurityPolicy: null,
 }
 
 test('should freeze-dry a trivial example', async () => {
@@ -104,11 +104,11 @@ test('should respect the addMetadata option', async () => {
     await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
 })
 
-test('should respect the keepOriginalAttributes option', async () => {
-    const testWithOption = async (keepOriginalAttributes?) => {
+test('should respect the rememberOriginalUrls option', async () => {
+    const testWithOption = async (rememberOriginalUrls?) => {
         const doc = await getExampleDoc()
 
-        const result = await freezeDry(doc, { keepOriginalAttributes })
+        const result = await freezeDry(doc, { rememberOriginalUrls })
 
         const dryDoc = await makeDom(result)
         expect(dryDoc.querySelector('img[data-original-src]')).not.toBeNull()
@@ -118,18 +118,19 @@ test('should respect the keepOriginalAttributes option', async () => {
     await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
 })
 
-test('should respect the setContentSecurityPolicy option', async () => {
-    const testWithOption = async (setContentSecurityPolicy?) => {
+test('should respect the contentSecurityPolicy option', async () => {
+    const getCspWithOption = async (contentSecurityPolicy) => {
         const doc = await getExampleDoc()
 
-        const result = await freezeDry(doc, { setContentSecurityPolicy })
+        const result = await freezeDry(doc, { contentSecurityPolicy })
 
         const dryDoc = await makeDom(result)
-        expect(dryDoc.querySelector('meta[http-equiv=Content-Security-Policy]')).not.toBeNull()
+        const cspElement = dryDoc.querySelector('meta[http-equiv=Content-Security-Policy]')
+        return cspElement?.getAttribute('content')
     }
-    await expect(testWithOption(true)).resolves.toEqual(undefined)
-    await expect(testWithOption(false)).rejects.toEqual(expect.anything())
-    await expect(testWithOption()).resolves.toEqual(undefined) // option should default to true
+    await expect(getCspWithOption('bla')).resolves.toBe('bla')
+    await expect(getCspWithOption(null)).resolves.toEqual(undefined)
+    await expect(getCspWithOption(undefined)).resolves.toMatch(/^default-src 'none';/)
 })
 
 test('should use the custom fetchResource function', async () => {

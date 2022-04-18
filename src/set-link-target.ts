@@ -1,20 +1,19 @@
 import { Link, HtmlAttributeDefinedLink } from './extract-links/types'
-import { GlobalConfig } from './types'
 
 /**
  * Set the link’s target to a new URL.
  * @param {Object} link - the link to modify.
  * @param {string} target - the link’s new target.
- * @param {boolean} [config.keepOriginalAttributes=false] - Whether to preserve the value of an
+ * @param {boolean} [config.rememberOriginalUrls=false] - Whether to preserve the value of an
  * element attribute if its URLs are inlined, by noting it as a new 'data-original-...' attribute.
  */
 export default function setLinkTarget(
     link: Link,
     target: string,
-    config: Pick<GlobalConfig, 'keepOriginalAttributes'>,
+    config: { rememberOriginalUrls?: boolean } = {},
 ) {
     // Optionally, remember the attribute's original value (if applicable).
-    if (isHtmlAttributeDefinedLink(link) && config.keepOriginalAttributes) {
+    if (isHtmlAttributeDefinedLink(link) && config.rememberOriginalUrls) {
         const noteAttribute = `data-original-${link.from.attribute}`
         // Multiple links may be contained in one attribute (e.g. a srcset); we must act
         // only at the first one, therefore we check for existence of the noteAttribute.

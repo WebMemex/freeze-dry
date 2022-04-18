@@ -3,10 +3,12 @@ import { flatOptions } from './package'
 
 import type { GlobalConfig, ProcessSubresourceRecurse } from './types/index'
 import type { SubresourceLink } from './extract-links/types'
-import finaliseSnapshot from './finalise-snapshot'
 import blobToDataUrl from './blob-to-data-url'
 import setLinkTarget from './set-link-target'
 import { Resource, DomCloneResource } from './resource'
+import setMementoTags from './set-memento-tags'
+import setContentSecurityPolicy from './set-content-security-policy'
+import setCharsetDeclaration from './set-charset-declaration'
 
 /**
  * Freeze-dry an HTML Document
@@ -20,13 +22,13 @@ import { Resource, DomCloneResource } from './resource'
  * UTF8, pass its name here; or pass null or an empty string to omit the declaration altogether.
  * @param {boolean} [options.addMetadata=true] - Whether to note the snapshotting time and the
  * document's URL in an extra meta and link tag.
- * @param {boolean} [options.keepOriginalAttributes=true] - Whether to preserve the value of an
+ * @param {boolean} [options.rememberOriginalUrls=true] - Whether to preserve the value of an
  * element attribute if its URLs are inlined, by noting it as a new 'data-original-...' attribute.
  * For example, <img src="bg.png"> would become <img src="data:..." data-original-src="bg.png">.
  * Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
  * URLs inside stylesheets are still lost.
- * @param {boolean} [options.setContentSecurityPolicy=true] - Whether to add a <meta> tag with a
- * content security policy that disallows the page to load any external resources.
+ * @param {boolean} [options.contentSecurityPolicy='…'] - Add a `<meta>` tag with the given content
+ * security policy to the snapshot. The default value disallows loading any external resources.
  * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
  * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
  * API-compatible with the global fetch(), but may also resolve to an object { blob, url } instead
@@ -45,34 +47,43 @@ export default async function freezeDry(
         || fail('No document given to freeze-dry'),
     options: Partial<GlobalConfig> = {},
 ): Promise<string> {
+    // Configure things.
     const defaultOptions: GlobalConfig = {
-        // General options
-        timeout: Infinity,
-
-        docUrl: undefined,
-
-        // Finalisation
-        charsetDeclaration: 'utf-8',
+        // Config for tweaking snapshot output
         addMetadata: true,
-        keepOriginalAttributes: true,
-        setContentSecurityPolicy: true,
         now: new Date(),
+        contentSecurityPolicy: {
+            'default-src': ["'none'"], // By default, block all connectivity and scripts.
+            'img-src': ['data:'], // Allow inlined images.
+            'media-src': ['data:'], // Allow inlined audio/video.
+            'style-src': ['data:', "'unsafe-inline'"], // Allow inlined styles.
+            'font-src': ['data:'], // Allow inlined fonts.
+            'frame-src': ['data:'], // Allow inlined iframes.
+        },
+        charsetDeclaration: 'utf-8',
 
-        // Dealing with subresources
+        // Config for dealing with subresources
+        timeout: Infinity,
         fetchResource: undefined,
         processSubresource: defaultProcessSubresource,
         newUrlForResource: defaultNewUrlForResource,
+        rememberOriginalUrls: true,
+
+        // Other config
+        docUrl: undefined,
         glob: doc.defaultView
             || (typeof window !== 'undefined' ? window : undefined)
             || fail('Lacking a global window object'),
     }
     const config: GlobalConfig = flatOptions(options, defaultOptions)
 
+    // Default callback for processing subresources. Recurses into each.
     async function defaultProcessSubresource(
         link: SubresourceLink,
         recurse: ProcessSubresourceRecurse,
     ) {
-        // TODO Something like this, for synchronously cloning frame contents?
+        // TODO Something like this, for synchronously cloning frame contents here instead of in step 1?
+        // (We’d first have to make srcdoc-based frames turn up as (pseudo)subresources)
         // if (link.resource) link.resource.freeze?.()
 
         // Get the linked resource if missing (from cache/internet).
@@ -103,9 +114,10 @@ export default async function freezeDry(
         return await blobToDataUrl(resource.blob, config)
     }
 
-    // Step 1: Capture the DOM.
+    // Configuration done. Start freeze-drying!
+
+    // Step 1: Capture the DOM in its current state.
     const domResource = new DomCloneResource(config.docUrl, doc, config)
-    // TODO avoid recursing here, and handle that in the next step?
     domResource.cloneFramedDocs(/* deep = */ true)
 
     // Step 2: Recurse into subresources, converting them as needed.
@@ -114,10 +126,18 @@ export default async function freezeDry(
     // Step 3: Make the DOM static and context-free.
     domResource.dry()
 
-    // Step 4: Finalise (e.g. stamp some <meta> tags onto the page)
-    finaliseSnapshot(domResource, config)
+    // Step 4: Finalise snapshot.
+    // Step 4.1: Add metadata about the snapshot to the snapshot itself.
+    if (config.addMetadata)
+        setMementoTags(domResource.doc, { originalUrl: domResource.url, datetime: config.now })
+    // Step 4.2: Set a strict Content Security Policy in a <meta> tag.
+    if (config.contentSecurityPolicy !== null)
+        setContentSecurityPolicy(domResource.doc, config.contentSecurityPolicy)
+    // Step 4.3: Create/replace the <meta charset=…> element.
+    if (config.charsetDeclaration !== undefined)
+        setCharsetDeclaration(domResource.doc, config.charsetDeclaration)
 
-    // Return it as a single string of HTML
+    // Return the snapshot as a single string of HTML
     const html = domResource.string
     return html
 }
