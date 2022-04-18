@@ -58,17 +58,30 @@ test('should be idempotent', async () => {
     expect(extraDryHtml).toEqual(dryHtml)
 })
 
-test.skip('should return the incomplete result after given timeout', async () => {
+test('should return the incomplete result after given timeout', async () => {
     const doc = await getExampleDoc()
-
-    // Make fetch never resolve
-    fetch.mockImplementation(url => new Promise(resolve => {}))
+    fetch.mockImplementation(endlessFetch)
 
     const resultP = freezeDry(doc, {
         now: new Date(1534615340948),
         timeout: 2000,
     })
     jest.runAllTimers() // trigger the timeout directly.
+    const result = await resultP
+
+    expect(result).toMatchSnapshot()
+})
+
+test('should return the incomplete result if aborted', async () => {
+    const doc = await getExampleDoc()
+    fetch.mockImplementation(endlessFetch)
+
+    const controller = new AbortController()
+    const resultP = freezeDry(doc, {
+        now: new Date(1534615340948),
+        signal: controller.signal,
+    })
+    controller.abort()
     const result = await resultP
 
     expect(result).toMatchSnapshot()
@@ -275,3 +288,8 @@ async function mockFetch(url: string) {
 
     throw new Error(`Trying to fetch unknown URL: ${url}`)
 }
+
+// Make a mock fetch that never resolves but can be aborted as usual.
+const endlessFetch: typeof globalThis.fetch = (url, init) => new Promise((resolve, reject) => {
+    init.signal?.addEventListener('abort', () => reject())
+})

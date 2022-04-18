@@ -26,24 +26,47 @@ exports[`should freeze-dry an example page as expected 1`] = `
 
 exports[`should return the incomplete result after given timeout 1`] = `
 "<!DOCTYPE html>
-<html><head><meta charset=\\"utf-8\\"><meta http-equiv=\\"Content-Security-Policy\\" content=\\"default-src 'none'; img-src data:; media-src data:; style-src data: 'unsafe-inline'; font-src data:; frame-src data:\\"><meta http-equiv=\\"Memento-Datetime\\" content=\\"Sat, 18 Aug 2018 18:02:20 GMT\\"><link rel=\\"original\\" href=\\"https://example.com/main/page.html\\">
-        <link rel=\\"stylesheet\\" href=\\"https://example.com/main/style/style.css\\">
+<html><head><meta charset=\\"utf-8\\"><meta http-equiv=\\"Content-Security-Policy\\" content=\\"default-src 'none'; img-src data:; media-src data:; style-src data: 'unsafe-inline'; font-src data:; frame-src data:\\"><meta http-equiv=\\"Memento-Datetime\\" content=\\"Sat, 18 Aug 2018 18:02:20 GMT\\"><link rel=\\"original\\" href=\\"https://example.com/pages/example.html\\">
+        
+        
+        <link rel=\\"stylesheet\\" href=\\"https://example.com/style/style.css\\">
         <style>
-            p {
-                background: url(\\"https://example.com/imgs/background.png\\");
-            }
-        </style>
+          .class-in-style-tag {
+              background: url('https://example.com/imgs/background.png') repeat;
+          }
+      </style>
     </head>
     <body style=\\"background: url('https://example.com/imgs/background.png');\\">
         <h1>Freeze me.</h1>
         <p>
-            <button>A button with javascript click handler.</button>
-            <a href=\\"https://example.com/main/something\\">A relative link.</a>
-            <a href=\\"javascript:\\">A spammy javascript 'link'.</a>
-            <img src=\\"https://example.com/imgs/8x8.png\\" srcset=\\"https://example.com/imgs/16x16.png 2x, https://example.com/imgs/32x32.png 4x\\">
-            
+            <a href=\\"https://example.com/pages/something\\">A relative link.</a>
+            <img src=\\"https://example.com/imgs/8x8.png\\">
         </p>
-        <iframe src=\\"data:text/html;base64,PCFET0NUWVBFIGh0bWw+CjxodG1sPjxoZWFkPjwvaGVhZD4KPGJvZHk+CiAgICA8aDE+aWZyYW1lIGNvbnRlbnQ8L2gxPgogICAgPGltZyBzcmM9Imh0dHBzOi8vZXhhbXBsZS5jb20vaWZyYW1lL2ltYWdlLnBuZyI+CiAgICAKCgo8L2JvZHk+PC9odG1sPg==\\" data-original-src=\\"https://example.com/iframe/innerpage.html\\"></iframe>
+        <iframe id=\\"iframe-src\\" src=\\"data:text/html;base64,PCFET0NUWVBFIGh0bWw+CjxodG1sPjxoZWFkPjwvaGVhZD4KPGJvZHk+CiAgICA8aDE+aWZyYW1lIGNvbnRlbnQ8L2gxPgogICAgPGltZyBzcmM9Imh0dHBzOi8vZXhhbXBsZS5jb20vaWZyYW1lL2ltYWdlLnBuZyI+CiAgICA8aWZyYW1lIHNyYz0iZGF0YTp0ZXh0L2h0bWw7YmFzZTY0LFBDRkVUME5VV1ZCRklHaDBiV3crQ2p4b2RHMXNQanhvWldGa1Bqd3ZhR1ZoWkQ0S1BHSnZaSGsrQ2lBZ0lDQThhREUrYm1WemRHVmtJR2xtY21GdFpTQmpiMjUwWlc1MFBDOW9NVDRLQ2dvOEwySnZaSGsrUEM5b2RHMXNQZz09IiBkYXRhLW9yaWdpbmFsLXNyYz0iaW5uZXJpbm5lcnBhZ2UuaHRtbCI+PC9pZnJhbWU+CiAgICAKCgo8L2JvZHk+PC9odG1sPg==\\" data-original-src=\\"/iframe/innerpage.html\\"></iframe>
+    
+
+</body></html>"
+`;
+
+exports[`should return the incomplete result if aborted 1`] = `
+"<!DOCTYPE html>
+<html><head><meta charset=\\"utf-8\\"><meta http-equiv=\\"Content-Security-Policy\\" content=\\"default-src 'none'; img-src data:; media-src data:; style-src data: 'unsafe-inline'; font-src data:; frame-src data:\\"><meta http-equiv=\\"Memento-Datetime\\" content=\\"Sat, 18 Aug 2018 18:02:20 GMT\\"><link rel=\\"original\\" href=\\"https://example.com/pages/example.html\\">
+        
+        
+        <link rel=\\"stylesheet\\" href=\\"https://example.com/style/style.css\\">
+        <style>
+          .class-in-style-tag {
+              background: url('https://example.com/imgs/background.png') repeat;
+          }
+      </style>
+    </head>
+    <body style=\\"background: url('https://example.com/imgs/background.png');\\">
+        <h1>Freeze me.</h1>
+        <p>
+            <a href=\\"https://example.com/pages/something\\">A relative link.</a>
+            <img src=\\"https://example.com/imgs/8x8.png\\">
+        </p>
+        <iframe id=\\"iframe-src\\" src=\\"data:text/html;base64,PCFET0NUWVBFIGh0bWw+CjxodG1sPjxoZWFkPjwvaGVhZD4KPGJvZHk+CiAgICA8aDE+aWZyYW1lIGNvbnRlbnQ8L2gxPgogICAgPGltZyBzcmM9Imh0dHBzOi8vZXhhbXBsZS5jb20vaWZyYW1lL2ltYWdlLnBuZyI+CiAgICA8aWZyYW1lIHNyYz0iZGF0YTp0ZXh0L2h0bWw7YmFzZTY0LFBDRkVUME5VV1ZCRklHaDBiV3crQ2p4b2RHMXNQanhvWldGa1Bqd3ZhR1ZoWkQ0S1BHSnZaSGsrQ2lBZ0lDQThhREUrYm1WemRHVmtJR2xtY21GdFpTQmpiMjUwWlc1MFBDOW9NVDRLQ2dvOEwySnZaSGsrUEM5b2RHMXNQZz09IiBkYXRhLW9yaWdpbmFsLXNyYz0iaW5uZXJpbm5lcnBhZ2UuaHRtbCI+PC9pZnJhbWU+CiAgICAKCgo8L2JvZHk+PC9odG1sPg==\\" data-original-src=\\"/iframe/innerpage.html\\"></iframe>
     
 
 </body></html>"

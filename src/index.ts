@@ -16,6 +16,8 @@ import setCharsetDeclaration from './set-charset-declaration'
  * @param {Object} [options]
  * @param {number} [options.timeout=Infinity] - Maximum time (in milliseconds) spent on fetching the
  * page's subresources. The resulting HTML will have only succesfully fetched subresources inlined.
+ * @param {AbortSignal} [options.signal] - Signal to abort subresource fetching at any moment. As
+ * with `timeout`, the resulting HTML will have only succesfully fetched subresources inlined.
  * @param {string} [options.docUrl] - URL to override doc.URL.
  * @param {string} [options.charsetDeclaration='utf-8'] - The value put into the <meta charset="…">
  * element of the snapshot. If you will store/serve the returned string using an encoding other than
@@ -64,6 +66,7 @@ export default async function freezeDry(
 
         // Config for dealing with subresources
         timeout: Infinity,
+        signal: undefined,
         fetchResource: undefined,
         processSubresource: defaultProcessSubresource,
         newUrlForResource: defaultNewUrlForResource,
@@ -76,6 +79,24 @@ export default async function freezeDry(
             || fail('Lacking a global window object'),
     }
     const config: GlobalConfig = flatOptions(options, defaultOptions)
+
+    if (config.timeout >= 0 && config.timeout < Infinity) {
+        // The timeout option is merely a shorthand for a time-triggered AbortSignal.
+        const controller = new AbortController()
+        const signal = controller.signal
+        const glob = config.glob || globalThis
+        glob.setTimeout(() => {
+            controller.abort('Freeze-dry timed out')
+        }, config.timeout)
+
+        // If both a signal and a timeout are passed, abort at either’s command.
+        if (config.signal) {
+            const originalSignal = config.signal
+            originalSignal.addEventListener('abort', event => controller.abort(originalSignal.reason))
+        }
+
+        config.signal = signal
+    }
 
     // Default callback for processing subresources. Recurses into each.
     async function defaultProcessSubresource(
@@ -121,7 +142,12 @@ export default async function freezeDry(
     domResource.cloneFramedDocs(/* deep = */ true)
 
     // Step 2: Recurse into subresources, converting them as needed.
-    await domResource.processSubresources(config.processSubresource)
+    try {
+        await domResource.processSubresources(config.processSubresource)
+    } catch (error) {
+        // If subresource crawling timed out or was aborted, continue with what we have.
+        if (!config.signal?.aborted) throw error
+    }
 
     // Step 3: Make the DOM static and context-free.
     domResource.dry()

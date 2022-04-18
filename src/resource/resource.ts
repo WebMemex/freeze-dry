@@ -76,7 +76,7 @@ export abstract class Resource {
      */
     static async fromLink(
         link: SubresourceLink,
-        config: Pick<GlobalConfig, 'fetchResource' | 'glob'> = {},
+        config: Pick<GlobalConfig, 'fetchResource' | 'signal' | 'glob'> = {},
     ): Promise<Resource> {
         if (link.absoluteTarget === undefined) {
             throw new Error(`Cannot fetch invalid target: ${link.target}`)
@@ -89,6 +89,7 @@ export abstract class Resource {
         const resourceOrResponse = await fetchFunction(targetUrl, {
             cache: 'force-cache',
             redirect: 'follow',
+            signal: config.signal,
         })
 
         // If we got a Response, we wait for the content to arrive.

@@ -22,6 +22,7 @@ export type ContentSecurityPolicy = string | {
 
 export interface GlobalConfig {
     timeout: number,
+    signal?: AbortSignal,
     docUrl?: UrlString,
     charsetDeclaration: string | null,
     addMetadata: boolean,

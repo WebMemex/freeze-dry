@@ -18,6 +18,8 @@ The `options` object is optional, and even `document` can be omitted, in which c
 to `window.document`. Possible options are:
 - `timeout` (number): Maximum time (in milliseconds) spent on fetching the page's subresources. The
   resulting HTML will have only succesfully fetched subresources inlined.
+- `signal` (AbortSignal): Signal to abort subresource fetching at any moment. As with `timeout`, the
+  resulting HTML will have only succesfully fetched subresources inlined.
 - `docUrl` (string): overrides the documents's URL. This will influence the expansion of relative
   URLs, and is useful for cases where the document was constructed dynamically (e.g. using
   [DOMParser][]).
