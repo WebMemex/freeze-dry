@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test'
 
 test.beforeEach(async ({ page }, testInfo) => {
-  // Prevent appending OS name to snapshot files. (it may still add the browser name though)
+  // Prevent appending OS name to snapshot files.
   testInfo.snapshotSuffix = ''
 })
 
@@ -10,7 +10,7 @@ async function prechecks(page: Page) {
   await expect(await page.evaluate('typeof freezeDry'), 'Precheck failed: freezeDry is not a function').toBe('function')
 }
 
-test('Freeze-dry output on page page-with-links  matches reference snapshot.', async ({ page }) => {
+test('Freeze-dry output on page page-with-links matches reference snapshot.', async ({ page }) => {
   await page.goto('/pages/page-with-links.html')
   await prechecks(page)
   const html = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
@@ -24,7 +24,7 @@ test('Freeze-dry output on page page-with-images matches reference snapshot.', a
   await expect(html).toMatchSnapshot('page-with-images.html')
 })
 
-test('Freeze-dry output on page page-with-scripts reference snapshot.', async ({ page }) => {
+test('Freeze-dry output on page page-with-scripts matches reference snapshot.', async ({ page }) => {
   await page.goto('/pages/page-with-scripts.html')
   await prechecks(page)
   const html = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
@@ -80,7 +80,7 @@ test('should capture current state of documents inside frames', async ({ page })
   await expect(page.frame('empty').locator('hr').count()).resolves.toBe(1)
 })
 
-test('Test for idempotency (freeze-drying a second time makes no difference).', async ({ page }) => {
+test('should be idempotent (freeze-drying a second time makes no difference).', async ({ page }) => {
   await page.goto('/pages/page-with-frames.html') // an arbitrary page.
   await prechecks(page)
 
@@ -89,6 +89,6 @@ test('Test for idempotency (freeze-drying a second time makes no difference).', 
 
   // Freeze-dry the freeze-dried page. Adding metadata would of course break idempotency.
   const extraDryHtml: string = await page.evaluate('freezeDry(document, { addMetadata: false })')
-  
+
   expect(extraDryHtml).toEqual(dryHtml)
 })

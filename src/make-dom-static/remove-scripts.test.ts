@@ -1,5 +1,4 @@
 import removeScripts from './remove-scripts'
-import { GlobalConfig } from '../types'
 
 const config = {
     glob: window,

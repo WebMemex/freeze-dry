@@ -7,7 +7,7 @@ import { GlobalConfig } from "../types"
  */
 export default function removeScripts(
     docOrElement: Element | Document,
-    config: Pick<GlobalConfig, 'glob'>,
+    config: Pick<GlobalConfig, 'glob'> = {},
 ) {
     const rootElement = 'documentElement' in docOrElement
         ? docOrElement.documentElement
