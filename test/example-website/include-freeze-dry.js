@@ -1,6 +1,8 @@
 // Snowpack builds & serves the src directory at /freeze-dry
-import freezeDry from '/freeze-dry/index.js';
+import * as freezeDryModule from '/freeze-dry/index.js';
+const freezeDry = freezeDryModule.default;
 
+window.freezeDryModule = freezeDryModule;
 window.freezeDry = freezeDry;
 window.freezeDryAndShow = async function freezeDryAndShow(...args) {
   const html = await freezeDry(...args);
