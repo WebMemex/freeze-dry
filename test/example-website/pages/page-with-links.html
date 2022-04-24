@@ -7,10 +7,19 @@
     <body>
         <h1>Test page with links</h1>
         <p>
-            <a href="something">A relative link to <code>something</code>.</a>
+            <a href="something">A relative link to <code>something</code>.</a> (should be made absolute)
         </p>
         <p>
-            <a href="https://example.org/something">An absolute link to <code>https://example.org/something</code>.</a>
+            <a href="something#section3">A relative link to <code>something#section3</code>.</a> (should be made absolute)
+        </p>
+        <p>
+            <a href="#section3">A relative link to <code>#section3</code>.</a> (should remain unchanged)
+        </p>
+        <p>
+            <a href="page-with-links.html#section3">A relative link to <code>page-with-links.html#section3</code>.</a> (should become <code>#section3</code>)
+        </p>
+        <p>
+            <a href="https://example.org/something">An absolute link to <code>https://example.org/something</code>.</a> (should remain unchanged)
         </p>
     </body>
 </html>
