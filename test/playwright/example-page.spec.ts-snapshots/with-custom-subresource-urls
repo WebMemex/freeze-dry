@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; media-src data:; style-src data: 'unsafe-inline'; font-src data:; frame-src data:"><meta http-equiv="Memento-Datetime" content="Sat, 18 Aug 2018 18:02:20 GMT"><link rel="original" href="http://localhost:3000/pages/page-with-styles.html">
+        
+        
+        <link rel="stylesheet" href="
+
+http://localhost:3000/style/style.css
+↳ http://localhost:3000/style/imported-sheet.css
+  ↳ http://localhost:3000/imgs/background.png,
+↳ http://localhost:3000/style/myfont.woff,
+↳ http://localhost:3000/imgs/background.png
+
+" data-original-href="../style/style.css">
+        <style>
+            .class-in-style-tag {
+                color: yellow;
+                background: url('
+
+http://localhost:3000/imgs/background.png
+
+') repeat;
+            }
+        </style>
+    
+</head>
+    <body>
+        <h1>Test page with styles</h1>
+        <h2>
+            Paragraphs with a green background image.
+        </h2>
+        <p class="class-in-stylesheet">
+            Via linked stylesheet.
+        </p>
+        <p class="class-in-style-tag">
+            Via inline <code>&lt;style&gt;</code> tag.
+        </p>
+        <p style="color: yellow; background: url('
+
+http://localhost:3000/imgs/background.png
+
+') repeat;" data-original-style="color: yellow; background: url('../imgs/background.png') repeat;">
+            Via <code>style="…"</code> attribute.
+        </p>
+        <h2>Custom font</h2>
+        <p>
+            An <span class="with-custom-font">A</span> with another font.
+        </p>
+    
+
+</body></html>

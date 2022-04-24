@@ -92,3 +92,57 @@ test('should be idempotent (freeze-drying a second time makes no difference).', 
 
   expect(extraDryHtml).toEqual(dryHtml)
 })
+
+test('should work with custom newUrlForResource', async ({ page }) => {
+  await page.goto('/pages/page-with-styles.html')
+  await prechecks(page)
+
+  // Turn each subresource URL into a tree of its (sub)subresource URLs.
+  const html = await page.evaluate(String.raw`
+    freezeDry(document, {
+      now: new Date(1534615340948),
+      newUrlForResource: (resource) => {
+        const subresourceTree = resource.subresourceLinks
+          .map(link => '\n↳ ' + link.target.trim().replaceAll('\n', '\n  ')) // indent the sub-trees, if any
+        return '\n\n' + resource.url + subresourceTree.join() + '\n\n'
+      },
+    })
+  `)
+
+  expect(html).toMatchSnapshot('with-custom-subresource-urls')
+})
+
+test('should work with custom processSubresource', async ({ page }) => {
+  await page.goto('/pages/page-with-styles.html')
+  await prechecks(page)
+
+  // Let freeze-dry put each resource (actually, only its size) in a mock ‘archive’ object.
+  const myArchive = await page.evaluate(`
+    (async () => {
+      const myArchive = {}
+
+      const html = await freezeDry(document, {
+        now: new Date(1534615340948),
+        processSubresource: async (link, recurse) => {
+          link.resource = await freezeDryModule.Resource.fromLink(link)
+          myArchive[link.absoluteTarget] = link.resource.blob
+            .size // for this test, only store its size.
+          link.target = 'my-archive:' + link.absoluteTarget
+          await link.resource.processSubresources(recurse)
+        }
+      })
+      myArchive[document.URL] = new Blob([html], {type: 'text/html'})
+        .size // for this test, only store its size.
+
+      return myArchive
+    })()
+  `)
+
+  expect(myArchive).toEqual({
+    'http://localhost:3000/pages/page-with-styles.html': 1356,
+    'http://localhost:3000/imgs/background.png': 70,
+    'http://localhost:3000/style/imported-sheet.css': 57,
+    'http://localhost:3000/style/myfont.woff': 3216,
+    'http://localhost:3000/style/style.css': 270,
+  })
+})
