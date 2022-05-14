@@ -5,49 +5,53 @@ test.beforeEach(async ({ page }, testInfo) => {
   testInfo.snapshotSuffix = ''
 })
 
-async function prechecks(page: Page) {
-  await expect(page.locator('h1'), 'Precheck failed: Page not loaded?').toContainText('Test page')
-  await expect(await page.evaluate('typeof freezeDry'), 'Precheck failed: freezeDry is not a function').toBe('function')
+async function injectFreezeDry(page: Page) {
+  await page.evaluate(`
+    (async () => {
+      window.freezeDryModule = await import('http://localhost:3000/freeze-dry/index.js')
+      window.freezeDry = window.freezeDryModule.default
+    })()
+  `);
 }
 
 test('Freeze-dry output on page page-with-links matches reference snapshot.', async ({ page }) => {
   await page.goto('/pages/page-with-links.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
   const html = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
   await expect(html).toMatchSnapshot('page-with-links.html')
 })
 
 test('Freeze-dry output on page page-with-images matches reference snapshot.', async ({ page }) => {
   await page.goto('/pages/page-with-images.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
   const html = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
   await expect(html).toMatchSnapshot('page-with-images.html')
 })
 
 test('Freeze-dry output on page page-with-scripts matches reference snapshot.', async ({ page }) => {
   await page.goto('/pages/page-with-scripts.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
   const html = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
   await expect(html).toMatchSnapshot('page-with-scripts.html')
 })
 
 test('Freeze-dry output on page page-with-styles matches reference snapshot.', async ({ page }) => {
   await page.goto('/pages/page-with-styles.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
   const html = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
   await expect(html).toMatchSnapshot('page-with-styles.html')
 })
 
 test('Freeze-dry output on page page-with-frames matches reference snapshot.', async ({ page }) => {
   await page.goto('/pages/page-with-frames.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
   const html = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
   await expect(html).toMatchSnapshot('page-with-frames.html')
 })
 
 test('should capture current state of documents inside frames', async ({ page }) => {
   await page.goto('/pages/page-with-frames.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
 
   // Modify the iframe contents: add an <hr> element.
   const addAnElementScript = `
@@ -82,7 +86,7 @@ test('should capture current state of documents inside frames', async ({ page })
 
 test('should be idempotent (freeze-drying a second time makes no difference).', async ({ page }) => {
   await page.goto('/pages/page-with-frames.html') // an arbitrary page.
-  await prechecks(page)
+  await injectFreezeDry(page)
 
   const dryHtml: string = await page.evaluate('freezeDry(document, { now: new Date(1534615340948) })')
   await page.setContent(dryHtml)
@@ -95,7 +99,7 @@ test('should be idempotent (freeze-drying a second time makes no difference).', 
 
 test('should work with custom newUrlForResource', async ({ page }) => {
   await page.goto('/pages/page-with-styles.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
 
   // Turn each subresource URL into a tree of its (sub)subresource URLs.
   const html = await page.evaluate(String.raw`
@@ -114,7 +118,7 @@ test('should work with custom newUrlForResource', async ({ page }) => {
 
 test('should work with custom processSubresource', async ({ page }) => {
   await page.goto('/pages/page-with-styles.html')
-  await prechecks(page)
+  await injectFreezeDry(page)
 
   // Let freeze-dry put each resource (actually, only its size) in a mock ‘archive’ object.
   const myArchive = await page.evaluate(`
@@ -139,7 +143,7 @@ test('should work with custom processSubresource', async ({ page }) => {
   `)
 
   expect(myArchive).toEqual({
-    'http://localhost:3000/pages/page-with-styles.html': 1356,
+    'http://localhost:3000/pages/page-with-styles.html': 1347,
     'http://localhost:3000/imgs/background.png': 70,
     'http://localhost:3000/style/imported-sheet.css': 57,
     'http://localhost:3000/style/myfont.woff': 3216,
