@@ -1,6 +1,16 @@
-/** @type import('vite').UserConfig */
-const config = {
-  publicDir: 'test/example-website',
-}
+import { defineConfig } from 'vite'
 
-export default config
+export default defineConfig(({ command }) => ({
+  publicDir: command == 'serve' ? 'test/example-website' : false,
+  build: {
+    lib: {
+      entry: 'src/index.ts',
+      name: 'freezeDry',
+    },
+    rollupOptions: {
+      output: {
+        exports: 'named', // avoids warning about mix of default & named exports.
+      },
+    },
+  },
+}))

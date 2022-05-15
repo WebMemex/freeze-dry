@@ -1,4 +1,9 @@
-export { default } from './freeze-dry'
+import freezeDry from './freeze-dry'
+export default freezeDry
+// Also export the default as a named export, so e.g. CommonJS users can type:
+//     const { freezeDry } = require('freeze-dry');
+export { freezeDry }
+
 export * from './resource'
 export { default as blobToDataUrl } from './blob-to-data-url'
 export { default as makeDomStatic } from './make-dom-static'

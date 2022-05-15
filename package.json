@@ -13,6 +13,7 @@
   "main": "lib/index.js",
   "scripts": {
     "check-globals": "eslint --config .eslintrc-check-globals.json 'src/**/*.ts'",
+    "bundle": "vite build",
     "prepare": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts'",
     "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.test.js,**/*.test.ts' -w",
     "test": "npm run test:jest && npm run test:playwright",
