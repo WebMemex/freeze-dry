@@ -18,7 +18,7 @@
     "test": "npm run test:jest && npm run test:playwright",
     "test:jest": "jest --verbose",
     "test:playwright": "playwright test",
-    "test-server": "snowpack dev",
+    "test-server": "vite --port 3000 --strictPort",
     "typecheck": "tsc --noEmit || true"
   },
   "devDependencies": {
@@ -38,8 +38,8 @@
     "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
-    "snowpack": "^3.8.8",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.2",
+    "vite": "^2.9.9"
   },
   "dependencies": {
     "@babel/runtime": "^7.4.5",

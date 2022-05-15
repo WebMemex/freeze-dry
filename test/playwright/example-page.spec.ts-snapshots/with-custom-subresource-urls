@@ -20,8 +20,7 @@ http://localhost:3000/imgs/background.png
 ') repeat;
             }
         </style>
-    
-</head>
+    </head>
     <body>
         <h1>Test page with styles</h1>
         <h2>

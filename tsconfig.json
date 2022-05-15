@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "isolatedModules": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
         "strictPropertyInitialization": true,

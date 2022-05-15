@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }, testInfo) => {
 async function injectFreezeDry(page: Page) {
   await page.evaluate(`
     (async () => {
-      window.freezeDryModule = await import('http://localhost:3000/freeze-dry/index.js')
+      window.freezeDryModule = await import('/src/index.ts')
       window.freezeDry = window.freezeDryModule.default
     })()
   `);
@@ -143,7 +143,7 @@ test('should work with custom processSubresource', async ({ page }) => {
   `)
 
   expect(myArchive).toEqual({
-    'http://localhost:3000/pages/page-with-styles.html': 1347,
+    'http://localhost:3000/pages/page-with-styles.html': 1346,
     'http://localhost:3000/imgs/background.png': 70,
     'http://localhost:3000/style/imported-sheet.css': 57,
     'http://localhost:3000/style/myfont.woff': 3216,
