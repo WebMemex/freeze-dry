@@ -4,7 +4,7 @@ import type { GlobalConfig, UrlString, FrameElement } from "../types"
 import { DomResource } from "."
 import { HtmlDocumentLink } from '../extract-links/types'
 
-type DomCloneResourceConfig = Pick<GlobalConfig, 'glob' | 'getDocInFrame'>
+type DomCloneResourceConfig = Pick<GlobalConfig, 'glob'>
 
 export class DomCloneResource extends DomResource {
     protected _config: DomCloneResourceConfig
@@ -117,7 +117,6 @@ export class DomCloneResource extends DomResource {
     }
 
     private _getContentDocOfFrame(originalFrameElement: FrameElement) {
-        const { getDocInFrame = defaultGetDocInFrame } = this._config
         const originalInnerDoc = getDocInFrame(originalFrameElement)
         if (originalInnerDoc !== null) {
             return new DomCloneResource(originalInnerDoc, undefined, this._config)
@@ -127,7 +126,7 @@ export class DomCloneResource extends DomResource {
     }
 }
 
-function defaultGetDocInFrame(frameElement: FrameElement): Document | null {
+function getDocInFrame(frameElement: FrameElement): Document | null {
     try {
         return frameElement.contentDocument
     } catch (err) {

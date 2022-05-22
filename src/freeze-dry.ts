@@ -12,43 +12,58 @@ import setCharsetDeclaration from './set-charset-declaration'
 
 /**
  * Freeze-dry an HTML Document
- * @param {Document} [doc=window.document] - HTML Document to be freeze-dried. Remains unmodified.
- * @param {Object} [options]
- * @param {number} [options.timeout=Infinity] - Maximum time (in milliseconds) spent on fetching the
- * page's subresources. The resulting HTML will have only succesfully fetched subresources inlined.
- * @param {AbortSignal} [options.signal] - Signal to abort subresource fetching at any moment. As
- * with `timeout`, the resulting HTML will have only succesfully fetched subresources inlined.
- * @param {string} [options.docUrl] - URL to override doc.URL.
- * @param {string} [options.charsetDeclaration='utf-8'] - The value put into the <meta charset="…">
- * element of the snapshot. If you will store/serve the returned string using an encoding other than
- * UTF8, pass its name here; or pass null or an empty string to omit the declaration altogether.
- * @param {boolean} [options.addMetadata=true] - Whether to note the snapshotting time and the
- * document's URL in an extra meta and link tag.
- * @param {boolean} [options.rememberOriginalUrls=true] - Whether to preserve the value of an
- * element attribute if its URLs are inlined, by noting it as a new 'data-original-...' attribute.
- * For example, <img src="bg.png"> would become <img src="data:..." data-original-src="bg.png">.
- * Note this is an unstandardised workaround to keep URLs of subresources available; unfortunately
- * URLs inside stylesheets are still lost.
- * @param {boolean} [options.contentSecurityPolicy='…'] - Add a `<meta>` tag with the given content
- * security policy to the snapshot. The default value disallows loading any external resources.
- * @param {Date} [options.now] - Override the snapshot time (only relevant when addMetadata=true).
- * @param {Function} [options.fetchResource] - Custom function for fetching resources; should be
- * API-compatible with the global fetch(), but may also resolve to an object { blob, url } instead
- * of a Response.
- * @param {Function} [options.processSubresource] - Callback invoked for each of `doc`’s subresources.
- * Default behaviour is to recursively ‘dry’ subresources and turn each into a data URL.
- * @param {Function} [options.newUrlForResource] - Callback to determine the replacement URL for a
- * (processed, dried) subresource; defaults to creating a data URL. If `processSubresource` is
- * also given, this option is ignored.
- * @param {Window} [options.glob] - Overrides the global window object that is used for accessing
- * global DOM interfaces. Defaults to doc.defaultView or (if that is absent) the global `window`.
- * @returns {string} html - The freeze-dried document as a self-contained, static string of HTML.
+ *
+ * @returns The freeze-dried document as a self-contained, static string of HTML.
  */
 export default async function freezeDry(
-    doc: Document = typeof window !== 'undefined' && window.document
-        || fail('No document given to freeze-dry'),
+    /**
+     * Document to be freeze-dried. Remains unmodified.
+     */
+    doc: Document = typeof window !== 'undefined' && window.document || fail('No document given to freeze-dry'),
+
+    /**
+     * Options to customise freezeDry’s behaviour
+     */
     options: Partial<GlobalConfig> = {},
 ): Promise<string> {
+    const config = applyDefaultConfig(doc, options)
+
+    // Step 1: Capture the DOM in its current state.
+    const domResource = new DomCloneResource(doc, config.docUrl, config)
+    domResource.cloneFramedDocs(/* deep = */ true)
+
+    // Step 2: Recurse into subresources, converting them as needed.
+    try {
+        await domResource.processSubresources(config.processSubresource)
+    } catch (error) {
+        // If subresource crawling timed out or was aborted, continue with what we have.
+        if (!config.signal?.aborted) throw error
+    }
+
+    // Step 3: Make the DOM static and context-free.
+    // TODO Allow customising the applied transformations. (and likewise for drying subresources)
+    domResource.dry()
+
+    // Step 4: Finalise snapshot.
+    // Step 4.1: Add metadata about the snapshot to the snapshot itself.
+    if (config.addMetadata)
+        setMementoTags(domResource.doc, { originalUrl: domResource.url, datetime: config.now })
+    // Step 4.2: Set a strict Content Security Policy in a <meta> tag.
+    if (config.contentSecurityPolicy !== null)
+        setContentSecurityPolicy(domResource.doc, config.contentSecurityPolicy)
+    // Step 4.3: Create/replace the <meta charset=…> element.
+    if (config.charsetDeclaration !== undefined)
+        setCharsetDeclaration(domResource.doc, config.charsetDeclaration)
+
+    // Return the snapshot as a single string of HTML
+    const html = domResource.string
+    return html
+}
+
+function applyDefaultConfig(
+    doc: Document,
+    options: Partial<GlobalConfig>,
+): GlobalConfig {
     // Configure things.
     const defaultOptions: GlobalConfig = {
         // Config for tweaking snapshot output
@@ -67,8 +82,8 @@ export default async function freezeDry(
         // Config for dealing with subresources
         timeout: Infinity,
         signal: undefined,
-        fetchResource: undefined,
         processSubresource: defaultProcessSubresource,
+        fetchResource: undefined,
         newUrlForResource: defaultNewUrlForResource,
         rememberOriginalUrls: true,
 
@@ -134,37 +149,7 @@ export default async function freezeDry(
         return await blobToDataUrl(resource.blob, config)
     }
 
-    // Configuration done. Start freeze-drying!
-
-    // Step 1: Capture the DOM in its current state.
-    const domResource = new DomCloneResource(doc, config.docUrl, config)
-    domResource.cloneFramedDocs(/* deep = */ true)
-
-    // Step 2: Recurse into subresources, converting them as needed.
-    try {
-        await domResource.processSubresources(config.processSubresource)
-    } catch (error) {
-        // If subresource crawling timed out or was aborted, continue with what we have.
-        if (!config.signal?.aborted) throw error
-    }
-
-    // Step 3: Make the DOM static and context-free.
-    domResource.dry()
-
-    // Step 4: Finalise snapshot.
-    // Step 4.1: Add metadata about the snapshot to the snapshot itself.
-    if (config.addMetadata)
-        setMementoTags(domResource.doc, { originalUrl: domResource.url, datetime: config.now })
-    // Step 4.2: Set a strict Content Security Policy in a <meta> tag.
-    if (config.contentSecurityPolicy !== null)
-        setContentSecurityPolicy(domResource.doc, config.contentSecurityPolicy)
-    // Step 4.3: Create/replace the <meta charset=…> element.
-    if (config.charsetDeclaration !== undefined)
-        setCharsetDeclaration(domResource.doc, config.charsetDeclaration)
-
-    // Return the snapshot as a single string of HTML
-    const html = domResource.string
-    return html
+    return config
 }
 
 function fail(message: string): never {
