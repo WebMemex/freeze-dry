@@ -125,7 +125,6 @@ export default async function freezeDry(
         // Make the resource static and context-free.
         link.resource.dry()
 
-        // TODO Should the below go into the parent resource’s dry() function?
         // Change the link’s target to a new URL for the (now self-contained) subresource.
         const newUrl = await config.newUrlForResource(link.resource)
         if (newUrl !== link.target) setLinkTarget(link, newUrl, config)
