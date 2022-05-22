@@ -3,13 +3,13 @@ import { UrlString } from "../types"
 import { Link } from "../extract-links/types"
 
 export class LeafResource extends Resource {
-    private _url: UrlString
     private _blob: Blob
+    private _url: UrlString
 
-    constructor({ url, blob }: { url: UrlString, blob: Blob }) {
+    constructor(blob: Blob, url: UrlString) {
         super()
-        this._url = url
         this._blob = blob
+        this._url = url
     }
 
     get url(): UrlString {
@@ -25,10 +25,10 @@ export class LeafResource extends Resource {
         return [] as Link[] & []
     }
 
-    static async fromBlob({ url, blob }: {
-        url: UrlString,
+    static async fromBlob({ blob, url }: {
         blob: Blob,
+        url: UrlString,
     }): Promise<LeafResource> { // Should be Promise<this>; see TS issue #5863
-        return new this({ url, blob })
+        return new this(blob, url)
     }
 }

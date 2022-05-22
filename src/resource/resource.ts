@@ -100,8 +100,8 @@ export abstract class Resource {
         const finalUrl = resourceOrResponse.url
 
         return await Resource.fromBlob({
-            url: finalUrl,
             blob,
+            url: finalUrl,
             subresourceType: link.subresourceType,
             config,
         })
@@ -109,9 +109,9 @@ export abstract class Resource {
 
     // Create a Resource from a Blob object plus URL; returns an instance of a subclass of Resource
     // matching the given subresource type.
-    static async fromBlob({ url, blob, subresourceType, config }: {
-        url: UrlString,
+    static async fromBlob({ blob, url, subresourceType, config }: {
         blob: Blob,
+        url: UrlString,
         subresourceType?: SubresourceType,
         config: ResourceConfig,
     }): Promise<Resource> {
@@ -119,7 +119,7 @@ export abstract class Resource {
         if (resourceClass === undefined) {
             throw new Error(`Not sure how to interpret resource of type '${subresourceType}'`)
         }
-        const resource = await resourceClass.fromBlob({ url, blob, config })
+        const resource = await resourceClass.fromBlob({ blob, url, config })
         return resource
     }
 

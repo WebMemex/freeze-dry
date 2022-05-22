@@ -137,7 +137,7 @@ export default async function freezeDry(
     // Configuration done. Start freeze-drying!
 
     // Step 1: Capture the DOM in its current state.
-    const domResource = new DomCloneResource(config.docUrl, doc, config)
+    const domResource = new DomCloneResource(doc, config.docUrl, config)
     domResource.cloneFramedDocs(/* deep = */ true)
 
     // Step 2: Recurse into subresources, converting them as needed.

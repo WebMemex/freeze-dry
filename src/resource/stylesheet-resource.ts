@@ -15,8 +15,8 @@ export class StylesheetResource extends Resource {
     private _getString: () => string
 
     constructor(
-        url: UrlString,
         stylesheetContent: string,
+        url: UrlString,
         config: StylesheetResourceConfig = {},
     ) {
         super()
@@ -52,12 +52,12 @@ export class StylesheetResource extends Resource {
         return this._links
     }
 
-    static async fromBlob({ url, blob, config }: {
-        url: UrlString,
+    static async fromBlob({ blob, url, config }: {
         blob: Blob,
+        url: UrlString,
         config: StylesheetResourceConfig,
     }): Promise<StylesheetResource> { // Should be Promise<this>; see TS issue #5863
         const stylesheetText = await blobToText(blob, config)
-        return new this(url, stylesheetText, config)
+        return new this(stylesheetText, url, config)
     }
 }

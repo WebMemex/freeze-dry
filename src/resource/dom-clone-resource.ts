@@ -17,13 +17,13 @@ export class DomCloneResource extends DomResource {
      * relative URLs.
      */
     constructor(
-        url: UrlString | undefined,
         originalDoc: Document,
+        url?: UrlString,
         config: DomCloneResourceConfig = {},
     ) {
         const clone = originalDoc.cloneNode(/* deep = */ true) as Document
 
-        super(url, clone, config)
+        super(clone, url, config)
         this._config = config
         this._originalDoc = originalDoc
         this._framesContentDocClones = new Map()
@@ -120,7 +120,7 @@ export class DomCloneResource extends DomResource {
         const { getDocInFrame = defaultGetDocInFrame } = this._config
         const originalInnerDoc = getDocInFrame(originalFrameElement)
         if (originalInnerDoc !== null) {
-            return new DomCloneResource(undefined, originalInnerDoc, this._config)
+            return new DomCloneResource(originalInnerDoc, undefined, this._config)
         } else {
             return null
         }

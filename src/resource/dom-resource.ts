@@ -9,8 +9,8 @@ import makeDomStatic from "../make-dom-static"
 type DomResourceConfig = Pick<GlobalConfig, 'glob'>
 
 export class DomResource extends Resource {
-    private _url: UrlString | undefined
     private _doc: Document
+    private _url: UrlString | undefined
     protected _config: DomResourceConfig
     private _linksInDom: HtmlLink[]
 
@@ -19,13 +19,13 @@ export class DomResource extends Resource {
      * optional; if passed it will override the value of doc.URL when determining the target of
      * relative URLs.
      */
-    constructor(url: UrlString | undefined, doc: Document, config?: DomResourceConfig)
+    constructor(doc: Document, url?: UrlString, config?: DomResourceConfig)
 
-    constructor(url: UrlString, html: string, config?: DomResourceConfig)
+    constructor(html: string, url: UrlString, config?: DomResourceConfig)
 
     constructor(
-        url: UrlString | undefined,
         docOrHtml: Document | string,
+        url?: UrlString,
         config: DomResourceConfig = {},
     ) {
         super()
@@ -33,8 +33,8 @@ export class DomResource extends Resource {
         const doc = (typeof docOrHtml === 'string')
             ? (new glob.DOMParser()).parseFromString(docOrHtml, 'text/html')
             : docOrHtml
-        this._url = url
         this._doc = doc
+        this._url = url
         this._config = config
         this._linksInDom = extractLinksFromDom(doc, { docUrl: url })
         for (const link of this._linksInDom) link.from.resource = this
@@ -125,19 +125,19 @@ export class DomResource extends Resource {
         // TODO memoise like in DomCloneResource
         const innerDoc = frameElement.contentDocument
         if (innerDoc !== null) {
-            return new DomResource(undefined, innerDoc, this._config)
+            return new DomResource(innerDoc, undefined, this._config)
         } else {
             return null
         }
     }
 
-    static async fromBlob({ url, blob, config }: {
-        url: UrlString,
+    static async fromBlob({ blob, url, config }: {
         blob: Blob,
+        url: UrlString,
         config: DomResourceConfig
     }): Promise<DomResource> { // Should be Promise<this>; see TS issue #5863
         const html = await blobToText(blob, config)
-        return new this(url, html, config)
+        return new this(html, url, config)
     }
 }
 
