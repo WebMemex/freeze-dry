@@ -26,38 +26,83 @@ export default async function freezeDry(
      */
     options: Partial<GlobalConfig> = {},
 ): Promise<string> {
-    const config = applyDefaultConfig(doc, options)
-
-    // Step 1: Capture the DOM in its current state.
-    const domResource = new DomCloneResource(doc, config.docUrl, config)
-    domResource.cloneFramedDocs(/* deep = */ true)
-
-    // Step 2: Recurse into subresources, converting them as needed.
-    try {
-        await domResource.processSubresources(config.processSubresource)
-    } catch (error) {
-        // If subresource crawling timed out or was aborted, continue with what we have.
-        if (!config.signal?.aborted) throw error
-    }
-
-    // Step 3: Make the DOM static and context-free.
-    // TODO Allow customising the applied transformations. (and likewise for drying subresources)
-    domResource.dry()
-
-    // Step 4: Finalise snapshot.
-    // Step 4.1: Add metadata about the snapshot to the snapshot itself.
-    if (config.addMetadata)
-        setMementoTags(domResource.doc, { originalUrl: domResource.url, datetime: config.now })
-    // Step 4.2: Set a strict Content Security Policy in a <meta> tag.
-    if (config.contentSecurityPolicy !== null)
-        setContentSecurityPolicy(domResource.doc, config.contentSecurityPolicy)
-    // Step 4.3: Create/replace the <meta charset=…> element.
-    if (config.charsetDeclaration !== undefined)
-        setCharsetDeclaration(domResource.doc, config.charsetDeclaration)
+    const freezeDryer = await new FreezeDryer(doc, options).run()
 
     // Return the snapshot as a single string of HTML
-    const html = domResource.string
+    const html = freezeDryer.result.string
     return html
+}
+
+/**
+ * Freeze-dries an HTML Document
+ */
+export class FreezeDryer {
+    original: Document
+    result: DomCloneResource
+    config: GlobalConfig
+
+    constructor(
+        /** Document to be freeze-dried. Remains unmodified. */
+        doc: Document,
+        /** Options to customise freezeDry’s behaviour */
+        options: Partial<GlobalConfig> = {},
+    ) {
+        this.original = doc
+        this.config = applyDefaultConfig(doc, options)
+
+        // Step 1: Capture the DOM in its current state.
+        this.result = this.captureDom(doc, this.config)
+    }
+
+    async run(): Promise<this> {
+        // Step 2: Recurse into subresources, converting them as needed.
+        await this.crawlSubresources()
+        // Step 3: Make the DOM static and context-free.
+        this.dryResource()
+        // Step 4: Finalise snapshot.
+        this.finaliseSnapshot()
+
+        return this
+    }
+
+    /** Capture the DOM in its current state. */
+    private captureDom(
+        doc: Document,
+        config: Pick<GlobalConfig, 'glob' | 'docUrl'> = {},
+    ): DomCloneResource {
+        const domResource = new DomCloneResource(doc, config.docUrl, config)
+        domResource.cloneFramedDocs(/* deep = */ true)
+        return domResource
+    }
+
+    /** Recurse into subresources, converting them as needed. */
+    private async crawlSubresources() {
+        try {
+            await this.result.processSubresources(this.config.processSubresource)
+        } catch (error) {
+            // If subresource crawling timed out or was aborted, continue with what we have.
+            if (!this.config.signal?.aborted) throw error
+        }
+    }
+
+    /** Make the DOM static and context-free. */
+    private dryResource() {
+        // TODO Allow customising the applied transformations. (and likewise for drying subresources)
+        this.result.dry()
+    }
+
+    /** Finalise snapshot. */
+    private finaliseSnapshot() {
+        // Step 4.1: Add metadata about the snapshot to the snapshot itself.
+        if (this.config.addMetadata)
+            setMementoTags(this.result.doc, { originalUrl: this.result.url, datetime: this.config.now })
+        // Step 4.2: Set a strict Content Security Policy in a <meta> tag.
+        if (this.config.contentSecurityPolicy !== null)
+            setContentSecurityPolicy(this.result.doc, this.config.contentSecurityPolicy)
+        // Step 4.3: Create/replace the <meta charset=…> element.
+        if (this.config.charsetDeclaration !== undefined)
+            setCharsetDeclaration(this.result.doc, this.config.charsetDeclaration)
+    }
 }
 
 function applyDefaultConfig(
