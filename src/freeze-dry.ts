@@ -67,7 +67,7 @@ export class FreezeDryer {
 
     /** Capture the DOM in its current state. */
     private captureDom(original: Document): DomCloneResource {
-        const domResource = new DomCloneResource(original, this.config.docUrl, this.config)
+        const domResource = new DomCloneResource(original, this.config.docUrl, { glob: this.config.glob })
         domResource.cloneFramedDocs(/* deep = */ true)
         return domResource
     }
@@ -168,7 +168,11 @@ export class FreezeDryer {
         // Get the linked resource if missing (from cache/internet).
         if (!link.resource) {
             try {
-                link.resource = await Resource.fromLink(link, this.config)
+                link.resource = await Resource.fromLink(link, {
+                    fetchResource: this.config.fetchResource,
+                    signal: this.config.signal,
+                    glob: this.config.glob,
+                })
             } catch (err) {
                 // TODO we may want to do something here. Turn target into about:invalid? For
                 // now, we rely on the content security policy to prevent loading this resource.
@@ -185,11 +189,15 @@ export class FreezeDryer {
 
         // Change the link’s target to a new URL for the (now self-contained) subresource.
         const newUrl = await this.config.newUrlForResource(link.resource)
-        if (newUrl !== link.target) setLinkTarget(link, newUrl, this.config)
+        if (newUrl !== link.target) setLinkTarget(
+            link,
+            newUrl,
+            { rememberOriginalUrls: this.config.rememberOriginalUrls }
+        )
     }
 
     private async defaultNewUrlForResource(resource: Resource) {
-        return await blobToDataUrl(resource.blob, this.config)
+        return await blobToDataUrl(resource.blob, { glob: this.config.glob })
     }
 }
 
