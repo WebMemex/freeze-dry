@@ -1,12 +1,10 @@
-import { UrlString, GlobalConfig, ProcessSubresourceCallback } from '../types'
+import { UrlString, GlobalConfig, ProcessSubresourceCallback, Fetchy } from '../types'
 import { Link, SubresourceLink } from '../extract-links/types'
 import { DomResource, StylesheetResource, LeafResource } from './index'
 import { SubresourceType } from '../extract-links/url-attributes/types'
 
-type ResourceConfig = Pick<GlobalConfig, 'glob'>
-
 export interface ResourceFactory {
-    fromBlob(args: { url: UrlString, blob: Blob, config: ResourceConfig }): Promise<Resource>
+    fromBlob(args: { url: UrlString, blob: Blob, config?: GlobalConfig }): Promise<Resource>
 }
 
 export abstract class Resource {
@@ -76,7 +74,10 @@ export abstract class Resource {
      */
     static async fromLink(
         link: SubresourceLink,
-        config: Pick<GlobalConfig, 'fetchResource' | 'signal' | 'glob'> = {},
+        config: GlobalConfig & {
+            fetchResource?: Fetchy,
+            signal?: AbortSignal,
+        } = {},
     ): Promise<Resource> {
         if (link.absoluteTarget === undefined) {
             throw new Error(`Cannot fetch invalid target: ${link.target}`)
@@ -113,7 +114,7 @@ export abstract class Resource {
         blob: Blob,
         url: UrlString,
         subresourceType?: SubresourceType,
-        config: ResourceConfig,
+        config?: GlobalConfig,
     }): Promise<Resource> {
         const resourceClass = this.getResourceClass(subresourceType)
         if (resourceClass === undefined) {

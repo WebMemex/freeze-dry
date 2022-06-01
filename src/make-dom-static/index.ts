@@ -8,7 +8,7 @@ export  { removeScripts }
  * @param {Document} doc - the Document to be modified.
  * @returns nothing; doc is mutated.
  */
-export default function makeDomStatic(doc: Document, config: Pick<GlobalConfig, 'glob'>) {
+export default function makeDomStatic(doc: Document, config: GlobalConfig = {}) {
     removeScripts(doc, config)
 
     // If noscript content was not shown, we do not want it to show in the snapshot either. Also, we
@@ -37,7 +37,7 @@ export function removeNoscript(doc: Document) {
  * Disable editing on editable elements
  * @param doc the Document to be modified
  */
-export function removeContentEditable(doc: Document, config: Pick<GlobalConfig, 'glob'> = {}) {
+export function removeContentEditable(doc: Document, config: GlobalConfig = {}) {
     const glob = config.glob || globalThis
     const editableElements = Array.from(doc.querySelectorAll('*[contenteditable]'))
         .filter((element: Element): element is HTMLElement => element instanceof glob.HTMLElement)

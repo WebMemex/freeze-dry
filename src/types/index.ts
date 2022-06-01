@@ -20,7 +20,7 @@ export type ContentSecurityPolicy = string | {
     [directive: string]: string | string[] | undefined | null,
 }
 
-export interface GlobalConfig {
+export interface FreezeDryConfig extends GlobalConfig {
     /**
      * Maximum time (in milliseconds) spent on fetching the page’s subresources. The resulting HTML
      * will have only succesfully fetched subresources inlined.
@@ -86,10 +86,12 @@ export interface GlobalConfig {
      * creating a `data:` URL. If `processSubresource` is also given, this option is ignored.
      */
     newUrlForResource: NewUrlForResourceCallback,
+}
 
+export interface GlobalConfig {
     /**
-     * Overrides the global `window` object that is used for accessing global DOM interfaces.
-     * Defaults to `doc.defaultView` or (if that is absent) the global `window`.
+     * Overrides the object providing global DOM interfaces (instead of `globalThis`/`window`).
+     * Only relevant when freezeDry is not run ‘in’ but ‘on’ a DOM (e.g. in Node on JSDOM).
      */
-    glob?: typeof window, /* global window */
+    glob?: typeof globalThis,
 }

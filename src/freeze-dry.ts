@@ -1,7 +1,7 @@
 /* global window */
 import { flatOptions } from './package'
 
-import type { GlobalConfig, ProcessSubresourceRecurse } from './types/index'
+import type { FreezeDryConfig, ProcessSubresourceRecurse } from './types/index'
 import type { SubresourceLink } from './extract-links/types'
 import blobToDataUrl from './blob-to-data-url'
 import setLinkTarget from './set-link-target'
@@ -24,7 +24,7 @@ export default async function freezeDry(
     /**
      * Options to customise freezeDry’s behaviour
      */
-    options: Partial<GlobalConfig> = {},
+    options: Partial<FreezeDryConfig> = {},
 ): Promise<string> {
     const freezeDryer = await new FreezeDryer(doc, options).run()
 
@@ -39,13 +39,13 @@ export default async function freezeDry(
 export class FreezeDryer {
     original: Document
     result: DomCloneResource
-    config: GlobalConfig
+    config: FreezeDryConfig
 
     constructor(
         /** Document to be freeze-dried. Remains unmodified. */
         doc: Document,
         /** Options to customise freezeDry’s behaviour */
-        options: Partial<GlobalConfig> = {},
+        options: Partial<FreezeDryConfig> = {},
     ) {
         this.original = doc
         this.config = this.applyDefaultConfig(doc, options)
@@ -103,9 +103,9 @@ export class FreezeDryer {
 
     private applyDefaultConfig(
         doc: Document,
-        options: Partial<GlobalConfig>,
-    ): GlobalConfig {
-        const defaultOptions: GlobalConfig = {
+        options: Partial<FreezeDryConfig>,
+    ): FreezeDryConfig {
+        const defaultOptions: FreezeDryConfig = {
             // Config for tweaking snapshot output
             addMetadata: true,
             now: new Date(),
@@ -133,7 +133,7 @@ export class FreezeDryer {
                 || (typeof window !== 'undefined' ? window : undefined)
                 || fail('Lacking a global window object'),
         }
-        const config: GlobalConfig = flatOptions(options, defaultOptions)
+        const config: FreezeDryConfig = flatOptions(options, defaultOptions)
 
         if (config.timeout >= 0 && config.timeout < Infinity) {
             // The timeout option is merely a shorthand for a time-triggered AbortSignal.

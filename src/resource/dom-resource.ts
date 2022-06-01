@@ -6,12 +6,10 @@ import { extractLinksFromDom } from "../extract-links"
 import { blobToText } from "./util"
 import makeDomStatic from "../make-dom-static"
 
-type DomResourceConfig = Pick<GlobalConfig, 'glob'>
-
 export class DomResource extends Resource {
     private _doc: Document
     private _url: UrlString | undefined
-    protected _config: DomResourceConfig
+    protected _config: GlobalConfig
     private _linksInDom: HtmlLink[]
 
     /**
@@ -19,14 +17,14 @@ export class DomResource extends Resource {
      * optional; if passed it will override the value of doc.URL when determining the target of
      * relative URLs.
      */
-    constructor(doc: Document, url?: UrlString, config?: DomResourceConfig)
+    constructor(doc: Document, url?: UrlString, config?: GlobalConfig)
 
-    constructor(html: string, url: UrlString, config?: DomResourceConfig)
+    constructor(html: string, url: UrlString, config?: GlobalConfig)
 
     constructor(
         docOrHtml: Document | string,
         url?: UrlString,
-        config: DomResourceConfig = {},
+        config: GlobalConfig = {},
     ) {
         super()
         const glob = config.glob || globalThis
@@ -134,7 +132,7 @@ export class DomResource extends Resource {
     static async fromBlob({ blob, url, config }: {
         blob: Blob,
         url: UrlString,
-        config: DomResourceConfig
+        config?: GlobalConfig,
     }): Promise<DomResource> { // Should be Promise<this>; see TS issue #5863
         const html = await blobToText(blob, config)
         return new this(html, url, config)

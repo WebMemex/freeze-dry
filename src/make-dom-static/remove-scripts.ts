@@ -7,7 +7,7 @@ import { GlobalConfig } from "../types"
  */
 export default function removeScripts(
     docOrElement: Element | Document,
-    config: Pick<GlobalConfig, 'glob'> = {},
+    config: GlobalConfig = {},
 ) {
     const rootElement = 'documentElement' in docOrElement
         ? docOrElement.documentElement
@@ -38,7 +38,7 @@ function removeEventHandlers(rootElement: Element) {
 }
 
 // Disables all links with a 'javascript:' href.
-function removeJavascriptHrefs(rootElement: Element, config: Pick<GlobalConfig, 'glob'> = {}) {
+function removeJavascriptHrefs(rootElement: Element, config: GlobalConfig = {}) {
     const glob = config.glob || globalThis
     const linkElements = Array.from(rootElement.querySelectorAll('a, area'))
         .filter(element => element instanceof glob.HTMLElement) as Array<HTMLAnchorElement | HTMLAreaElement>

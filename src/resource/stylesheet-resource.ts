@@ -6,18 +6,16 @@ import { GlobalConfig, UrlString } from "../types"
 import { extractLinksFromCss } from "../extract-links"
 import { blobToText } from "./util"
 
-type StylesheetResourceConfig = Pick<GlobalConfig, 'glob'>
-
 export class StylesheetResource extends Resource {
     private _url: UrlString
     private _links: CssLink[]
-    private _config: StylesheetResourceConfig
+    private _config: GlobalConfig
     private _getString: () => string
 
     constructor(
         stylesheetContent: string,
         url: UrlString,
-        config: StylesheetResourceConfig = {},
+        config: GlobalConfig = {},
     ) {
         super()
         this._url = url
@@ -55,7 +53,7 @@ export class StylesheetResource extends Resource {
     static async fromBlob({ blob, url, config }: {
         blob: Blob,
         url: UrlString,
-        config: StylesheetResourceConfig,
+        config?: GlobalConfig,
     }): Promise<StylesheetResource> { // Should be Promise<this>; see TS issue #5863
         const stylesheetText = await blobToText(blob, config)
         return new this(stylesheetText, url, config)

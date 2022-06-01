@@ -5,7 +5,7 @@ import { GlobalConfig } from './types'
  * @param {boolean} blob - the blob to serialise.
  * @returns {string} dataUrl - the data URL.
  */
-export default async function blobToDataUrl(blob: Blob, config: Pick<GlobalConfig, 'glob'> = {}): Promise<string> {
+export default async function blobToDataUrl(blob: Blob, config: GlobalConfig = {}): Promise<string> {
     const glob = config.glob || globalThis
     const binaryString = await new Promise<string>((resolve, reject) => {
         const reader = new glob.FileReader()

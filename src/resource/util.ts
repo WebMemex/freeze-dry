@@ -1,6 +1,6 @@
 import { GlobalConfig } from '../types/index'
 
-export async function blobToText(blob: Blob, config: Pick<GlobalConfig, 'glob'> = {}): Promise<string> {
+export async function blobToText(blob: Blob, config: GlobalConfig = {}): Promise<string> {
     const text = await new Promise<string>((resolve, reject) => {
         const glob = config.glob || globalThis
         const reader = new glob.FileReader()

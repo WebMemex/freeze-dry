@@ -4,10 +4,8 @@ import type { GlobalConfig, UrlString, FrameElement } from "../types"
 import { DomResource } from "."
 import { HtmlDocumentLink } from '../extract-links/types'
 
-type DomCloneResourceConfig = Pick<GlobalConfig, 'glob'>
-
 export class DomCloneResource extends DomResource {
-    protected _config: DomCloneResourceConfig
+    protected _config: GlobalConfig
     private _framesContentDocClones: Map<FrameElement, DomCloneResource | null>
     private _originalDoc: Document
 
@@ -19,7 +17,7 @@ export class DomCloneResource extends DomResource {
     constructor(
         originalDoc: Document,
         url?: UrlString,
-        config: DomCloneResourceConfig = {},
+        config: GlobalConfig = {},
     ) {
         const clone = originalDoc.cloneNode(/* deep = */ true) as Document
 
