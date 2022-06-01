@@ -137,9 +137,9 @@ export class FreezeDryer {
 
         if (config.timeout >= 0 && config.timeout < Infinity) {
             // The timeout option is merely a shorthand for a time-triggered AbortSignal.
-            const controller = new AbortController()
-            const signal = controller.signal
             const glob = config.glob || globalThis
+            const controller = new glob.AbortController()
+            const signal = controller.signal
             glob.setTimeout(() => {
                 controller.abort('Freeze-dry timed out')
             }, config.timeout)
