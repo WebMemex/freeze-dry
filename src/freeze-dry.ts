@@ -48,10 +48,10 @@ export class FreezeDryer {
         options: Partial<GlobalConfig> = {},
     ) {
         this.original = doc
-        this.config = applyDefaultConfig(doc, options)
+        this.config = this.applyDefaultConfig(doc, options)
 
         // Step 1: Capture the DOM in its current state.
-        this.result = this.captureDom(doc, this.config)
+        this.result = this.captureDom(doc)
     }
 
     async run(): Promise<this> {
@@ -66,11 +66,8 @@ export class FreezeDryer {
     }
 
     /** Capture the DOM in its current state. */
-    private captureDom(
-        doc: Document,
-        config: Pick<GlobalConfig, 'glob' | 'docUrl'> = {},
-    ): DomCloneResource {
-        const domResource = new DomCloneResource(doc, config.docUrl, config)
+    private captureDom(original: Document): DomCloneResource {
+        const domResource = new DomCloneResource(original, this.config.docUrl, this.config)
         domResource.cloneFramedDocs(/* deep = */ true)
         return domResource
     }
@@ -103,63 +100,64 @@ export class FreezeDryer {
         if (this.config.charsetDeclaration !== undefined)
             setCharsetDeclaration(this.result.doc, this.config.charsetDeclaration)
     }
-}
 
-function applyDefaultConfig(
-    doc: Document,
-    options: Partial<GlobalConfig>,
-): GlobalConfig {
-    // Configure things.
-    const defaultOptions: GlobalConfig = {
-        // Config for tweaking snapshot output
-        addMetadata: true,
-        now: new Date(),
-        contentSecurityPolicy: {
-            'default-src': ["'none'"], // By default, block all connectivity and scripts.
-            'img-src': ['data:'], // Allow inlined images.
-            'media-src': ['data:'], // Allow inlined audio/video.
-            'style-src': ['data:', "'unsafe-inline'"], // Allow inlined styles.
-            'font-src': ['data:'], // Allow inlined fonts.
-            'frame-src': ['data:'], // Allow inlined iframes.
-        },
-        charsetDeclaration: 'utf-8',
+    private applyDefaultConfig(
+        doc: Document,
+        options: Partial<GlobalConfig>,
+    ): GlobalConfig {
+        const defaultOptions: GlobalConfig = {
+            // Config for tweaking snapshot output
+            addMetadata: true,
+            now: new Date(),
+            contentSecurityPolicy: {
+                'default-src': ["'none'"], // By default, block all connectivity and scripts.
+                'img-src': ['data:'], // Allow inlined images.
+                'media-src': ['data:'], // Allow inlined audio/video.
+                'style-src': ['data:', "'unsafe-inline'"], // Allow inlined styles.
+                'font-src': ['data:'], // Allow inlined fonts.
+                'frame-src': ['data:'], // Allow inlined iframes.
+            },
+            charsetDeclaration: 'utf-8',
 
-        // Config for dealing with subresources
-        timeout: Infinity,
-        signal: undefined,
-        processSubresource: defaultProcessSubresource,
-        fetchResource: undefined,
-        newUrlForResource: defaultNewUrlForResource,
-        rememberOriginalUrls: true,
+            // Config for dealing with subresources
+            timeout: Infinity,
+            signal: undefined,
+            processSubresource: this.defaultProcessSubresource.bind(this),
+            fetchResource: undefined,
+            newUrlForResource: this.defaultNewUrlForResource.bind(this),
+            rememberOriginalUrls: true,
 
-        // Other config
-        docUrl: undefined,
-        glob: doc.defaultView
-            || (typeof window !== 'undefined' ? window : undefined)
-            || fail('Lacking a global window object'),
-    }
-    const config: GlobalConfig = flatOptions(options, defaultOptions)
+            // Other config
+            docUrl: undefined,
+            glob: doc.defaultView
+                || (typeof window !== 'undefined' ? window : undefined)
+                || fail('Lacking a global window object'),
+        }
+        const config: GlobalConfig = flatOptions(options, defaultOptions)
 
-    if (config.timeout >= 0 && config.timeout < Infinity) {
-        // The timeout option is merely a shorthand for a time-triggered AbortSignal.
-        const controller = new AbortController()
-        const signal = controller.signal
-        const glob = config.glob || globalThis
-        glob.setTimeout(() => {
-            controller.abort('Freeze-dry timed out')
-        }, config.timeout)
+        if (config.timeout >= 0 && config.timeout < Infinity) {
+            // The timeout option is merely a shorthand for a time-triggered AbortSignal.
+            const controller = new AbortController()
+            const signal = controller.signal
+            const glob = config.glob || globalThis
+            glob.setTimeout(() => {
+                controller.abort('Freeze-dry timed out')
+            }, config.timeout)
 
-        // If both a signal and a timeout are passed, abort at either’s command.
-        if (config.signal) {
-            const originalSignal = config.signal
-            originalSignal.addEventListener('abort', event => controller.abort(originalSignal.reason))
+            // If both a signal and a timeout are passed, abort at either’s command.
+            if (config.signal) {
+                const originalSignal = config.signal
+                originalSignal.addEventListener('abort', event => controller.abort(originalSignal.reason))
+            }
+
+            config.signal = signal
         }
 
-        config.signal = signal
+        return config
     }
 
     // Default callback for processing subresources. Recurses into each.
-    async function defaultProcessSubresource(
+    private async defaultProcessSubresource(
         link: SubresourceLink,
         recurse: ProcessSubresourceRecurse,
     ) {
@@ -170,7 +168,7 @@ function applyDefaultConfig(
         // Get the linked resource if missing (from cache/internet).
         if (!link.resource) {
             try {
-                link.resource = await Resource.fromLink(link, config)
+                link.resource = await Resource.fromLink(link, this.config)
             } catch (err) {
                 // TODO we may want to do something here. Turn target into about:invalid? For
                 // now, we rely on the content security policy to prevent loading this resource.
@@ -186,15 +184,13 @@ function applyDefaultConfig(
         link.resource.dry()
 
         // Change the link’s target to a new URL for the (now self-contained) subresource.
-        const newUrl = await config.newUrlForResource(link.resource)
-        if (newUrl !== link.target) setLinkTarget(link, newUrl, config)
+        const newUrl = await this.config.newUrlForResource(link.resource)
+        if (newUrl !== link.target) setLinkTarget(link, newUrl, this.config)
     }
 
-    async function defaultNewUrlForResource(resource: Resource) {
-        return await blobToDataUrl(resource.blob, config)
+    private async defaultNewUrlForResource(resource: Resource) {
+        return await blobToDataUrl(resource.blob, this.config)
     }
-
-    return config
 }
 
 function fail(message: string): never {
