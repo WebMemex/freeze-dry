@@ -36,10 +36,11 @@ export default async function freezeDry(
 /**
  * Freeze-dries an HTML Document
  */
-export class FreezeDryer {
+export class FreezeDryer implements AbortController {
     original: Document
     result: DomCloneResource
     config: FreezeDryConfig
+    private abortController: AbortController
 
     constructor(
         /** Document to be freeze-dried. Remains unmodified. */
@@ -49,6 +50,7 @@ export class FreezeDryer {
     ) {
         this.original = doc
         this.config = this.applyDefaultConfig(doc, options)
+        this.abortController = this.initAbortController()
 
         // Step 1: Capture the DOM in its current state.
         this.result = this.captureDom(doc)
@@ -134,26 +136,43 @@ export class FreezeDryer {
                 || fail('Lacking a global window object'),
         }
         const config: FreezeDryConfig = flatOptions(options, defaultOptions)
-
-        if (config.timeout >= 0 && config.timeout < Infinity) {
-            // The timeout option is merely a shorthand for a time-triggered AbortSignal.
-            const glob = config.glob || globalThis
-            const controller = new glob.AbortController()
-            const signal = controller.signal
-            glob.setTimeout(() => {
-                controller.abort('Freeze-dry timed out')
-            }, config.timeout)
-
-            // If both a signal and a timeout are passed, abort at either’s command.
-            if (config.signal) {
-                const originalSignal = config.signal
-                originalSignal.addEventListener('abort', event => controller.abort(originalSignal.reason))
-            }
-
-            config.signal = signal
-        }
-
         return config
+    }
+
+    /**
+     * Abort freeze-drying.
+     */
+    async abort(reason?: any) {
+        this.abortController.abort(reason)
+    }
+
+    /**
+     * Signals whether freeze-drying has been aborted.
+     *
+     * Aborting can happen in several ways:
+     * - This object’s `abort()` method was called.
+     * - The `timeout` given in `options` has been reached.
+     * - The `signal` given in `options` was triggered.
+     */
+    get signal() {
+        return this.abortController.signal
+    }
+
+    private initAbortController() {
+        const glob = this.config.glob || globalThis
+        const abortController = new glob.AbortController()
+        if (this.config.timeout >= 0 && this.config.timeout < Infinity) {
+            // The timeout option is merely a shorthand for a time-triggered AbortSignal.
+            glob.setTimeout(() => {
+                this.abort('Freeze-dry timed out')
+            }, this.config.timeout)
+        }
+        if (this.config.signal) {
+            // Chain the given signal to our internal controller.
+            const configSignal = this.config.signal
+            configSignal.addEventListener('abort', event => this.abort(configSignal.reason))
+        }
+        return abortController
     }
 
     // Default callback for processing subresources. Recurses into each.
@@ -170,7 +189,7 @@ export class FreezeDryer {
             try {
                 link.resource = await Resource.fromLink(link, {
                     fetchResource: this.config.fetchResource,
-                    signal: this.config.signal,
+                    signal: this.signal,
                     glob: this.config.glob,
                 })
             } catch (err) {
