@@ -3,7 +3,7 @@ import { memoizeOne, postcss, postCssValuesParser } from '../package'
 import tryParseUrl from './try-parse-url'
 import { deepSyncingProxy, transformingCache } from './parse-tools'
 import { postcssValuesParser } from 'postcss-values-parser' // seems needed to get the namespace..
-import { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from './types'
+import type { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from './types'
 
 /**
  * Extract links from a stylesheet.

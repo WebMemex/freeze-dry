@@ -1,4 +1,4 @@
-import { Link, HtmlAttributeDefinedLink } from './extract-links/types'
+import type { Link, HtmlAttributeDefinedLink } from './extract-links/types'
 
 /**
  * Set the link’s target to a new URL.

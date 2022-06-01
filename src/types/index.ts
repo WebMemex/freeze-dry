@@ -1,5 +1,5 @@
 import { UrlString, Fetchy, FrameElement } from './util'
-import { SubresourceLink } from '../extract-links/types'
+import type { SubresourceLink } from '../extract-links/types'
 import { Resource } from '../resource'
 
 export * from './util'

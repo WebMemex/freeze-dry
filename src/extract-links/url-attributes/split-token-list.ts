@@ -1,4 +1,4 @@
-import { Parser } from './types'
+import type { Parser } from './types'
 
 const splitByRegex: (regex: RegExp) => Parser = regex => value => {
     const tokens = []

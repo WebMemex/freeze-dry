@@ -1,5 +1,5 @@
 import { Resource } from '.'
-import { Link } from '../extract-links/types'
+import type { Link } from '../extract-links/types'
 
 class TestResource extends Resource {
     blob: null

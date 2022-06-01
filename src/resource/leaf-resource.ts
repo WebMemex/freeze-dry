@@ -1,6 +1,6 @@
-import { Resource } from "./resource"
-import { UrlString } from "../types"
-import { Link } from "../extract-links/types"
+import { Resource } from './resource'
+import type { UrlString } from '../types'
+import type { Link } from '../extract-links/types'
 
 export class LeafResource extends Resource {
     private _blob: Blob

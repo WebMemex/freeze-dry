@@ -1,4 +1,4 @@
-import { ContentSecurityPolicy } from "./types"
+import type { ContentSecurityPolicy } from './types'
 
 /**
  * Puts the given CSP directives into a <meta> tag of the given document.

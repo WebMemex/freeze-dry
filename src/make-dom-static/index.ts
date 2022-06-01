@@ -1,5 +1,5 @@
 import removeScripts from './remove-scripts'
-import { GlobalConfig } from '../types'
+import type { GlobalConfig } from '../types'
 
 export  { removeScripts }
 

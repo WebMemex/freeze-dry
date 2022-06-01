@@ -1,4 +1,4 @@
-import { GlobalConfig } from "../types"
+import type { GlobalConfig } from '../types'
 
 /**
  * Tries to remove all kinds of scripts contained in the given rootElement.

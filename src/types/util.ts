@@ -1,4 +1,4 @@
-import { UrlString } from '../extract-links/types'
+import type { UrlString } from '../extract-links/types'
 export type { UrlString }
 
 export type FrameElement = HTMLFrameElement | HTMLIFrameElement

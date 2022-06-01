@@ -3,8 +3,8 @@ import { syncingParsedView } from './parse-tools'
 import { extractLinksFromCssSynced } from './from-css'
 import urlAttributes from './url-attributes/index'
 import { flatMap } from './util'
-import { UrlString, HtmlLink } from './types'
-import { AttributeInfo } from './url-attributes/types'
+import type { UrlString, HtmlLink } from './types'
+import type { AttributeInfo } from './url-attributes/types'
 
 /**
  * Extracts links from an HTML Document.

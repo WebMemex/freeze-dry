@@ -1,8 +1,8 @@
 import { pathForDomNode, domNodeAtPath } from '../package'
 
-import type { GlobalConfig, UrlString, FrameElement } from "../types"
-import { DomResource } from "."
-import { HtmlDocumentLink } from '../extract-links/types'
+import type { GlobalConfig, UrlString, FrameElement } from '../types'
+import { DomResource } from '.'
+import type { HtmlDocumentLink } from '../extract-links/types'
 
 export class DomCloneResource extends DomResource {
     protected _config: GlobalConfig

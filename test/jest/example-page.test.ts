@@ -4,7 +4,7 @@ import jestFetchMock from 'jest-fetch-mock' // magically polyfills Response, Req
 import { dataURLToBlob } from 'blob-util'
 
 import freezeDry from '../../src/index'
-import { NewUrlForResourceCallback, ProcessSubresourceCallback } from '../../src/types'
+import type { NewUrlForResourceCallback, ProcessSubresourceCallback } from '../../src/types'
 
 const fetch = jestFetchMock
 Object.assign(global, { fetch })

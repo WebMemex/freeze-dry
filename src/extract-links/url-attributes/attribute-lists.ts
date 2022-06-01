@@ -3,7 +3,7 @@
 import tryParseUrl from '../try-parse-url'
 import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list'
 import { omit } from './util'
-import { AttributeInfo, AttributeInfoDict } from './types'
+import type { AttributeInfo, AttributeInfoDict } from './types'
 
 // Default properties for the attributes listed below.
 const defaultItem: Omit<AttributeInfo, 'attribute'> = {

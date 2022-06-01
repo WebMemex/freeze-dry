@@ -1,10 +1,10 @@
-import { postcss } from "../package"
+import { postcss } from '../package'
 
-import { Resource } from "./resource"
-import { CssLink } from "../extract-links/types"
-import { GlobalConfig, UrlString } from "../types"
-import { extractLinksFromCss } from "../extract-links"
-import { blobToText } from "./util"
+import { Resource } from './resource'
+import type { CssLink } from '../extract-links/types'
+import type { GlobalConfig, UrlString } from '../types'
+import { extractLinksFromCss } from '../extract-links'
+import { blobToText } from './util'
 
 export class StylesheetResource extends Resource {
     private _url: UrlString

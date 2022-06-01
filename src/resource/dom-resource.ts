@@ -1,10 +1,10 @@
-import { documentOuterHTML } from "../package"
-import { Resource } from "./resource"
-import type { HtmlLink } from "../extract-links/types"
-import type { GlobalConfig, UrlString, FrameElement } from "../types"
-import { extractLinksFromDom } from "../extract-links"
-import { blobToText } from "./util"
-import makeDomStatic from "../make-dom-static"
+import { documentOuterHTML } from '../package'
+import { Resource } from './resource'
+import type { HtmlLink } from '../extract-links/types'
+import type { GlobalConfig, UrlString, FrameElement } from '../types'
+import { extractLinksFromDom } from '../extract-links'
+import { blobToText } from './util'
+import makeDomStatic from '../make-dom-static'
 
 export class DomResource extends Resource {
     private _doc: Document

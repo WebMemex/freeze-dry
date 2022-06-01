@@ -1,4 +1,4 @@
-import { UrlString } from '../types'
+import type { UrlString } from '../types'
 
 export type SubresourceType = 'audio' | 'document' | 'embed' | 'font' | 'image' | 'object'
     | 'script' | 'style' | 'track' | 'video'

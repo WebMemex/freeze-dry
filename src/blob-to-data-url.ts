@@ -1,4 +1,4 @@
-import { GlobalConfig } from './types'
+import type { GlobalConfig } from './types'
 
 /**
  * Turn a Blob into a base64-encoded data URL.

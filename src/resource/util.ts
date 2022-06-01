@@ -1,4 +1,4 @@
-import { GlobalConfig } from '../types/index'
+import type { GlobalConfig } from '../types/index'
 
 export async function blobToText(blob: Blob, config: GlobalConfig = {}): Promise<string> {
     const text = await new Promise<string>((resolve, reject) => {

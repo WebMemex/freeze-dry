@@ -1,7 +1,7 @@
-import { UrlString, GlobalConfig, ProcessSubresourceCallback, Fetchy } from '../types'
-import { Link, SubresourceLink } from '../extract-links/types'
+import type { UrlString, GlobalConfig, ProcessSubresourceCallback, Fetchy } from '../types'
+import type { Link, SubresourceLink } from '../extract-links/types'
 import { DomResource, StylesheetResource, LeafResource } from './index'
-import { SubresourceType } from '../extract-links/url-attributes/types'
+import type { SubresourceType } from '../extract-links/url-attributes/types'
 
 export interface ResourceFactory {
     fromBlob(args: { url: UrlString, blob: Blob, config?: GlobalConfig }): Promise<Resource>
