@@ -7,15 +7,15 @@ const splitByRegex: (regex: RegExp) => Parser = regex => value => {
     while (remainder.length > 0) {
         const match = remainder.match(regex) as RegExpMatchArray
         // (match is never null, as the regexes given below match on any string)
-        const leadingWhitespace = match[1]
-        const token = match[2]
+        const leadingWhitespace = match[1]!
+        const token = match[2]!
         if (token.length > 0) { // I suppose we can simply omit empty (= invalid?) tokens..
             tokens.push({
                 token,
                 index: remainderIndex + leadingWhitespace.length,
             })
         }
-        const charactersSeen = match[0].length
+        const charactersSeen = match[0]!.length
         remainder = remainder.slice(charactersSeen, )
         remainderIndex += charactersSeen
     }

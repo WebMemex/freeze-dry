@@ -44,7 +44,7 @@ export const parsedView: (parse: Parser) => (value: string) => ParsedView = pars
 
     tokens.toString = () => {
         // Glue everything back together, with the current values of the tokens.
-        let newValue = glueStrings[0]
+        let newValue = glueStrings[0]!
         tokens.forEach(({ token }, i) => {
             newValue += token + glueStrings[i+1]
         })

@@ -7,7 +7,10 @@ import type { UrlString } from './types'
  * @param {string} [docUrl] - the absolute URL of the document itself. Defaults to doc.URL.
  * @returns {string} The absolute URL that is the base URL of the document.
  */
-export default function getBaseUrl(doc: Document, docUrl: UrlString = doc.URL): UrlString {
+export default function getBaseUrl(
+    doc: Document,
+    docUrl: UrlString = (doc.URL as UrlString)
+): UrlString {
     const baseEl = doc.querySelector('base[href]')
     if (baseEl) {
         // Interpret the base href relative to the document URL

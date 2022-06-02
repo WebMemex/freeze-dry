@@ -2,7 +2,8 @@ import { memoizeOne, postcss, postCssValuesParser } from '../package'
 
 import tryParseUrl from './try-parse-url'
 import { deepSyncingProxy, transformingCache } from './parse-tools'
-import { postcssValuesParser } from 'postcss-values-parser' // seems needed to get the namespace..
+import type { postcssValuesParser } from 'postcss-values-parser'
+import type { AtRule, Root } from 'postcss'
 import type { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from './types'
 
 /**
@@ -12,7 +13,7 @@ import type { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from
  * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
  * inside the stylesheet.
  */
-export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString): CssLink[] {
+export function extractLinksFromCss(parsedCss: Root, baseUrl: UrlString): CssLink[] {
     const links: CssLink[] = []
 
     // Grab all @import urls
@@ -25,12 +26,14 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
         }
 
         let maybeUrlNode: postcssValuesParser.Node | undefined
-        const firstNode = valueAst.nodes[0].nodes[0]
+        const firstNode = valueAst.nodes[0]?.nodes[0]
+        if (!firstNode) return
         if (firstNode.type === 'string') {
             maybeUrlNode = firstNode
         }
         else if (firstNode.type === 'func' && firstNode.value === 'url') {
             const argument = firstNode.nodes[1] // nodes[0] is the opening parenthesis.
+            if (!argument) return
             if (argument.type === 'string' || argument.type === 'word') {
                 maybeUrlNode = argument // For either type, argument.value is our URL.
             }
@@ -77,8 +80,8 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
             let subresourceType: 'font' | 'image'
             if (
                 decl.prop === 'src'
-                && decl.parent.type === 'atrule'
-                && decl.parent.name === 'font-face'
+                && decl.parent?.type === 'atrule'
+                && (decl.parent as AtRule).name === 'font-face'
             ) {
                 subresourceType = 'font'
             } else {
@@ -87,6 +90,7 @@ export function extractLinksFromCss(parsedCss: postcss.Root, baseUrl: UrlString)
             }
 
             const argument = functionNode.nodes[1] // nodes[0] is the opening parenthesis.
+            if (argument === undefined) return
             if (argument.type === 'string' || argument.type === 'word') {
                 const urlNode = argument // For either type, argument.value is our URL.
 
@@ -141,7 +145,7 @@ export function extractLinksFromCssSynced({
     //            set|get             mutate|get
 
     // Wrap get and set so we can get and set the AST directly, without reparsing when unnecessary.
-    const { get: getParsedCss, set: setParsedCss } = transformingCache<string, postcss.Root>({
+    const { get: getParsedCss, set: setParsedCss } = transformingCache<string, Root>({
         get: getCssString,
         set: setCssString,
         transform: cssString => postcss.parse(cssString),
@@ -157,17 +161,19 @@ export function extractLinksFromCssSynced({
     // arguments to its callback, so operations performed on them would not be noticed. Therefore,
     // we manually remember currentParsedCss and set() it whenever (any member of) the links object
     // has been operated on.
-    let currentParsedCss: postcss.Root | null
+    let currentParsedCss: Root | null
     const links: CssLink[] = deepSyncingProxy<CssLink[]>({
         get: () => {
+            let parsedCss
             try {
-                currentParsedCss = getParsedCss()
+                parsedCss = getParsedCss()
             } catch (err) {
                 // Corrupt CSS is treated as containing no links at all.
                 currentParsedCss = null
                 return []
             }
-            return memoizedExtractLinksFromCss(currentParsedCss, baseUrl)
+            currentParsedCss = parsedCss
+            return memoizedExtractLinksFromCss(parsedCss, baseUrl)
         },
         set: links => {
             // No need to use the given argument; any of links's setters will have already updated

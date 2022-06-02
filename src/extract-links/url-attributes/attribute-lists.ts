@@ -4,6 +4,7 @@ import tryParseUrl from '../try-parse-url'
 import { splitByWhitespace, splitByComma, splitByCommaPickFirstTokens } from './split-token-list'
 import { omit } from './util'
 import type { AttributeInfo, AttributeInfoDict } from './types'
+import { UrlString } from '../types'
 
 // Default properties for the attributes listed below.
 const defaultItem: Omit<AttributeInfo, 'attribute'> = {
@@ -20,7 +21,7 @@ const defaultItem: Omit<AttributeInfo, 'attribute'> = {
         // Default is to expect a single URL (+ possibly whitespace).
         const url = value.trim()
         if (url.length === 0) return []
-        const index = value.indexOf(url[0]) // probably 0; otherwise the number of leading spaces.
+        const index = value.indexOf(url[0]!) // probably 0; otherwise the number of leading spaces.
         return [ { token: url, index } ]
     },
 
@@ -38,7 +39,7 @@ const defaultItem: Omit<AttributeInfo, 'attribute'> = {
         url,
         element,
         // We allow the caller to override the document's URL and base URL.
-        baseUrl = element.baseURI,
+        baseUrl = element.baseURI as UrlString,
         documentURL = (element.ownerDocument !== null) ? element.ownerDocument.URL : undefined,
     ) {
         // Normally, the URL is simply relative to the document's base URL.
@@ -204,13 +205,13 @@ export const html40: AttributeInfoDict = {
             if (!match) return [] // Probably a normal refresh that stays on the same page.
 
             // If the URL was preceded by a quote, truncate it at the next quote.
-            const quote = match[2]
-            let url = match[3]
+            const quote = match[2]!
+            let url = match[3]!
             if (quote && url.includes(quote)) {
                 url = url.slice(0, url.indexOf(quote))
             }
 
-            const index = match[1].length
+            const index = match[1]!.length
             url = url.trim() // url could not start with whitespace, so index remains correct.
             return [{ token: url, index }]
         },

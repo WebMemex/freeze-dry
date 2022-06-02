@@ -12,7 +12,7 @@ export interface AttributeInfo {
     makeAbsolute(
         url: string,
         element: Element,
-        baseUrl?: string,
+        baseUrl?: UrlString,
         documentURL?: string
     ): UrlString | undefined;
 }
