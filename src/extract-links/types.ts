@@ -2,8 +2,9 @@ import { FrameElement } from '../types/util'
 import { Resource, DomResource } from '../resource' // TODO Remove need for this (recursive) import
 import type { SubresourceType } from './url-attributes/types'
 
-// This alias is used to explicitly state which strings are guaranteed/presumed to be absolute URLs.
-export type UrlString = string
+// UrlString is used for strings that are guaranteed/presumed to be absolute URLs.
+// Specify just enough to make it incompatible with an arbitrary string.
+export type UrlString = `${string}:${string}`
 
 export type Link = NonSubresourceLink | SubresourceLink
 

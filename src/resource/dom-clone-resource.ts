@@ -5,7 +5,6 @@ import { DomResource } from '.'
 import type { HtmlDocumentLink } from '../extract-links/types'
 
 export class DomCloneResource extends DomResource {
-    protected _config: GlobalConfig
     private _framesContentDocClones: Map<FrameElement, DomCloneResource | null>
     private _originalDoc: Document
 
@@ -22,7 +21,6 @@ export class DomCloneResource extends DomResource {
         const clone = originalDoc.cloneNode(/* deep = */ true) as Document
 
         super(clone, url, config)
-        this._config = config
         this._originalDoc = originalDoc
         this._framesContentDocClones = new Map()
 
@@ -91,7 +89,7 @@ export class DomCloneResource extends DomResource {
      * @param frameElement The frame element for which to get the inner document
      * @returns a clone of the document in the frame.
      */
-    getContentDocOfFrame(frameElement: FrameElement): DomCloneResource | null {
+    override getContentDocOfFrame(frameElement: FrameElement): DomCloneResource | null {
         // Look up the corresponding frame element in the other (original/cloned) doc.
         let originalFrameElement, clonedFrameElement
         if (frameElement.ownerDocument === this.doc) {

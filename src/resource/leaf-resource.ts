@@ -12,20 +12,20 @@ export class LeafResource extends Resource {
         this._url = url
     }
 
-    get url(): UrlString {
+    override get url(): UrlString {
         return this._url
     }
 
-    get blob(): Blob {
+    override get blob(): Blob {
         return this._blob
     }
 
     // A leaf resource has zero links by definition.
-    get links(): Link[] & [] {
+    override get links(): Link[] & [] {
         return [] as Link[] & []
     }
 
-    static async fromBlob({ blob, url }: {
+    static override async fromBlob({ blob, url }: {
         blob: Blob,
         url: UrlString,
     }): Promise<LeafResource> { // Should be Promise<this>; see TS issue #5863

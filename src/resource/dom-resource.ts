@@ -43,11 +43,11 @@ export class DomResource extends Resource {
         return this._doc
     }
 
-    get url(): UrlString {
-        return this._url ?? this._doc.URL
+    override get url(): UrlString {
+        return this._url ?? (this._doc.URL as UrlString)
     }
 
-    get blob(): Blob {
+    override get blob(): Blob {
         const glob = this._config.glob || globalThis
         return new glob.Blob([this.string], { type: 'text/html' })
     }
@@ -58,7 +58,7 @@ export class DomResource extends Resource {
         return documentOuterHTML(this._doc)
     }
 
-    get links(): HtmlLink[] {
+    override get links(): HtmlLink[] {
         // Return links directly contained in the document itself, as well as in its iframes with a
         // srcdoc (because such iframes are not treated as subresources)
         const allLinks = [
@@ -90,7 +90,7 @@ export class DomResource extends Resource {
         return resources;
     }
 
-    dry() {
+    override dry() {
         // Usual resource drying (e.g. change relative to absolute links)
         super.dry()
 
@@ -129,7 +129,7 @@ export class DomResource extends Resource {
         }
     }
 
-    static async fromBlob({ blob, url, config }: {
+    static override async fromBlob({ blob, url, config }: {
         blob: Blob,
         url: UrlString,
         config?: GlobalConfig,

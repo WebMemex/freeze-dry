@@ -202,7 +202,7 @@ export function deepSyncingProxy<R extends object>({ get, set, alwaysSet = false
             let targetWalker: { [key: string]: any } = rootObject
             const properties = path.split('.').slice(1)
             for (let i = 0; i < properties.length; i++) {
-                const child: any = targetWalker[properties[i]]
+                const child: any = targetWalker[properties[i]!]
                 if (!isNonNullObject(child)) {
                     const pathSoFar = '.' + properties.slice(0, i+1).join('.')
                     throw new TypeError(

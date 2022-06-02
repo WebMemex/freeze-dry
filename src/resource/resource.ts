@@ -98,7 +98,7 @@ export abstract class Resource {
             ? await resourceOrResponse.blob()
             : resourceOrResponse.blob
         // Read the final URL of the resource (after any redirects).
-        const finalUrl = resourceOrResponse.url
+        const finalUrl = resourceOrResponse.url as UrlString
 
         return await Resource.fromBlob({
             blob,
@@ -129,7 +129,7 @@ export abstract class Resource {
     static getResourceClass(
         subresourceType: SubresourceType | undefined
     ): ResourceFactory | undefined {
-        const resourceClasses: { [s: string]: ResourceFactory | undefined } = {
+        const resourceClasses: { [s: string]: ResourceFactory } = {
             document: DomResource,
             style: StylesheetResource,
             image: LeafResource, // Images cannot have subresources (actually, SVGs can! TODO)

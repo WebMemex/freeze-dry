@@ -37,7 +37,7 @@ export class StylesheetResource extends Resource {
         return this._url
     }
 
-    get blob() {
+    override get blob() {
         const glob = this._config.glob || globalThis
         return new glob.Blob([this.string], { type: 'text/css' })
     }
@@ -46,11 +46,11 @@ export class StylesheetResource extends Resource {
         return this._getString()
     }
 
-    get links(): CssLink[] {
+    override get links(): CssLink[] {
         return this._links
     }
 
-    static async fromBlob({ blob, url, config }: {
+    static override async fromBlob({ blob, url, config }: {
         blob: Blob,
         url: UrlString,
         config?: GlobalConfig,
