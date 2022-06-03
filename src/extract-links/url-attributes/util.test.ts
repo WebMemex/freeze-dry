@@ -1,13 +1,13 @@
 import {
-    mergeWith, omit, uniq,
+    merge, omit, uniq,
 } from './util'
 
-describe('mergeWith', () => {
+describe('merge', () => {
     test('typical case', () => {
         const object1 = { a: 1, b: 2 }
         const object2 = { a: 3, c: 4 }
         const sum = (x, y) => x + y
-        const result = mergeWith(sum)(object1, object2)
+        const result = merge([object1, object2], sum)
         expect(result).toEqual({ a: 4, b: 2, c: 4 })
     })
 
@@ -15,14 +15,14 @@ describe('mergeWith', () => {
         const object1 = { a: 0,  b: 10, c: 0 }
         const object2 = { a: 10, b: 0,  d: 10 }
         const movingAverage = (x, y) => x * 0.8 + y * 0.2
-        const result = mergeWith(movingAverage)(object1, object2)
+        const result = merge([object1, object2], movingAverage)
         expect(result).toEqual({ a: 2, b: 8, c: 0, d: 10 })
     })
 })
 
 test('omit', () => {
     const object = { a: 1, b: 2, c: 3 }
-    const result = omit(['b'])(object)
+    const result = omit(object, ['b'])
     expect(result).toEqual({ a: 1, c: 3 })
 })
 

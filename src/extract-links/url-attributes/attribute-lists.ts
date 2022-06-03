@@ -40,7 +40,9 @@ const defaultItem: Omit<AttributeInfo, 'attribute'> = {
         element,
         // We allow the caller to override the document's URL and base URL.
         baseUrl = element.baseURI as UrlString,
-        documentURL = (element.ownerDocument !== null) ? element.ownerDocument.URL : undefined,
+        documentURL = (element.ownerDocument !== null)
+            ? element.ownerDocument.URL as UrlString
+            : undefined,
     ) {
         // Normally, the URL is simply relative to the document's base URL.
         return tryParseUrl(url, baseUrl)
@@ -65,7 +67,26 @@ const makeAbsoluteUsingCodebase: AttributeInfo['makeAbsolute'] = (url, element, 
 
 // HTML 4.0
 // Mostly derived from https://www.w3.org/TR/REC-html40/index/attributes.html
-export const html40: AttributeInfoDict = {
+export const html40: AttributeInfoDict<
+    | 'action'
+    | 'applet_archive'
+    | 'object_archive'
+    | 'background'
+    | 'cite'
+    | 'classid'
+    | 'codebase'
+    | 'data'
+    | 'href'
+    | 'link_icon_href'
+    | 'link_stylesheet_href'
+    | 'longdesc'
+    | 'profile'
+    | 'img_src'
+    | 'frame_src'
+    | 'script_src'
+    | 'param_ref_value'
+    | 'meta_refresh_content'
+> = {
     action: {
         ...defaultItem,
         attribute: 'action',
@@ -220,7 +241,27 @@ export const html40: AttributeInfoDict = {
 
 // HTML 5.2.
 // Derived from https://www.w3.org/TR/2017/REC-html52-20171214/fullindex.html#attributes-table
-export const html52: AttributeInfoDict = {
+export const html52: AttributeInfoDict<
+| 'action'
+| 'cite'
+| 'href'
+| 'link_icon_href'
+| 'link_stylesheet_href'
+| 'img_src'
+| 'script_src'
+| 'meta_refresh_content'
+| 'data'
+| 'formaction'
+| 'longdesc'
+| 'manifest'
+| 'poster'
+| 'audio_src'
+| 'embed_src'
+| 'frame_src'
+| 'track_src'
+| 'video_src'
+| 'srcset'
+> = {
     action: html40.action,
     cite: html40.cite,
     data: {
@@ -251,7 +292,9 @@ export const html52: AttributeInfoDict = {
             url,
             element,
             _,
-            documentURL = (element.ownerDocument !== null) ? element.ownerDocument.URL : undefined,
+            documentURL = (element.ownerDocument !== null)
+                ? element.ownerDocument.URL as UrlString
+                : undefined,
         ) {
             // The manifest is not influenced by a <base href="..."> tag.
             return tryParseUrl(url, documentURL)
@@ -316,9 +359,32 @@ export const html52: AttributeInfoDict = {
 
 // WHATWG as of 2018-04-20
 // https://html.spec.whatwg.org/multipage/indices.html#attributes-3 of 2018-04-20
-export const whatwg: AttributeInfoDict = {
+export const whatwg: AttributeInfoDict<
+| 'action'
+| 'cite'
+| 'href'
+| 'link_icon_href'
+| 'link_stylesheet_href'
+| 'img_src'
+| 'script_src'
+| 'meta_refresh_content'
+| 'data'
+| 'formaction'
+| 'manifest'
+| 'poster'
+| 'audio_src'
+| 'embed_src'
+| 'frame_src'
+| 'track_src'
+| 'video_src'
+| 'srcset'
+| 'itemprop'
+| 'itemtype'
+| 'itemid'
+| 'ping'
+> = {
     // Includes all of HTML 5.2 except longdesc
-    ...omit(['longdesc'])(html52),
+    ...omit(html52, ['longdesc']),
 
     itemprop: {
         // Microdata's itemprop can contain absolute URLs, used as identifiers.

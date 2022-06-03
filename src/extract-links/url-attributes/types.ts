@@ -13,11 +13,11 @@ export interface AttributeInfo {
         url: string,
         element: Element,
         baseUrl?: UrlString,
-        documentURL?: string
+        documentURL?: UrlString,
     ): UrlString | undefined;
 }
 
-export interface AttributeInfoDict { [key: string]: AttributeInfo }
+export type AttributeInfoDict<Key extends string = string> = { [key in Key]: AttributeInfo }
 
 export interface TokenPointer {
     token: string;

@@ -1,5 +1,5 @@
 import { html40, html52, whatwg } from './attribute-lists'
-import { mergeWith, uniq } from './util'
+import { merge, uniq } from './util'
 import type { AttributeInfo, AttributeInfoDict } from './types'
 
 // Helper for combining two object's element lists.
@@ -11,6 +11,5 @@ const mergeAttributeInfos: (info1: AttributeInfo, info2: AttributeInfo) => Attri
     })
 
 // Export the union of all attributes.
-const allAttributes: AttributeInfoDict =
-    mergeWith<AttributeInfo, AttributeInfoDict>(mergeAttributeInfos)(whatwg, html52, html40)
+const allAttributes: AttributeInfoDict = merge([whatwg, html52, html40], mergeAttributeInfos)
 export default allAttributes
