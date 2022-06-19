@@ -14,6 +14,8 @@ export type ProcessSubresourceRecurse = (
     link: SubresourceLink,
 ) => void | Promise<void>
 
+export type DryResourceCallback = (resource: Resource) => void | Promise<void>
+
 export type NewUrlForResourceCallback = (resource: Resource) => string | Promise<string>
 
 export type ContentSecurityPolicy = string | {
@@ -74,6 +76,12 @@ export interface FreezeDryConfig extends GlobalConfig {
      * but may also resolve to an object `{ blob, url }` instead of a `Response`.
      */
     fetchResource?: Fetchy,
+
+    /**
+     * Transformations to apply on the document and each subresource. It is recommended to call
+     * `resource.dry()` as part of this transformation, to run the default actions.
+     */
+    dryResource: DryResourceCallback,
 
     /**
      * Callback invoked for each of `doc`’s subresources. Default behaviour is to recursively ‘dry’

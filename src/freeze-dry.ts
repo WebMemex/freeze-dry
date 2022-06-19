@@ -60,7 +60,7 @@ export class FreezeDryer implements AbortController {
         // Step 2: Recurse into subresources, converting them as needed.
         await this.crawlSubresources()
         // Step 3: Make the DOM static and context-free.
-        this.dryResource()
+        await this.config.dryResource(this.result)
         // Step 4: Finalise snapshot.
         this.finaliseSnapshot()
 
@@ -82,12 +82,6 @@ export class FreezeDryer implements AbortController {
             // If subresource crawling timed out or was aborted, continue with what we have.
             if (!this.config.signal?.aborted) throw error
         }
-    }
-
-    /** Make the DOM static and context-free. */
-    private dryResource() {
-        // TODO Allow customising the applied transformations. (and likewise for drying subresources)
-        this.result.dry()
     }
 
     /** Finalise snapshot. */
@@ -126,6 +120,7 @@ export class FreezeDryer implements AbortController {
             signal: undefined,
             processSubresource: this.defaultProcessSubresource.bind(this),
             fetchResource: undefined,
+            dryResource: this.defaultDryResource.bind(this),
             newUrlForResource: this.defaultNewUrlForResource.bind(this),
             rememberOriginalUrls: true,
 
@@ -204,7 +199,7 @@ export class FreezeDryer implements AbortController {
         await link.resource.processSubresources(recurse)
 
         // Make the resource static and context-free.
-        link.resource.dry()
+        await this.config.dryResource(link.resource)
 
         // Change the link’s target to a new URL for the (now self-contained) subresource.
         const newUrl = await this.config.newUrlForResource(link.resource)
@@ -213,6 +208,10 @@ export class FreezeDryer implements AbortController {
             newUrl,
             { rememberOriginalUrls: this.config.rememberOriginalUrls }
         )
+    }
+
+    private defaultDryResource(resource: Resource) {
+        resource.dry()
     }
 
     private async defaultNewUrlForResource(resource: Resource) {
