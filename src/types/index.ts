@@ -1,23 +1,53 @@
-import { UrlString, Fetchy, FrameElement } from './util'
+import { UrlString, Fetchy } from './util'
 import type { SubresourceLink } from '../extract-links/types'
 import { Resource } from '../resource'
 
 export * from './util'
 
-// The callback that is run for each encountered subresource link
 export type ProcessSubresourceCallback = (
+    /** The subresource link to be processed. */
     link: SubresourceLink,
+    /**
+     * The callback that can be used to process this subresource’s subresources. Invoking it will
+     * invoke this function itself again, while enabling `freezeDry` to track progress and trigger
+     * event handlers.
+     */
     recurse: ProcessSubresourceRecurse,
 ) => void | Promise<void>
 
 export type ProcessSubresourceRecurse = (
+    /** The ((…)sub)subresource link to be processed. */
     link: SubresourceLink,
 ) => void | Promise<void>
 
-export type DryResourceCallback = (resource: Resource) => void | Promise<void>
+export type DryResourceCallback = (
+    /** The resource to be ‘dried’. */
+    resource: Resource,
+    /**
+     * Whether `resource` is the top-level document being freeze-dried (rather than a subresource).
+     */
+    isRootDocument: boolean,
+) => void | Promise<void>
 
+/**
+ * Function for choosing a new URL for a subresource.
+ * @returns the new URL for linking to this subresource.
+ */
 export type NewUrlForResourceCallback = (resource: Resource) => string | Promise<string>
 
+/**
+ * A value for the Content-Security-Policy `<meta>` tag (or HTTP header). It can be the string value
+ * or (for convenience) it can be an object defining each policy directive separately; the values
+ * of this object can again be either a string, or (for convenience) an array of strings listing the
+ * individual sources separately (or a nullish value, equivalent to not including the directive).
+ *
+ * @example
+ *     {
+ *       'default-src': "'none'",
+ *       'img-src': ['data:'],
+ *       'style-src': ['data:', "'unsafe-inline'"],
+ *     }
+ */
 export type ContentSecurityPolicy = string | {
     [directive: string]: string | string[] | undefined | null,
 }

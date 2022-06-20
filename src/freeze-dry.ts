@@ -11,22 +11,29 @@ import setContentSecurityPolicy from './set-content-security-policy'
 import setCharsetDeclaration from './set-charset-declaration'
 
 /**
- * Freeze-dry an HTML Document
+ * Freeze-dry an HTML Document.
+ *
+ * Technically, this function is a convenience wrapper that instantiates and runs a {@link
+ * FreezeDrier} instance.
  *
  * @returns The freeze-dried document as a self-contained, static string of HTML.
+ *
+ * @example
+ * Simplest use case:
+ *     const html = await freezeDry()
  */
 export default async function freezeDry(
     /**
      * Document to be freeze-dried. Remains unmodified.
      */
-    doc: Document = typeof window !== 'undefined' && window.document || fail('No document given to freeze-dry'),
+    document: Document = typeof window !== 'undefined' && window.document || fail('No document given to freeze-dry'),
 
     /**
      * Options to customise freezeDry’s behaviour
      */
     options: Partial<FreezeDryConfig> = {},
 ): Promise<string> {
-    const freezeDryer = await new FreezeDryer(doc, options).run()
+    const freezeDryer = await new FreezeDryer(document, options).run()
 
     // Return the snapshot as a single string of HTML
     const html = freezeDryer.result.string
@@ -34,48 +41,81 @@ export default async function freezeDry(
 }
 
 /**
- * Freeze-dries an HTML Document
+ * Freeze-dries an HTML Document.
+ *
+ * For most use cases, use the {@link freezeDry} function, a convenience wrapper around this class.
+ *
+ * Use this class instead if you need more control. For example to access the incomplete result
+ * before `freezeDry` finishes, or to obtain it as a `Document` or `Blob` rather than a string.
+ *
+ * @example
+ * This is roughly what running `freezeDry(document, options)` does:
+ *     const freezeDryer = new FreezeDryer(document, options)
+ *     await freezeDryier.run()
+ *     const html = freezeDryer.result.string
  */
 export class FreezeDryer implements AbortController {
-    original: Document
-    result: DomCloneResource
-    config: FreezeDryConfig
+    /**
+     * The {@link Document} that was passed to this `FreezeDryer` to be freeze-dried.
+     */
+    readonly original: Document
+
+    /**
+     * The clone of the original document. After completing {@link run}, this is the freeze-dried
+     * result. It can also be accessed before or while `run`ning, to already obtain a partial
+     * result if needed.
+     */
+    readonly result: DomCloneResource
+
+    /**
+     * The configuration of this `FreezeDryer` (based on the passed `options`).
+     */
+    readonly config: FreezeDryConfig
+
     private abortController: AbortController
 
     constructor(
         /** Document to be freeze-dried. Remains unmodified. */
-        doc: Document,
+        document: Document,
         /** Options to customise freezeDry’s behaviour */
         options: Partial<FreezeDryConfig> = {},
     ) {
-        this.original = doc
-        this.config = this.applyDefaultConfig(doc, options)
+        this.original = document
+        this.config = this.applyDefaultConfig(document, options)
         this.abortController = this.initAbortController()
 
         // Step 1: Capture the DOM in its current state.
-        this.result = this.captureDom(doc)
+        this.result = this.captureDom(document)
     }
 
+    /**
+     * Run the freeze-drying process.
+     *
+     * Starts the process of recursively crawling and drying subresources of {@link result}, then
+     * finalises the snapshot itself.
+     *
+     * @returns this - the `FreezeDryer` itself
+     */
     async run(): Promise<this> {
         // Step 2: Recurse into subresources, converting them as needed.
         await this.crawlSubresources()
         // Step 3: Make the DOM static and context-free.
-        await this.config.dryResource(this.result)
+        await this.config.dryResource(this.result, true)
         // Step 4: Finalise snapshot.
         this.finaliseSnapshot()
 
         return this
     }
 
-    /** Capture the DOM in its current state. */
-    private captureDom(original: Document): DomCloneResource {
+    /** Capture the DOM in its current state. (Step 1) */
+    protected captureDom(original: Document): DomCloneResource {
         const domResource = new DomCloneResource(original, this.config.docUrl, { glob: this.config.glob })
         domResource.cloneFramedDocs(/* deep = */ true)
         return domResource
     }
 
-    /** Recurse into subresources, converting them as needed. */
-    private async crawlSubresources() {
+    /** Recurse into subresources, converting them as needed. (Step 2) */
+    protected async crawlSubresources() {
         try {
             await this.result.processSubresources(this.config.processSubresource)
         } catch (error) {
@@ -84,8 +124,8 @@ export class FreezeDryer implements AbortController {
         }
     }
 
-    /** Finalise snapshot. */
-    private finaliseSnapshot() {
+    /** Finalise snapshot. (Step 4) */
+    protected finaliseSnapshot() {
         // Step 4.1: Add metadata about the snapshot to the snapshot itself.
         if (this.config.addMetadata)
             setMementoTags(this.result.doc, { originalUrl: this.result.url, datetime: this.config.now })
@@ -97,7 +137,7 @@ export class FreezeDryer implements AbortController {
             setCharsetDeclaration(this.result.doc, this.config.charsetDeclaration)
     }
 
-    private applyDefaultConfig(
+    protected applyDefaultConfig(
         doc: Document,
         options: Partial<FreezeDryConfig>,
     ): FreezeDryConfig {
@@ -118,10 +158,10 @@ export class FreezeDryer implements AbortController {
             // Config for dealing with subresources
             timeout: Infinity,
             signal: undefined,
-            processSubresource: this.defaultProcessSubresource.bind(this),
-            fetchResource: undefined,
-            dryResource: this.defaultDryResource.bind(this),
-            newUrlForResource: this.defaultNewUrlForResource.bind(this),
+            processSubresource: this.processSubresource.bind(this),
+            fetchResource: undefined, // defaults to browser’s fetch
+            dryResource: this.dryResource.bind(this),
+            newUrlForResource: this.newUrlForResource.bind(this),
             rememberOriginalUrls: true,
 
             // Other config
@@ -135,7 +175,8 @@ export class FreezeDryer implements AbortController {
     }
 
     /**
-     * Abort freeze-drying.
+     * Abort freeze-drying. Stops further crawling of subresources, but still finishes the snapshot
+     * using the currently available subresources.
      */
     async abort(reason?: any) {
         this.abortController.abort(reason)
@@ -145,7 +186,7 @@ export class FreezeDryer implements AbortController {
      * Signals whether freeze-drying has been aborted.
      *
      * Aborting can happen in several ways:
-     * - This object’s `abort()` method was called.
+     * - This `FreezeDryer`’s {@link abort} method was called.
      * - The `timeout` given in `options` has been reached.
      * - The `signal` given in `options` was triggered.
      */
@@ -170,16 +211,21 @@ export class FreezeDryer implements AbortController {
         return abortController
     }
 
-    // Default callback for processing subresources. Recurses into each.
-    private async defaultProcessSubresource(
+    /**
+     * Default method for processing subresources (can be overruled in `options`).
+     *
+     * Fetches the subresource, recurses into each of its (sub)subresources, then applies {@link
+     * dryResource} and {@link newUrlForResource} on it.
+     */
+    protected async processSubresource(
         link: SubresourceLink,
         recurse: ProcessSubresourceRecurse,
     ) {
-        // TODO Something like this, for synchronously cloning frame contents here instead of in step 1?
+        // TODO Synchronously clone frame contents here instead of in `captureDom`?
         // (We’d first have to make srcdoc-based frames turn up as (pseudo)subresources)
         // if (link.resource) link.resource.freeze?.()
 
-        // Get the linked resource if missing (from cache/internet).
+        // Subresource step 1: Get the linked resource if missing (from cache/internet).
         if (!link.resource) {
             try {
                 link.resource = await Resource.fromLink(link, {
@@ -189,19 +235,18 @@ export class FreezeDryer implements AbortController {
                 })
             } catch (err) {
                 // TODO we may want to do something here. Turn target into about:invalid? For
-                // now, we rely on the content security policy to prevent loading this resource.
+                // now, we rely on the content security policy to prevent loading this subresource.
                 return
             }
         }
 
-        // Recurse into this subresource’s subresources.
-        // (`recurse` ≈ current function itself, but also facilitates logging progress etc.)
+        // Subresource step 2: Recurse into this subresource’s subresources.
         await link.resource.processSubresources(recurse)
 
-        // Make the resource static and context-free.
-        await this.config.dryResource(link.resource)
+        // Subresource step 3: Make this subresource static and context-free.
+        await this.config.dryResource(link.resource, false)
 
-        // Change the link’s target to a new URL for the (now self-contained) subresource.
+        // Subresource step 4: Change the link’s target to a new URL for the subresource.
         const newUrl = await this.config.newUrlForResource(link.resource)
         if (newUrl !== link.target) setLinkTarget(
             link,
@@ -210,11 +255,27 @@ export class FreezeDryer implements AbortController {
         )
     }
 
-    private defaultDryResource(resource: Resource) {
+    /**
+     * Default method for ‘drying’ a (sub)resource (can be overruled in `options`).
+     *
+     * Makes the resource static and context-free.
+     */
+    protected dryResource(
+        /** The resource to be ‘dried’. */
+        resource: Resource,
+        /**
+         * Whether `resource` is the top-level document being freeze-dried (rather than a subresource).
+         */
+        isRootDocument: boolean,
+    ) {
         resource.dry()
     }
 
-    private async defaultNewUrlForResource(resource: Resource) {
+    /**
+     * Default method for choosing a new URL for a subresource (can be overruled in `options`).
+     * @returns the complete resource content encoded as a data URL (`data:mime/type;base64;………`).
+     */
+    protected async newUrlForResource(resource: Resource) {
         return await blobToDataUrl(resource.blob, { glob: this.config.glob })
     }
 }
