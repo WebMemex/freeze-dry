@@ -24,13 +24,14 @@ export type DryResourceCallback = (
     /** The resource to be ‘dried’. */
     resource: Resource,
     /**
-     * Whether `resource` is the top-level document being freeze-dried (rather than a subresource).
+     * Whether `resource` is the top-level document (rather than a subresource).
      */
     isRootDocument: boolean,
 ) => void | Promise<void>
 
 /**
  * Function for choosing a new URL for a subresource.
+ *
  * @returns the new URL for linking to this subresource.
  */
 export type NewUrlForResourceCallback = (resource: Resource) => string | Promise<string>

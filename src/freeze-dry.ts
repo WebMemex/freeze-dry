@@ -124,6 +124,73 @@ export class FreezeDryer implements AbortController {
         }
     }
 
+    /**
+     * Default method for processing subresources (can be overruled in `options`).
+     *
+     * Fetches the subresource, recurses into each of its (sub)subresources, then applies {@link
+     * dryResource} and {@link newUrlForResource} on it.
+     */
+    protected async processSubresource(
+        link: SubresourceLink,
+        recurse: ProcessSubresourceRecurse,
+    ) {
+        // TODO Synchronously clone frame contents here instead of in `captureDom`?
+        // (We’d first have to make srcdoc-based frames turn up as (pseudo)subresources)
+        // if (link.resource) link.resource.freeze?.()
+
+        // Subresource step 1: Get the linked resource if missing (from cache/internet).
+        if (!link.resource) {
+            try {
+                link.resource = await Resource.fromLink(link, {
+                    fetchResource: this.config.fetchResource,
+                    signal: this.signal,
+                    glob: this.config.glob,
+                })
+            } catch (err) {
+                // TODO we may want to do something here. Turn target into about:invalid? For
+                // now, we rely on the content security policy to prevent loading this subresource.
+                return
+            }
+        }
+
+        // Subresource step 2: Recurse into this subresource’s subresources.
+        await link.resource.processSubresources(recurse)
+
+        // Subresource step 3: Make this subresource static and context-free.
+        await this.config.dryResource(link.resource, false)
+
+        // Subresource step 4: Change the link’s target to a new URL for the subresource.
+        const newUrl = await this.config.newUrlForResource(link.resource)
+        if (newUrl !== link.target) setLinkTarget(
+            link,
+            newUrl,
+            { rememberOriginalUrls: this.config.rememberOriginalUrls }
+        )
+    }
+
+    /**
+     * Default method for choosing a new URL for a subresource (can be overruled in `options`).
+     *
+     * @returns the complete resource content encoded as a data URL (`data:mime/type;base64;………`).
+     */
+    protected async newUrlForResource(resource: Resource) {
+        return await blobToDataUrl(resource.blob, { glob: this.config.glob })
+    }
+
+    /**
+     * Default method for ‘drying’ a (sub)resource (can be overruled in `options`).
+     *
+     * Makes the resource static and context-free. (Step 3, and subresource step 3)
+     */
+     protected dryResource(
+        /** The resource to be ‘dried’. */
+        resource: Resource,
+        /** Whether `resource` is the top-level document (rather than a subresource). */
+        isRootDocument: boolean,
+    ) {
+        resource.dry()
+    }
+
     /** Finalise snapshot. (Step 4) */
     protected finaliseSnapshot() {
         // Step 4.1: Add metadata about the snapshot to the snapshot itself.
@@ -174,26 +241,6 @@ export class FreezeDryer implements AbortController {
         return config
     }
 
-    /**
-     * Abort freeze-drying. Stops further crawling of subresources, but still finishes the snapshot
-     * using the currently available subresources.
-     */
-    async abort(reason?: any) {
-        this.abortController.abort(reason)
-    }
-
-    /**
-     * Signals whether freeze-drying has been aborted.
-     *
-     * Aborting can happen in several ways:
-     * - This `FreezeDryer`’s {@link abort} method was called.
-     * - The `timeout` given in `options` has been reached.
-     * - The `signal` given in `options` was triggered.
-     */
-    get signal() {
-        return this.abortController.signal
-    }
-
     private initAbortController() {
         const glob = this.config.glob || globalThis
         const abortController = new glob.AbortController()
@@ -212,71 +259,23 @@ export class FreezeDryer implements AbortController {
     }
 
     /**
-     * Default method for processing subresources (can be overruled in `options`).
-     *
-     * Fetches the subresource, recurses into each of its (sub)subresources, then applies {@link
-     * dryResource} and {@link newUrlForResource} on it.
+     * Abort freeze-drying. Stops further crawling of subresources, but still finishes the snapshot
+     * using the currently available subresources.
      */
-    protected async processSubresource(
-        link: SubresourceLink,
-        recurse: ProcessSubresourceRecurse,
-    ) {
-        // TODO Synchronously clone frame contents here instead of in `captureDom`?
-        // (We’d first have to make srcdoc-based frames turn up as (pseudo)subresources)
-        // if (link.resource) link.resource.freeze?.()
-
-        // Subresource step 1: Get the linked resource if missing (from cache/internet).
-        if (!link.resource) {
-            try {
-                link.resource = await Resource.fromLink(link, {
-                    fetchResource: this.config.fetchResource,
-                    signal: this.signal,
-                    glob: this.config.glob,
-                })
-            } catch (err) {
-                // TODO we may want to do something here. Turn target into about:invalid? For
-                // now, we rely on the content security policy to prevent loading this subresource.
-                return
-            }
-        }
-
-        // Subresource step 2: Recurse into this subresource’s subresources.
-        await link.resource.processSubresources(recurse)
-
-        // Subresource step 3: Make this subresource static and context-free.
-        await this.config.dryResource(link.resource, false)
-
-        // Subresource step 4: Change the link’s target to a new URL for the subresource.
-        const newUrl = await this.config.newUrlForResource(link.resource)
-        if (newUrl !== link.target) setLinkTarget(
-            link,
-            newUrl,
-            { rememberOriginalUrls: this.config.rememberOriginalUrls }
-        )
+    async abort(reason?: any) {
+        this.abortController.abort(reason)
     }
 
     /**
-     * Default method for ‘drying’ a (sub)resource (can be overruled in `options`).
+     * Signals whether freeze-drying has been aborted.
      *
-     * Makes the resource static and context-free.
+     * Aborting can happen in several ways:
+     * - This `FreezeDryer`’s {@link abort} method was called.
+     * - The `timeout` given in `options` has been reached.
+     * - The `signal` given in `options` was triggered.
      */
-    protected dryResource(
-        /** The resource to be ‘dried’. */
-        resource: Resource,
-        /**
-         * Whether `resource` is the top-level document being freeze-dried (rather than a subresource).
-         */
-        isRootDocument: boolean,
-    ) {
-        resource.dry()
-    }
-
-    /**
-     * Default method for choosing a new URL for a subresource (can be overruled in `options`).
-     * @returns the complete resource content encoded as a data URL (`data:mime/type;base64;………`).
-     */
-    protected async newUrlForResource(resource: Resource) {
-        return await blobToDataUrl(resource.blob, { glob: this.config.glob })
+    get signal() {
+        return this.abortController.signal
     }
 }
 
