@@ -1,21 +1,57 @@
 # Freeze-dry: web page conservation
 
-Freeze-dry stores a web page as it is shown in the browser. It takes the DOM, and returns it as an
-HTML string, after having and inlined external resources such as images and stylesheets (as `data:`
-URLs).
+Freeze-dry captures a web page as it is currently shown in the browser. It takes the DOM, grabs its
+subresources such as images and stylesheets, and compiles them all into a single string of HTML.
 
-It also ensures the snapshot is static and completely offline: all scripts are removed, and any
-attempt at internet connectivity is blocked by adding a content security policy. The resulting HTML
-document is a static, self-contained snapshot of the page.
+The resulting HTML document is a static, self-contained snapshot of the page, that could for example
+be used for archival, offline viewing, or static republishing; it could be saved on a usb stick or
+attached to an email, and be opened on any device.
 
-For more details about how this exactly works, see [src/Readme.md](src/Readme.md).
+Freeze-drying a web page is comparable to making a screenshot, or ‘printing’ to a PDF file. But the
+snapshot adapts to the viewer’s screen size, allows text to be selected, can be read by a screen
+reader, and so on; just as it would on the original web page.
+
+Technically, `freeze-dry` is a JavaScript function that is run on a web page. It is mainly intended
+for use by browser extensions and headless browsers. Much of its behaviour can be [customised][] if
+needed.
+
 
 ## Usage
 
+Get the module, e.g. using `npm`:
+
+    npm install freeze-dry
+
+Then, in your code:
+
+    import freezeDry from 'freeze-dry'
+    …
     const html = await freezeDry(document, options)
 
-The `options` object is optional, and even `document` can be omitted, in which case it will default
-to `window.document`. Possible options are:
+In a few seconds, `freezeDry` should return your snapshot as a string (potentially a very long one).
+
+The `options` parameter is optional. In fact, `document` is too (it defaults to `window.document`).
+
+### Customising freeze-dry’s behaviour
+
+The `options` argument to the `freezeDry()` function lets you tweak its behaviour. For example,
+instead of inlining subresources as `data:` URLs, you could store the subresources separately;
+perhaps to create an [MHTML][] file, or store each resource on [IPFS][].
+
+See the [API][] documentation for all options, and the [customising][] page for examples.
+
+If `freezeDry`’s options don’t suffice for your needs, you can even ‘[build your own][]’ custom
+freeze-dry-ish function in just a few lines of code, by directly using freeze-dry’s internals.
+
+[MHTML]: https://tools.ietf.org/html/rfc2557
+[IPFS]: https://ipfs.io
+[customising]: docs/customising.md
+[build your own]: docs/build-your-own.md
+
+
+### All options
+
+Possible options are:
 - `timeout` (number): Maximum time (in milliseconds) spent on fetching the page's subresources. The
   resulting HTML will have only succesfully fetched subresources inlined.
 - `signal` (AbortSignal): Signal to abort subresource fetching at any moment. As with `timeout`, the
@@ -28,16 +64,6 @@ to `window.document`. Possible options are:
    UTF8, pass its name here; or pass null or an empty string to omit the declaration altogether.
 - `addMetadata` (boolean): If true (the default), a `meta` and `link` tag will be added to the
   returned html, noting the documents URL and time of snapshotting (that is, the current time).
-  <details>
-
-  The meta data mimics the HTTP headers defined for the [Memento][] protocol. The added headers look
-  like so:
-
-      <meta http-equiv="Memento-Datetime" content="Sat, 18 Aug 2018 18:02:20 GMT">
-      <link rel="original" href="https://example.com/main/page.html">
-
-  </details>
-
 - `rememberOriginalUrls` (boolean): If true (the default), preserves the original value of an
   element attribute if its URLs are inlined, by noting it as a new `data-original-...` attribute.
   For example, `<img src="bg.png">` would become `<img src="data:..." data-original-src="bg.png">`.
@@ -53,10 +79,5 @@ to `window.document`. Possible options are:
   Defaults to `doc.defaultView` or (if that is absent) the global `window`. Intended for (testing)
   environments where `freezeDry` is not run ‘in’ but ‘on’ a DOM (e.g. some [jsdom][] setups).
 
-Note that the resulting string can easily be several megabytes when pages contain images, videos,
-fonts, etcetera.
-
-
 [DOMParser]: https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
-[Memento]: https://tools.ietf.org/html/rfc7089
 [jsdom]: https://github.com/jsdom/jsdom/
