@@ -20,7 +20,8 @@
     "test:jest": "jest --verbose",
     "test:playwright": "playwright test",
     "test-server": "vite --port 3000 --strictPort",
-    "typecheck": "tsc --noEmit || true"
+    "typecheck": "tsc --noEmit || true",
+    "docs": "typedoc"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
@@ -39,6 +40,7 @@
     "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
+    "typedoc": "^0.23.5",
     "typescript": ">=4.5.0",
     "vite": "^2.9.9"
   },

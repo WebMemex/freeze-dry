@@ -2,10 +2,11 @@ import tryParseUrl from './try-parse-url'
 import type { UrlString } from './types'
 
 /**
- * Equivalent to reading doc.baseURI, except that the document's URL can be overridden.
- * @param {Document} doc - the HTML document.
- * @param {string} [docUrl] - the absolute URL of the document itself. Defaults to doc.URL.
- * @returns {string} The absolute URL that is the base URL of the document.
+ * Equivalent to reading `doc.baseURI`, except that the document’s URL can be overridden.
+ *
+ * @param doc - The HTML document.
+ * @param docUrl - The absolute URL of the document itself. Defaults to `doc.URL`.
+ * @returns The absolute URL that is the base URL of the document.
  */
 export default function getBaseUrl(
     doc: Document,

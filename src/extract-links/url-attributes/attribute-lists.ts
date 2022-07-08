@@ -8,15 +8,8 @@ import { UrlString } from '../types'
 
 // Default properties for the attributes listed below.
 const defaultItem: Omit<AttributeInfo, 'attribute'> = {
-    // The name of the attribute
     // attribute: (no default value, required)
-
-    // The elements this attribute can appear on, as an array of CSS Selectors
     elements: ['*'],
-
-    // Parser for the attribute value, returns an array of zero, one, or multiple URLs.
-    // Each url is an object { token, index }, to help replacing the url on the right spot.
-    // (to e.g. replace the correct 5 in <meta http-equiv="refresh" content="5; url=5">)
     parse: value => {
         // Default is to expect a single URL (+ possibly whitespace).
         const url = value.trim()
@@ -24,17 +17,8 @@ const defaultItem: Omit<AttributeInfo, 'attribute'> = {
         const index = value.indexOf(url[0]!) // probably 0; otherwise the number of leading spaces.
         return [ { token: url, index } ]
     },
-
-    // Whether the attribute's URL refers to an "external resource"; i.e. something that is to be
-    // considered "part of"/"transcluded into" the current document, rather than just referred to.
-    // Might be slightly subjective in some cases.
     isSubresource: false,
-
-    // How the subresource is used; corresponds to what is now called the 'destination' in the WHATWG
-    // fetch spec (https://fetch.spec.whatwg.org/#concept-request-destination as of 2018-05-17)
     subresourceType: undefined,
-
-    // Turn the extracted (possibly) relative URL into an absolute URL.
     makeAbsolute(
         url,
         element,

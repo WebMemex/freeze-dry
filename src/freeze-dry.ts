@@ -14,23 +14,21 @@ import setCharsetDeclaration from './set-charset-declaration'
  * Freeze-dry an HTML Document.
  *
  * Technically, this function is a convenience wrapper that instantiates and runs a {@link
- * FreezeDrier} instance.
- *
- * @returns The freeze-dried document as a self-contained, static string of HTML.
+ * FreezeDryer} instance.
  *
  * @example
- * Simplest use case:
- *     const html = await freezeDry()
+ * // Simplest use case
+ * const html = await freezeDry()
+ *
+ * // With options
+ * const html = await freezeDry(document, { timeout: 5000 })
+ *
+ * @param document - Document to be freeze-dried. Remains unmodified. @defaultValue `window.document`.
+ * @param options - Options to customise freezeDry’s behaviour. See {@link FreezeDryConfig}.
+ * @returns The freeze-dried document as a self-contained, static string of HTML.
  */
-export default async function freezeDry(
-    /**
-     * Document to be freeze-dried. Remains unmodified.
-     */
+export async function freezeDry(
     document: Document = typeof window !== 'undefined' && window.document || fail('No document given to freeze-dry'),
-
-    /**
-     * Options to customise freezeDry’s behaviour
-     */
     options: Partial<FreezeDryConfig> = {},
 ): Promise<string> {
     const freezeDryer = await new FreezeDryer(document, options).run()
@@ -56,7 +54,7 @@ export default async function freezeDry(
  */
 export class FreezeDryer implements AbortController {
     /**
-     * The {@link Document} that was passed to this `FreezeDryer` to be freeze-dried.
+     * The `Document` that was passed to this `FreezeDryer` to be freeze-dried.
      */
     readonly original: Document
 
@@ -74,10 +72,12 @@ export class FreezeDryer implements AbortController {
 
     private abortController: AbortController
 
+    /**
+     * @param document - Document to be freeze-dried. Remains unmodified.
+     * @param options - Options to customise freezeDry’s behaviour.
+     */
     constructor(
-        /** Document to be freeze-dried. Remains unmodified. */
         document: Document,
-        /** Options to customise freezeDry’s behaviour */
         options: Partial<FreezeDryConfig> = {},
     ) {
         this.original = document
@@ -94,7 +94,7 @@ export class FreezeDryer implements AbortController {
      * Starts the process of recursively crawling and drying subresources of {@link result}, then
      * finalises the snapshot itself.
      *
-     * @returns this - the `FreezeDryer` itself
+     * @returns The FreezeDryer itself.
      */
     async run(): Promise<this> {
         // Step 2: Recurse into subresources, converting them as needed.
@@ -181,11 +181,11 @@ export class FreezeDryer implements AbortController {
      * Default method for ‘drying’ a (sub)resource (can be overruled in `options`).
      *
      * Makes the resource static and context-free. (Step 3, and subresource step 3)
+     * @param resource - The resource to be ‘dried’.
+     * @param isRootDocument - Whether `resource` is the top-level document (rather than a subresource).
      */
      protected dryResource(
-        /** The resource to be ‘dried’. */
         resource: Resource,
-        /** Whether `resource` is the top-level document (rather than a subresource). */
         isRootDocument: boolean,
     ) {
         resource.dry()

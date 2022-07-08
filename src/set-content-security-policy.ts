@@ -1,10 +1,11 @@
 import type { ContentSecurityPolicy } from './types'
 
 /**
- * Puts the given CSP directives into a <meta> tag of the given document.
- * @param {Document} doc - the Document to be modified.
- * @param {ContentSecurityPolicy} csp - the desired value of the Content Security Policy.
- * @returns nothing; doc is mutated.
+ * Puts the given CSP directives into a `<meta>` tag of the given document.
+ *
+ * @param doc - The Document to be modified.
+ * @param csp - The desired value of the Content Security Policy.
+ * @returns Nothing; the Document is mutated.
  */
 export default function setContentSecurityPolicy(doc: Document, csp: ContentSecurityPolicy) {
     const cspString = cspToString(csp)
@@ -42,6 +43,9 @@ export default function setContentSecurityPolicy(doc: Document, csp: ContentSecu
     doc.head.removeAttribute('profile')
 }
 
+/**
+ * Convert a Content Security Policy object into a string.
+ */
 export function cspToString(csp: ContentSecurityPolicy) {
     if (typeof csp === 'string') return csp
 

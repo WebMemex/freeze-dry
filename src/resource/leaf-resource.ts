@@ -2,6 +2,11 @@ import { Resource } from './resource'
 import type { UrlString } from '../types'
 import type { Link } from '../extract-links/types'
 
+/**
+ * LeafResource represents any {@link Resource} without links (e.g. fonts, images, videos).
+ *
+ * It basically contains a Blob and a URL, and does nothing special.
+ */
 export class LeafResource extends Resource {
     private _blob: Blob
     private _url: UrlString
@@ -20,7 +25,9 @@ export class LeafResource extends Resource {
         return this._blob
     }
 
-    // A leaf resource has zero links by definition.
+    /**
+     * An empty list. A leaf resource has zero links by definition.
+     */
     override get links(): Link[] & [] {
         return [] as Link[] & []
     }

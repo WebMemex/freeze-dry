@@ -4,14 +4,31 @@ import type { GlobalConfig, UrlString, FrameElement } from '../types'
 import { DomResource } from '.'
 import type { HtmlDocumentLink } from '../extract-links/types'
 
+/**
+ * DomCloneResource represents an HTML document, but works on a clone of the DOM it was given.
+ *
+ * It allows a web page to be snapshotted in its current state, after which modifications to the
+ * original DOM or the clone do not influence the other.
+ *
+ * The original document is cloned at construction time. Its frames can be (recursively) cloned
+ * with {@link cloneFramedDocs}.
+ *
+ * See its parent class {@link DomResource} for further info.
+ *
+ * @example
+ * const domResource = new DomCloneResource(window.document)
+ * domResource.cloneFramedDocs(true)
+ */
 export class DomCloneResource extends DomResource {
     private _framesContentDocClones: Map<FrameElement, DomCloneResource | null>
     private _originalDoc: Document
 
     /**
-     * @param url - Since the passed Document already has a property doc.URL, the url parameter is
-     * optional; if passed it will override the value of doc.URL when determining the target of
+     * @param originalDoc - The Document to clone.
+     * @param url - Since the passed Document already has a property `doc.URL`, the `url` parameter
+     * is optional; if passed it will override the value of `doc.URL` when determining the target of
      * relative URLs.
+     * @param config - Optional environment configuration.
      */
     constructor(
         originalDoc: Document,
@@ -29,22 +46,46 @@ export class DomCloneResource extends DomResource {
         // etc..
     }
 
+    /**
+     * The clone of the Document.
+     */
+    override get doc(): Document {
+        return super.doc
+    }
+
+    /**
+     * The Document that was cloned.
+     */
     get originalDoc(): Document {
         return this._originalDoc
     }
 
+    /**
+     * Get the original node corresponding to a given node in the document clone.
+     */
     getOriginalNode<T extends Node = Node>(nodeInClone: T) {
         const path = pathForDomNode(nodeInClone, this.doc)
         const originalNode = domNodeAtPath(path, this._originalDoc)
         return originalNode as T
     }
 
+    /**
+     * Get the cloned node corresponding to a given node in the original document.
+     */
     getClonedNode<T extends Node = Node>(nodeInOriginal: T) {
         const path = pathForDomNode(nodeInOriginal, this._originalDoc)
         const originalNode = domNodeAtPath(path, this.doc)
         return originalNode as T
     }
 
+    /**
+     * Create a DomCloneResource for each document in an (i)frame in the original document.
+     *
+     * The created clones are associated with the (i)frame elements. To access a clone, use
+     * {@link getContentDocOfFrame}.
+     *
+     * @param deep - If `true`, also clone any frames inside the frames, recursively.
+     */
     cloneFramedDocs(deep: boolean = false) {
         // Get all (i)frames (filter by HTMLElement, just to be sure; did SVG invent frames yet?)
         const glob = this._config.glob || globalThis
@@ -86,8 +127,9 @@ export class DomCloneResource extends DomResource {
      * On the first invocation, the frame content is cloned from the original document. Subsequent
      * invocations will return this same object.
      *
-     * @param frameElement The frame element for which to get the inner document
-     * @returns a clone of the document in the frame.
+     * @param frameElement The frame element for which to get the inner document. Either the frame
+     * of the original or of the cloned document can be passed.
+     * @returns A clone of the document in the frame.
      */
     override getContentDocOfFrame(frameElement: FrameElement): DomCloneResource | null {
         // Look up the corresponding frame element in the other (original/cloned) doc.

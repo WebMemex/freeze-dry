@@ -7,27 +7,57 @@ export interface ResourceFactory {
     fromBlob(args: { url: UrlString, blob: Blob, config?: GlobalConfig }): Promise<Resource>
 }
 
+/**
+ * Resource is an abstraction to help deal with links and subresources of web pages.
+ *
+ * Each Resource has content and a URL, and may have links to other URLs, which can again be
+ * represented as a Resource, and so on; resources can thus form a tree of (sub)resources.
+ *
+ * For example, a web page ({@link DomResource}) might link to a stylesheet ({@link
+ * StylesheetResource}) which may link to a font ({@link LeafResource}).
+ *
+ * Each such subclass of Resource exposes the links it contains; e.g. it extracts the `href`
+ * attribute of a `<link>` element (in HTML), or the `src` URLs of a `@font-face` rule (in CSS).
+ *
+ * The target of a {@link Link} can be modified, which updates the resource content accordingly.
+ *
+ * Each subclass also provides a `dry()` method that transforms the contents to be usable outside of
+ * its original context (e.g. served from a different URL), and to be as accurately as possible a
+ * a snapshot of the current state of the resource (e.g. any dynamic state is made part of the DOM).
+ *
+ * The content can be accessed as a Blob via {@link blob}, and as a string via `text` on subclasses
+ * for text-based resources (HTML in {@link DomResource}, CSS in {@link StylesheetResource}).
+ */
 export abstract class Resource {
-    // URL of the resource.
+    /** URL of the resource. */
     abstract readonly url: UrlString
 
-    // A Blob with the resource content.
+    /** A Blob with the current resource content. */
     abstract readonly blob: Blob
 
-    // An array of links, providing a live view on the links defined in the resource. Changing the
-    // target of a link will change the resource content. When a subresource is fetched, it is
-    // remembered as a property `resource` on the corresponding link object, thus forming a tree of
-    // resources.
+    /**
+     * An array of {@link Link}s, providing a live view on the links defined in the resource.
+     * Changing the target of a link will change the resource content.
+     */
     abstract readonly links: Link[]
 
-    // An array of links (subset of `this.links`) containing only links that define a subresource,
-    // and for which a Resource subclass exists.
+    /**
+     * An array of {@link Link}s (a subset of {@link links}), containing only subresource links, and
+     * for whose `subresourceType` a Resource subclass exists. That is, those links that {@link
+     * Resource.fromLink} accepts.
+     */
     get subresourceLinks(): SubresourceLink[] {
         return this.links
             .filter((link: Link): link is SubresourceLink => link.isSubresource)
             .filter(link => Resource.getResourceClass(link.subresourceType))
     }
 
+    /**
+     * Perform a function on each subresource link.
+     *
+     * @param processSubresource - Invoked on each subresource link.
+     * @returns A promise that completes when all invocations have completed.
+     */
     async processSubresources(processSubresource: ProcessSubresourceCallback) {
         async function processSubresourceWrapper(link: SubresourceLink) {
             // TODO emit an event?
@@ -38,12 +68,16 @@ export abstract class Resource {
         ))
     }
 
-    // ‘Dry’ the resource, i.e. make it static and context-free.
+    /**
+     * ‘Dry’ the resource, i.e. make it static and context-free.
+     */
     dry() {
         this.makeLinksAbsolute()
     }
 
-    // Make ‘outward’ links absolute, and ‘within-document’ links relative (e.g. href="#top").
+    /**
+     * Make ‘outward’ links absolute, and ‘within-document’ links relative (e.g. href="#top").
+     */
     makeLinksAbsolute() {
         this.links.forEach(link => {
             // If target is invalid (hence absoluteTarget undefined), leave it untouched.
@@ -66,11 +100,22 @@ export abstract class Resource {
     }
 
     /**
-     * Fetch the resource a given `link` points to, and return it.
-     * @param {Object} link - the link pointing to the resource.
-     * @param {Function} [config.fetchResource] - custom function for fetching resources; should be
-     * API-compatible with the global fetch(), but may also return { blob, url } instead of a Response.
-     * @returns {Resource}
+     * Fetch the resource a given `link` points to, and return it as a {@link Resource}.
+     *
+     * This method does not modify the given link; the caller can store the created Resource in
+     * `link.resource`, to grow a tree of links and resources.
+     *
+     * @example
+     * link.resource = await Resource.fromLink(link)
+     *
+     * @param link - The link pointing to the resource.
+     * @param config - Optional environment configuration.
+     * @param config.fetchResource - Custom function for fetching resources; should be
+     * API-compatible with the global `fetch()`, but may also return `{ blob, url }` instead of a
+     * `Response`.
+     * @param config.signal - Signal that can be used to abort fetching the resource and let this
+     * method throw.
+     * @returns The newly created {@link Resource}.
      */
     static async fromLink(
         link: SubresourceLink,
@@ -108,8 +153,23 @@ export abstract class Resource {
         })
     }
 
-    // Create a Resource from a Blob object plus URL; returns an instance of a subclass of Resource
-    // matching the given subresource type.
+    /**
+     * Create a {@link Resource} from a Blob and a URL, and a subresource type.
+     *
+     * Note that the URL is not resolved (see {@link fromLink} for that), but is used to interpret
+     * any relative links that the resource may contain.
+     *
+     * Currently, the `subresourceType` is mandatory, and determines what subclass of Resource is
+     * instantiated (in freeze-dry, this method is only used for subresources, so the expected type
+     * is always known). The Blob’s MIME type is ignored.
+     *
+     * @param params.blob - The contents of the resource.
+     * @param params.url - The resource’s URL.
+     * @param params.subresourceType - The type of subresource expected by the parent resource, e.g.
+     * `'image'` or `'style'`. Note this is not the same as its MIME type.
+     * @param params.config - Optional environment configuration.
+     * @returns An instance of a subclass of {@link Resource} matching the given subresource type.
+     */
     static async fromBlob({ blob, url, subresourceType, config }: {
         blob: Blob,
         url: UrlString,
@@ -124,8 +184,14 @@ export abstract class Resource {
         return resource
     }
 
-    // Determine the Resource subclass to use for the given subresource type; returns undefined if
-    // the type is not supported.
+    /**
+     * Determine the Resource subclass to use for the given subresource type.
+     *
+     * @param subresourceType - The type of subresource expected by the parent resource, e.g.
+     * `'image'` or `'style'`. Note this is not the same as its MIME type.
+     * @returns The appropriate {@link Resource} subclass, or `undefined` if the type is not
+     * supported.
+     */
     static getResourceClass(
         subresourceType: SubresourceType | undefined
     ): ResourceFactory | undefined {

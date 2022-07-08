@@ -1,9 +1,10 @@
 /**
- * Add or replace the <meta charset="..."> element at the start of the
- * Document's <head> element.
- * @param {Document} doc - The Document to add tags to.
- * @param {string} charsetDeclaration - the character set name (usually 'utf8')
- * @returns nothing; doc is mutated.
+ * Add or replace the `<meta charset="...">` element at the start of the Document’s `<head>`
+ * element.
+ *
+ * @param doc - The Document to add the element to.
+ * @param charsetDeclaration - The character set name (usually `'utf-8'`).
+ * @returns Nothing; the document is mutated.
  */
 export default function setCharsetDeclaration(doc: Document, charsetDeclaration: string | null) {
     // Ensure a head element exists.

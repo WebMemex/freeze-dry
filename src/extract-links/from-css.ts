@@ -7,11 +7,12 @@ import type { AtRule, Root } from 'postcss'
 import type { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from './types'
 
 /**
- * Extract links from a stylesheet.
- * @param {Object} parsedCss - An AST as produced by postcss.parse()
- * @param {string} baseUrl - the absolute URL for interpreting any relative URLs in the stylesheet.
- * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
- * inside the stylesheet.
+ * Extract links from a parsed stylesheet.
+ *
+ * @param parsedCss - An AST as produced by `postcss.parse()`
+ * @param baseUrl - the absolute URL for interpreting any relative URLs in the stylesheet.
+ * @returns The extracted links. Each {@link Link} provides a live, editable view on one URL inside
+ * the stylesheet.
  */
 export function extractLinksFromCss(parsedCss: Root, baseUrl: UrlString): CssLink[] {
     const links: CssLink[] = []
@@ -117,23 +118,34 @@ export function extractLinksFromCss(parsedCss: Root, baseUrl: UrlString): CssLin
         })
     })
 
+    // TODO also grab URLs in the @namespace at-rule.
+
     return links
 }
 
 /**
- * Create a live&editable view on the links in a stylesheet.
- * @param options
- * @param {() => string} options.get - getter to obtain the current content of the stylesheet. This
- * may be called many times, so keep it light; e.g. just reading a variable or style attribute.
- * @param {string => void} options.set - setter that is called, whenever a link is modified, with
- * the new value of the whole stylesheet.
- * @param {string} options.baseUrl - the absolute URL for interpreting any relative URLs in the
- * stylesheet.
+ * Create a live & editable view on the links in a stylesheet.
+ *
+ * Conceptually, the stylesheet is a mutable string. Because strings are not mutable, this function
+ * takes a getter and a setter method that it uses to read and write the string.
+ *
+ * @example
+ * const linksInStyleAttribute = extractLinksFromCssSynced({
+ *   get: () => element.getAttribute('style'),
+ *   set: newValue => { element.setAttribute('style', newValue) },
+ *   baseUrl: element.baseURI as UrlString,
+ * })
+ *
+ * @param options.get - Getter to obtain the current content of the stylesheet. This may be called
+ * many times, so keep it light; e.g. just reading a variable or style attribute.
+ * @param options.set - Setter that is called, whenever a link is modified, with the new value of
+ * the whole stylesheet.
+ * @param options.baseUrl - The absolute URL for interpreting any relative URLs in the stylesheet.
  */
 export function extractLinksFromCssSynced({
     get: getCssString,
     set: setCssString,
-    baseUrl
+    baseUrl,
 }: {
     get: () => string,
     set: (value: string) => void,

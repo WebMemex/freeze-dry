@@ -1,9 +1,10 @@
 import type { GlobalConfig } from '../types'
 
 /**
- * Tries to remove all kinds of scripts contained in the given rootElement.
- * @param {Element} rootElement
- * @returns nothing; rootElement is mutated.
+ * Remove all scripts contained in the given Document/Element.
+ *
+ * @param docOrElement - The Document or Element to remove scripts from.
+ * @returns Nothing; the document/element contents are mutated.
  */
 export default function removeScripts(
     docOrElement: Element | Document,
@@ -18,13 +19,18 @@ export default function removeScripts(
     removeJavascriptHrefs(rootElement, config)
 }
 
-// Removes all <script> elements in rootElement.
+/**
+ * Remove all `<script>` elements in `rootElement`.
+ */
 function removeScriptElements(rootElement: Element) {
     const scripts = Array.from(rootElement.querySelectorAll('script'))
     scripts.forEach(element => element.parentNode?.removeChild(element))
 }
 
-// Removes event handlers (onclick, onload, etcetera) from rootElement and all elements it contains.
+/**
+ * Remove event handlers (`onclick`, `onload`, etc.) from `rootElement` and all elements it
+ * contains.
+ */
 function removeEventHandlers(rootElement: Element) {
     const elements = Array.from(rootElement.querySelectorAll('*'))
     elements.forEach(element => {
@@ -37,17 +43,21 @@ function removeEventHandlers(rootElement: Element) {
     })
 }
 
-// Disables all links with a 'javascript:' href.
+/**
+ * Disable all links whose `href` starts with `javascript:`.
+ *
+ * To not change the link’s appearance, but without any action when clicked, the `href` attribute
+ * is set to `'javascript:'` (for lack of a better idea).
+ */
 function removeJavascriptHrefs(rootElement: Element, config: GlobalConfig = {}) {
     const glob = config.glob || globalThis
     const linkElements = Array.from(rootElement.querySelectorAll('a, area'))
         .filter(element => element instanceof glob.HTMLElement) as Array<HTMLAnchorElement | HTMLAreaElement>
     linkElements
+        // Note `href` gives the serialised URL, so the scheme is already lowercased and trimmed.
+        // See https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-href
         .filter(element => element.href.startsWith('javascript:'))
-        // .filter(element => element.getAttribute('href').trim().toLowerCase().startsWith('javascript:'))
         .forEach(element => {
-            // We should keep some href value there to not change the link's appearance, but it
-            // should not be resolvable. Keeping the 'javascript:' there, for lack of a better idea.
             element.setAttribute('href', 'javascript:')
         })
 }

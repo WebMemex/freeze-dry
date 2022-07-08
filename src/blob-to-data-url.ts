@@ -2,8 +2,9 @@ import type { GlobalConfig } from './types'
 
 /**
  * Turn a Blob into a base64-encoded data URL.
- * @param {boolean} blob - the blob to serialise.
- * @returns {string} dataUrl - the data URL.
+ *
+ * @param blob - the blob to serialise.
+ * @returns The data URL.
  */
 export default async function blobToDataUrl(blob: Blob, config: GlobalConfig = {}): Promise<string> {
     const glob = config.glob || globalThis

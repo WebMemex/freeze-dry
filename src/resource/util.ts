@@ -1,5 +1,14 @@
 import type { GlobalConfig } from '../types/index'
 
+/**
+ * Obtain a Blob’s contents as a string.
+ *
+ * The Blob content is assumed to be UTF-8 encoded.
+ *
+ * @param blob - The Blob to convert.
+ * @param config - Optional environment configuration.
+ * @returns the blob’s content.
+ */
 export async function blobToText(blob: Blob, config: GlobalConfig = {}): Promise<string> {
     const text = await new Promise<string>((resolve, reject) => {
         const glob = config.glob || globalThis

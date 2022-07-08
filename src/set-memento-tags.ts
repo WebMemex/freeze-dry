@@ -1,12 +1,13 @@
 /**
- * Add provenance metadata to the DOM, using the terminology of the Memento protocol.
- * Note however that the Memento spec only discusses HTTP headers; we take the freedom to use <meta>
- * and <link> tags to 'embed' these headers inside the document itself.
- * @param {Document} doc - The Document to add tags to.
- * @param {Object} options
- * @param {Date} [options.datetime] - The moment the page was snapshotted.
- * @param {string} [options.originalUrl] - The page's original location.
- * @returns nothing; doc is mutated.
+ * Add provenance metadata to the DOM, using the terminology of the [Memento protocol](https://mementoweb.org/guide/rfc/).
+ *
+ * Note however that the Memento spec only discusses HTTP headers; we take the freedom to use
+ * `<meta>` and `<link>` tags to ‘embed’ these headers inside the document itself.
+ *
+ * @param doc - The Document to add tags to.
+ * @param options.datetime - The moment the page was snapshotted.
+ * @param options.originalUrl - The page's original location.
+ * @returns Nothing; the Document is mutated.
  */
 export default function setMementoTags(doc: Document, {
     originalUrl,
@@ -38,7 +39,9 @@ export default function setMementoTags(doc: Document, {
     }
 }
 
-// Produces an RFC 1123 datetime string, hard-coded to use GMT as its timezone, as Memento requires.
+/**
+ * Produces an RFC 1123 datetime string, hard-coded to use GMT as its timezone, as Memento requires.
+ */
 function datetimeToString(datetime: Date) {
     const months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

@@ -7,11 +7,11 @@ import type { AttributeInfo } from './url-attributes/types'
 
 /**
  * Extracts links from an HTML Document.
- * @param {Document} doc - the Document to extract links from.
- * @param {Object} [options]
- * @param {string} [options.docUrl] - can be specified to override doc.URL
- * @returns {Object[]} The extracted links. Each link provides a live, editable view on one URL
- * inside the DOM.
+ *
+ * @param doc - The Document to extract links from.
+ * @param options.docUrl - Can be specified to override `doc.URL`.
+ * @returns The extracted links. Each {@link Link} provides a live, editable view on one URL inside
+ * the DOM.
  */
 export function extractLinksFromDom(doc: Document, {
     docUrl = undefined,

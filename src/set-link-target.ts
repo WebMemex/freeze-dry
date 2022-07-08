@@ -2,10 +2,20 @@ import type { Link, HtmlAttributeDefinedLink } from './extract-links/types'
 
 /**
  * Set the link’s target to a new URL.
- * @param {Object} link - the link to modify.
- * @param {string} target - the link’s new target.
- * @param {boolean} [config.rememberOriginalUrls=false] - Whether to preserve the value of an
- * element attribute if its URLs are inlined, by noting it as a new 'data-original-...' attribute.
+ *
+ * Essentially this performs `link.target = target`, but with extra steps:
+ * - If the link is defined by an attribute of an HTML element, the element’s `integrity` attribute
+ *  (if any) is removed. (In case the new target has different content, the integrity attribute
+ *  could prevent it from being loaded.)
+ * - If the link is defined by an attribute of an HTML element, and `config.rememberOriginalUrls` is
+ *  `true`, the attribute’s existing value is preserved in a `data-original-…` attribute.
+ *
+ * Note that modifying a {@link Link}’s target updates the {@link Resource} that defines the link.
+ *
+ * @param link - The link to modify.
+ * @param target - The link’s new target: a relative or absolute URL.
+ * @param config.rememberOriginalUrls - If true, and the link is defined by an attribute of an HTML
+ * element, the attribute’s existing value is preserved in a `data-original-…` attribute.
  */
 export default function setLinkTarget(
     link: Link,

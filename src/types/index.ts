@@ -4,28 +4,36 @@ import { Resource } from '../resource'
 
 export * from './util'
 
+/**
+ * Callback invoked for each subresource.
+ * @param link - The subresource link to be processed.
+ * @param recurse - The callback that can be used to process this subresource’s subresources.
+ * Invoking it will invoke this function itself again, while enabling `freezeDry` to track progress
+ * and trigger event handlers.
+ */
 export type ProcessSubresourceCallback = (
-    /** The subresource link to be processed. */
     link: SubresourceLink,
-    /**
-     * The callback that can be used to process this subresource’s subresources. Invoking it will
-     * invoke this function itself again, while enabling `freezeDry` to track progress and trigger
-     * event handlers.
-     */
     recurse: ProcessSubresourceRecurse,
 ) => void | Promise<void>
 
+/**
+ * The callback for recursing into a subresource’s subresources.
+ * Equivalent to {@link ProcessSubresourceCallback}, expect there is no need to pass it the
+ * `recurse` parameter again.
+ * @param link - The ((…)sub)subresource link to be processed.
+ */
 export type ProcessSubresourceRecurse = (
-    /** The ((…)sub)subresource link to be processed. */
     link: SubresourceLink,
 ) => void | Promise<void>
 
+/**
+ * Transformations to apply on the document and each subresource. It is recommended to call
+ * `resource.dry()` as part of this transformation, to run the default actions.
+ * @param resource - The resource to be ‘dried’.
+ * @param isRootDocument - Whether `resource` is the top-level document (rather than a subresource).
+ */
 export type DryResourceCallback = (
-    /** The resource to be ‘dried’. */
     resource: Resource,
-    /**
-     * Whether `resource` is the top-level document (rather than a subresource).
-     */
     isRootDocument: boolean,
 ) => void | Promise<void>
 
@@ -53,10 +61,17 @@ export type ContentSecurityPolicy = string | {
     [directive: string]: string | string[] | undefined | null,
 }
 
+/**
+ * The configuration for freeze-dry.
+ *
+ * The configuration is set by the `options` passed to {@link freezeDry} or {@link FreezeDryer}.
+ */
 export interface FreezeDryConfig extends GlobalConfig {
     /**
      * Maximum time (in milliseconds) spent on fetching the page’s subresources. The resulting HTML
      * will have only succesfully fetched subresources inlined.
+     *
+     * @defaultValue Infinity
      */
     timeout: number,
 
@@ -68,18 +83,26 @@ export interface FreezeDryConfig extends GlobalConfig {
 
     /**
      * URL to override doc.URL.
+     *
+     * Its value will influence the expansion of relative URLs, and is useful for cases where the
+     * document was constructed dynamically (e.g. using [DOMParser](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser)).
      */
     docUrl?: UrlString,
 
     /**
-     * The value put into the <meta charset="…"> element of the snapshot. If you will store/serve
-     * the returned string using an encoding other than UTF8, pass its name here; or pass null or an
-     * empty string to omit the declaration altogether.
+     * The value put into the <meta charset="…"> element of the snapshot.
+     *
+     * If you will store/serve the returned string using an encoding other than UTF8, pass its name
+     * here; or pass null or an empty string to omit the declaration altogether.
+     *
+     * @defaultValue 'utf-8'
      */
     charsetDeclaration: string | null,
 
     /**
      * Whether to note the snapshotting time and the document's URL in an extra meta and link tag.
+     *
+     * @defaultValue true
      */
     addMetadata: boolean,
 
@@ -98,7 +121,8 @@ export interface FreezeDryConfig extends GlobalConfig {
     contentSecurityPolicy: ContentSecurityPolicy | null,
 
     /**
-     * Override the snapshot time (only relevant when `addMetadata` is `true`).
+     * Override the snapshot time (only relevant when `addMetadata` is `true`). Mainly intended for
+     * testing purposes.
      */
     now: Date,
 
@@ -127,10 +151,13 @@ export interface FreezeDryConfig extends GlobalConfig {
     newUrlForResource: NewUrlForResourceCallback,
 }
 
+/**
+ * Optional configuration relevant to various methods within freeze-dry.
+ */
 export interface GlobalConfig {
     /**
      * Overrides the object providing global DOM interfaces (instead of `globalThis`/`window`).
-     * Only relevant when freezeDry is not run ‘in’ but ‘on’ a DOM (e.g. in Node on JSDOM).
+     * Only relevant when freezeDry is not run ‘in’ but ‘on’ a DOM (e.g. in NodeJS on [JSDOM](https://github.com/jsdom/jsdom/)).
      */
     glob?: typeof globalThis,
 }

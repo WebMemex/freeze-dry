@@ -6,26 +6,56 @@ import type { SubresourceType } from './url-attributes/types'
 // Specify just enough to make it incompatible with an arbitrary string.
 export type UrlString = `${string}:${string}`
 
+/**
+ * A representation of a link between web resources.
+ *
+ * A Link contains:
+ * - `from`: an {@link Anchor} representing the place this link ‘points from’.
+ * - `target`: the link target, possibly relative URL.
+ * - `absoluteTarget`: the link target, expanded to an absolute URL if needed.
+ * - `isSubresource`: whether the link’s target is considered a subresource.
+ * - `subresourceType`: what type of subresource it links to (if applicable).
+ * - `resource`: if available, the `Resource` that this link targets.
+ */
 export type Link = NonSubresourceLink | SubresourceLink
 
+/**
+ * A representation of a link between web resources.
+ *
+ * This interface is not for direct use, but is extended by all subtypes of {@link Link}.
+ */
 interface Link_base {
-    // The link's target URL. This is the exact value as it appears in the document, and may thus be
-    // a relative URL. This property can be written to, which will modify the document.
+    /**
+     * The link’s target URL.
+     *
+     * This is the exact value as it appears in the document, and may thus be
+     * a relative URL. For most use cases `absoluteTarget` is more useful than `target`.
+     *
+     * This property can be written to, which will modify the resource containing the link.
+     */
     target: string;
 
-    // The link's target URL as an absolute URL. This takes into account factors like the <base
-    // href="..."> tag, so usually you may prefer to use `absoluteTarget` rather than `target`.
-    // If the target is not a valid (relative) URL, absoluteTarget equals undefined.
+     /**
+      * The link’s target URL as an absolute URL.
+      *
+      * This takes into account factors like the `<base href="...">` element.
+      *
+      * If the target is not a valid (relative) URL, absoluteTarget equals undefined.
+      */
     readonly absoluteTarget?: UrlString;
 
-    // A boolean indicating whether the resource being linked to is normally considered a
-    // subresource of the document. For example, the `src` of an `<img>` tag specifies a subresource
-    // because the image is considered *part of* the document, while the `href` of an `<a>` or the
-    // `action` of a `<form>` merely *point to* another resource.
+     /**
+      * A boolean indicating whether the resource being linked to is normally considered a
+      * subresource of the document. For example, the `src` of an `<img>` element specifies a
+      * subresource because the image is considered *part of* the document, while the `href` of an
+      * `<a>` or the `action` of a `<form>` merely *point to* another resource.
+      */
     readonly isSubresource: boolean;
 
-    // Information needed to find the link in the DOM or stylesheet, for scenarios where one needs
-    // to do more than just reading or modifying the link target.
+     /**
+      * Information about where the link points ‘from’ (the place where it is defined) in the DOM or
+      * stylesheet.
+      */
     readonly from: Anchor;
 }
 
@@ -36,20 +66,30 @@ export interface NonSubresourceLink extends Link_base {
     readonly subresourceType?: undefined;
 }
 
-// Links that make their targets ‘part of’ the document.
+/**
+ * A link that makes its target ‘part of’ the document.
+ */
 export interface SubresourceLink extends Link_base {
     readonly isSubresource: true;
 
-    // Indicates the type of resource (`image`, `style`, ...). This corresponds to what is now
-    // called the 'destination' in the WHATWG fetch spec. See <https://fetch.spec.whatwg.org/#concept-request-destination>
+    /**
+     * Indicates the type of resource (`image`, `style`, ...). This corresponds to what is now
+     * called the ‘destination’ in the WHATWG fetch spec. See <https://fetch.spec.whatwg.org/#concept-request-destination>
+     */
     readonly subresourceType?: SubresourceType;
 
-    // If the subresource is available, it can be assigned to this attribute.
+    /**
+     * If the subresource is available, it can be assigned to this attribute.
+     */
     // TODO Remove this ‘upward’ dependency.
     resource?: Resource;
 }
 
 
+/**
+ * The place a link points ‘from’. For links in HTML or CSS, this is the place where the link is
+ * defined (only an HTTP `Link` header can specify the anchor of a link).
+ */
 export interface Anchor {
     // TODO Remove this ‘upward’ dependency.
     resource?: Resource;
@@ -58,7 +98,7 @@ export interface Anchor {
 export interface AttributeAnchor<E extends Element, A extends string> extends Anchor {
     element: E;
     attribute: A;
-    // Range is kept optional while it is not yet implemented for the 'style' attribute (it depends
+    // Range is kept optional while it is not yet implemented for the `style` attribute (it depends
     // on CssAnchor.range)
     rangeWithinAttribute?: [number, number];
 }
@@ -75,15 +115,28 @@ export interface CssAnchor extends Anchor {
 }
 
 
-// A link defined in an HTML document.
+/**
+ * A {@link Link} defined in an HTML document.
+ */
 export type HtmlLink = HtmlNonSubresourceLink | HtmlSubresourceLink
 
-interface HtmlLink_base extends Link_base {
+/**
+ * A {@link Link} defined in an HTML document.
+ *
+ * This interface is not for direct use, but is extended by all subtypes of {@link HtmlLink}.
+ */
+export interface HtmlLink_base extends Link_base {
     readonly from: AttributeAnchor<Element, string> | TextContentAnchor<any>;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that does not link to a subresource.
+ */
 export type HtmlNonSubresourceLink = HtmlLink_base & NonSubresourceLink
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a subresource.
+ */
 export type HtmlSubresourceLink =
     | HtmlUntypedLink
     | HtmlAudioLink
@@ -97,33 +150,53 @@ export type HtmlSubresourceLink =
     | HtmlTrackLink
     | HtmlVideoLink
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a subresource.
+ *
+ * This interface is not for direct use, but is extended by all subtypes of {@link HtmlSubresourceLink}.
+ */
 type HtmlSubresourceLink_base = HtmlLink_base & SubresourceLink
 
 export interface HtmlUntypedLink extends HtmlSubresourceLink_base {
     readonly subresourceType: undefined;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to an `audio` subresource.
+ */
 export interface HtmlAudioLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "audio";
     readonly from: AttributeAnchor<HTMLAudioElement | HTMLSourceElement, "src">;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a `document` subresource.
+ */
 export interface HtmlDocumentLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "document";
     readonly from: AttributeAnchor<FrameElement, "src"> & { resource?: DomResource };
     resource?: DomResource;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to an `embed` subresource.
+ */
 export interface HtmlEmbedLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "embed";
     readonly from: AttributeAnchor<HTMLEmbedElement, "embed">;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a `font` subresource.
+ */
 export interface HtmlFontLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "font";
     readonly from: TextContentAnchor<HTMLStyleElement>;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to an `image` subresource.
+ */
 export interface HtmlImageLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "image";
     readonly from:
@@ -137,16 +210,25 @@ export interface HtmlImageLink extends HtmlSubresourceLink_base {
         ;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to an `object` subresource.
+ */
 export interface HtmlObjectLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "object";
     readonly from: AttributeAnchor<HTMLObjectElement, "data">;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a `script` subresource.
+ */
 export interface HtmlScriptLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "script";
     readonly from: AttributeAnchor<HTMLScriptElement, "src">;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a `style` subresource.
+ */
 export interface HtmlStyleLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "style";
     readonly from:
@@ -155,11 +237,17 @@ export interface HtmlStyleLink extends HtmlSubresourceLink_base {
         ;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a `track` subresource.
+ */
 export interface HtmlTrackLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "track";
     readonly from: AttributeAnchor<HTMLTrackElement, "src">;
 }
 
+/**
+ * A {@link Link} defined in an HTML document, that links to a `video` subresource.
+ */
 export interface HtmlVideoLink extends HtmlSubresourceLink_base {
     readonly subresourceType: "video";
     readonly from:
@@ -170,15 +258,34 @@ export interface HtmlVideoLink extends HtmlSubresourceLink_base {
 
 export type HtmlAttributeDefinedLink = HtmlLink & { from: AttributeAnchor<Element, string> }
 
+/**
+ * A {@link Link} defined in a CSS stylesheet.
+ */
+export type CssLink = CssSubresourceLink // (all links in CSS are subresource links)
 
-export type CssLink = CssSubresourceLink // (all links in CSS define subresources)
-
+/**
+ * A {@link Link} defined in a CSS stylesheet.
+ *
+ * This interface is not for direct use, but is extended by all subtypes of {@link CssLink}.
+ */
 interface CssLink_base extends Link_base {
     readonly from: CssAnchor;
 }
 
-type CssSubresourceLink = CssFontLink | CssImageLink | CssStyleLink
+/**
+ * A {@link Link} defined in a CSS stylesheet, that links to a subresource.
+ *
+ * Note that all links in stylesheets are subresource links.
+ */
+export type CssSubresourceLink = CssFontLink | CssImageLink | CssStyleLink
 
+/**
+ * A {@link Link} defined in a CSS stylesheet, that links to a subresource.
+ *
+ * Note that all links in stylesheets are subresource links.
+ *
+ * This interface is not for direct use, but is extended by all subtypes of {@link CssSubresourceLink}.
+ */
 type CssSubresourceLink_base = CssLink_base & SubresourceLink
 
 export interface CssFontLink extends CssSubresourceLink_base {

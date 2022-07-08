@@ -5,8 +5,9 @@ export  { removeScripts }
 
 /**
  * Remove interactivity from a document.
- * @param {Document} doc - the Document to be modified.
- * @returns nothing; doc is mutated.
+ *
+ * @param doc - The Document to be modified.
+ * @returns Nothing; the Document is mutated.
  */
 export default function makeDomStatic(doc: Document, config: GlobalConfig = {}) {
     removeScripts(doc, config)
@@ -26,7 +27,8 @@ export default function makeDomStatic(doc: Document, config: GlobalConfig = {}) 
 
 /**
  * Remove any <noscript> tags from the document.
- * @param doc
+ *
+ * @param doc - The Document to be modified.
  */
 export function removeNoscript(doc: Document) {
     const noscripts = Array.from(doc.querySelectorAll('noscript'))
@@ -34,8 +36,9 @@ export function removeNoscript(doc: Document) {
 }
 
 /**
- * Disable editing on editable elements
- * @param doc the Document to be modified
+ * Disable editing on editable elements.
+ *
+ * @param doc - The Document to be modified.
  */
 export function removeContentEditable(doc: Document, config: GlobalConfig = {}) {
     const glob = config.glob || globalThis
