@@ -4,7 +4,8 @@ import tryParseUrl from './try-parse-url'
 import { deepSyncingProxy, transformingCache } from './parse-tools'
 import type { postcssValuesParser } from 'postcss-values-parser'
 import type { AtRule, Root } from 'postcss'
-import type { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from './types'
+import type { UrlString } from '../../types'
+import type { CssLink, CssStyleLink, CssFontLink, CssImageLink } from './types'
 
 /**
  * Find all links in a parsed stylesheet.

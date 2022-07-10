@@ -1,5 +1,5 @@
 import { UrlString, Fetchy } from './util'
-import type { SubresourceLink } from '../resource/links/types'
+import type { SubresourceLink } from '../resource'
 import { Resource } from '../resource'
 
 export * from './util'

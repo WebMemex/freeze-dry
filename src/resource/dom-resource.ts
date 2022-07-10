@@ -1,7 +1,7 @@
 import { documentOuterHTML } from '../package'
 import { Resource } from './resource'
-import type { HtmlLink } from './links/types'
 import type { GlobalConfig, UrlString, FrameElement } from '../types'
+import type { HtmlLink } from './links'
 import { findLinksInDom } from './links'
 import { blobToText } from './util'
 import makeDomStatic from '../make-dom-static'

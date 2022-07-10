@@ -3,7 +3,7 @@
 // attribute, that allows both reading and writing the URLs in place.
 
 import { memoize, mutableProxyFactory } from '../../package'
-import type { Parser, TokenPointer } from './url-attributes/types'
+import type { Parser, TokenPointer } from './url-attributes'
 
 interface ParsedView extends Array<TokenPointer> {
     // Array of course already had a toString() method, but we redefine it, so just to be explicit:

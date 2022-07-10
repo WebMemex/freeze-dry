@@ -1,4 +1,4 @@
-import type { GlobalConfig } from '../types/index'
+import type { GlobalConfig } from '../types'
 
 /**
  * Obtain a Blob’s contents as a string.

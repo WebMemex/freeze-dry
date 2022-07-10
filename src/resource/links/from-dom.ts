@@ -2,8 +2,9 @@ import getBaseUrl from './get-base-url'
 import { syncingParsedView } from './parse-tools'
 import { findLinksInCssSynced } from './from-css'
 import urlAttributes from './url-attributes/index'
-import type { UrlString, HtmlLink } from './types'
-import type { AttributeInfo } from './url-attributes/types'
+import type { UrlString } from '../../types'
+import type { HtmlLink } from './types'
+import type { AttributeInfo } from './url-attributes'
 
 /**
  * Find all links in an HTML Document.

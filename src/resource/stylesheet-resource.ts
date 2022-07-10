@@ -1,9 +1,9 @@
 import { postcss } from '../package'
 
 import { Resource } from './resource'
-import type { CssLink } from './links/types'
 import type { GlobalConfig, UrlString } from '../types'
 import { findLinksInCss } from './links'
+import type { CssLink } from './links'
 import { blobToText } from './util'
 
 /**

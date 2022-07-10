@@ -1,4 +1,4 @@
-import postcss from 'postcss'
+import { postcss } from '../../package'
 
 import { findLinksInCss, findLinksInCssSynced } from './from-css'
 

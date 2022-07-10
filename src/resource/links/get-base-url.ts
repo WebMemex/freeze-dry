@@ -1,5 +1,5 @@
 import tryParseUrl from './try-parse-url'
-import type { UrlString } from './types'
+import type { UrlString } from '../../types'
 
 /**
  * Equivalent to reading `doc.baseURI`, except that the document’s URL can be overridden.

@@ -3,7 +3,14 @@
 //     const { freezeDry } = require('freeze-dry');
 export { freezeDry as default } from './freeze-dry'
 export * from './freeze-dry'
-export * from './resource'
+
+/**
+ * Abstractions to help deal with links and subresources of web pages.
+ *
+ * See the documentation of {@link resource!Resource}.
+ */
+export * as resource from './resource'
+
 export { default as blobToDataUrl } from './blob-to-data-url'
 export { default as makeDomStatic } from './make-dom-static'
 export * from './make-dom-static'
@@ -13,5 +20,3 @@ export { default as setMementoTags } from './set-memento-tags'
 export { default as setLinkTarget } from './set-link-target'
 
 export * from './types'
-export * from './resource/links/types'
-export * from './resource/links/url-attributes/types'

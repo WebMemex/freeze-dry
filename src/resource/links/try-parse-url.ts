@@ -1,6 +1,6 @@
 import { relativeToAbsoluteIri } from '../../package'
 
-import type { UrlString } from './types'
+import type { UrlString } from '../../types'
 
 /**
  * Parse the given URL `url` relative to the given base URL `baseUrl`.

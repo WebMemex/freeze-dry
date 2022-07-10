@@ -1,13 +1,4 @@
-import type { UrlString } from '../types'
-
-/**
- * A string indicating the type of subresource expected by a parent resource, e.g. `'image'` or
- * `'style'`. Note this is not the same as a MIME type.
- *
- * This corresponds to what is now called the ‘destination’ in the [WHATWG fetch spec](https://fetch.spec.whatwg.org/#concept-request-destination).
- */
-export type SubresourceType = 'audio' | 'document' | 'embed' | 'font' | 'image' | 'object'
-    | 'script' | 'style' | 'track' | 'video'
+import type { UrlString, SubresourceType } from '../../../types'
 
 /**
  * Details about an HTML attribute that are relevant for finding links in it.

@@ -1,10 +1,5 @@
-import { FrameElement } from '../../types/util'
+import { FrameElement, UrlString, SubresourceType } from '../../types'
 import { Resource, DomResource } from '..' // TODO Remove need for this (recursive) import
-import type { SubresourceType } from './url-attributes/types'
-
-// UrlString is used for strings that are guaranteed/presumed to be absolute URLs.
-// Specify just enough to make it incompatible with an arbitrary string.
-export type UrlString = `${string}:${string}`
 
 /**
  * A representation of a link between web resources.

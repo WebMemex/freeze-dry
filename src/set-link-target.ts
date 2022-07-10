@@ -1,4 +1,4 @@
-import type { Link, HtmlAttributeDefinedLink } from './resource/links/types'
+import type { Link, HtmlAttributeDefinedLink } from './resource'
 
 /**
  * Set the link’s target to a new URL.

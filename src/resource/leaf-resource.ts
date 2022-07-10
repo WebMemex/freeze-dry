@@ -1,6 +1,6 @@
 import { Resource } from './resource'
+import type { Link } from './links'
 import type { UrlString } from '../types'
-import type { Link } from './links/types'
 
 /**
  * LeafResource represents any {@link Resource} without links (e.g. fonts, images, videos).

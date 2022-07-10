@@ -1,5 +1,5 @@
-import { Resource } from '.'
-import type { Link } from './links/types'
+import { Resource } from './resource'
+import type { Link } from './links'
 
 class TestResource extends Resource {
     blob: null

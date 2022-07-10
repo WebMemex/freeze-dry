@@ -13,3 +13,5 @@ const mergeAttributeInfos: (info1: AttributeInfo, info2: AttributeInfo) => Attri
 // Export the union of all attributes.
 const allAttributes: AttributeInfoDict = merge([whatwg, html52, html40], mergeAttributeInfos)
 export default allAttributes
+
+export * from './types'
