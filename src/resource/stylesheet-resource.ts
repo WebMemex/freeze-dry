@@ -1,9 +1,9 @@
 import { postcss } from '../package'
 
 import { Resource } from './resource'
-import type { CssLink } from '../extract-links/types'
+import type { CssLink } from './links/types'
 import type { GlobalConfig, UrlString } from '../types'
-import { extractLinksFromCss } from '../extract-links'
+import { findLinksInCss } from './links'
 import { blobToText } from './util'
 
 /**
@@ -35,7 +35,7 @@ export class StylesheetResource extends Resource {
         this._config = config
         try {
             const parsedCss = postcss.parse(stylesheetContent)
-            this._links = extractLinksFromCss(parsedCss, url)
+            this._links = findLinksInCss(parsedCss, url)
             for (const link of this._links) link.from.resource = this
             // Whenever the stylesheet content is accessed, we serialise its AST.
             this._getString = () => parsedCss.toResult().css
@@ -77,7 +77,7 @@ export class StylesheetResource extends Resource {
      *
      * The target of a {@link Link} can be modified, which updates the resource content accordingly.
      *
-     * Note that currently, all links extracted from a stylesheet are subresource links.
+     * Note that currently, all links we find in a stylesheet are subresource links.
      */
     override get links(): CssLink[] {
         return this._links

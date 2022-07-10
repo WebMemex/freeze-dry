@@ -1,7 +1,7 @@
 import type { UrlString, GlobalConfig, ProcessSubresourceCallback, Fetchy } from '../types'
-import type { Link, SubresourceLink } from '../extract-links/types'
+import type { Link, SubresourceLink } from './links/types'
 import { DomResource, StylesheetResource, LeafResource } from './index'
-import type { SubresourceType } from '../extract-links/url-attributes/types'
+import type { SubresourceType } from './links/url-attributes/types'
 
 export interface ResourceFactory {
     fromBlob(args: { url: UrlString, blob: Blob, config?: GlobalConfig }): Promise<Resource>
@@ -16,8 +16,9 @@ export interface ResourceFactory {
  * For example, a web page ({@link DomResource}) might link to a stylesheet ({@link
  * StylesheetResource}) which may link to a font ({@link LeafResource}).
  *
- * Each such subclass of Resource exposes the links it contains; e.g. it extracts the `href`
- * attribute of a `<link>` element (in HTML), or the `src` URLs of a `@font-face` rule (in CSS).
+ * Each such subclass of Resource exposes the links it contains. Note that besides the user-visible
+ * links made by `<a>` elements, links are also created by e.g. the `src` of an `<img>` element (in
+ * HTML), or the `url(…)` in a `background-image` value (in CSS).
  *
  * The target of a {@link Link} can be modified, which updates the resource content accordingly.
  *

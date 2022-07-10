@@ -1,4 +1,4 @@
-import { memoizeOne, postcss, postCssValuesParser } from '../package'
+import { memoizeOne, postcss, postCssValuesParser } from '../../package'
 
 import tryParseUrl from './try-parse-url'
 import { deepSyncingProxy, transformingCache } from './parse-tools'
@@ -7,14 +7,14 @@ import type { AtRule, Root } from 'postcss'
 import type { CssLink, CssStyleLink, CssFontLink, CssImageLink, UrlString } from './types'
 
 /**
- * Extract links from a parsed stylesheet.
+ * Find all links in a parsed stylesheet.
  *
  * @param parsedCss - An AST as produced by `postcss.parse()`
  * @param baseUrl - the absolute URL for interpreting any relative URLs in the stylesheet.
- * @returns The extracted links. Each {@link Link} provides a live, editable view on one URL inside
+ * @returns The found links. Each {@link Link} provides a live, editable view on one URL inside
  * the stylesheet.
  */
-export function extractLinksFromCss(parsedCss: Root, baseUrl: UrlString): CssLink[] {
+export function findLinksInCss(parsedCss: Root, baseUrl: UrlString): CssLink[] {
     const links: CssLink[] = []
 
     // Grab all @import urls
@@ -130,7 +130,7 @@ export function extractLinksFromCss(parsedCss: Root, baseUrl: UrlString): CssLin
  * takes a getter and a setter method that it uses to read and write the string.
  *
  * @example
- * const linksInStyleAttribute = extractLinksFromCssSynced({
+ * const linksInStyleAttribute = findLinksInCssSynced({
  *   get: () => element.getAttribute('style'),
  *   set: newValue => { element.setAttribute('style', newValue) },
  *   baseUrl: element.baseURI as UrlString,
@@ -142,7 +142,7 @@ export function extractLinksFromCss(parsedCss: Root, baseUrl: UrlString): CssLin
  * the whole stylesheet.
  * @param options.baseUrl - The absolute URL for interpreting any relative URLs in the stylesheet.
  */
-export function extractLinksFromCssSynced({
+export function findLinksInCssSynced({
     get: getCssString,
     set: setCssString,
     baseUrl,
@@ -164,8 +164,8 @@ export function extractLinksFromCssSynced({
         untransform: parsedCss => parsedCss.toResult().css,
     })
 
-    // Memoise, such that when we get the AST from cache, we get the extracted links from cache too.
-    const memoizedExtractLinksFromCss = memoizeOne(extractLinksFromCss)
+    // Memoise, such that when we get the AST from cache, we get the found links from cache too.
+    const memoizedfindLinksInCss = memoizeOne(findLinksInCss)
 
     // Make a proxy so that `links` is always up-to-date and its modifications are written back.
     // For the curious: note that wrapping {get,set}parsedCss in a deepSyncingProxy would not work:
@@ -185,7 +185,7 @@ export function extractLinksFromCssSynced({
                 return []
             }
             currentParsedCss = parsedCss
-            return memoizedExtractLinksFromCss(parsedCss, baseUrl)
+            return memoizedfindLinksInCss(parsedCss, baseUrl)
         },
         set: links => {
             // No need to use the given argument; any of links's setters will have already updated

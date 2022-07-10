@@ -1,6 +1,6 @@
 import postcss from 'postcss'
 
-import { extractLinksFromCss, extractLinksFromCssSynced } from './from-css'
+import { findLinksInCss, findLinksInCssSynced } from './from-css'
 
 const exampleCssString = `
     @import 'sheet2.css' screen and orientation('landscape');
@@ -34,11 +34,11 @@ const exampleCssStringWithReplacedUrls = `
     }
 `
 
-describe('extractLinksFromCss', () => {
+describe('findLinksInCss', () => {
     test('should find all URLs in a typical example', () => {
         const parsedCss = postcss.parse(exampleCssString)
 
-        const links = extractLinksFromCss(parsedCss, 'https://base.url/stylesheet.css')
+        const links = findLinksInCss(parsedCss, 'https://base.url/stylesheet.css')
 
         expect(links.length).toEqual(5)
 
@@ -61,7 +61,7 @@ describe('extractLinksFromCss', () => {
     test('should correctly update URLs in a typical example', () => {
         const parsedCss = postcss.parse(exampleCssString)
 
-        const links = extractLinksFromCss(parsedCss, 'https://base.url/stylesheet.css')
+        const links = findLinksInCss(parsedCss, 'https://base.url/stylesheet.css')
 
         links[0].target = 'new-target0'
         links[1].target = 'new-target1'
@@ -80,7 +80,7 @@ describe('extractLinksFromCss', () => {
         `
         const parsedCss = postcss.parse(cssString)
 
-        const links = extractLinksFromCss(parsedCss, 'https://base.url/')
+        const links = findLinksInCss(parsedCss, 'https://base.url/')
 
         expect(links).toHaveLength(2)
         expect(links[0].target).toEqual('background.png')
@@ -97,7 +97,7 @@ describe('extractLinksFromCss', () => {
         `
         const parsedCss = postcss.parse(cssString)
 
-        const links = extractLinksFromCss(parsedCss, 'https://base.url/stylesheet.css')
+        const links = findLinksInCss(parsedCss, 'https://base.url/stylesheet.css')
 
         expect(links).toHaveLength(4)
         expect(links[0].target).toBe('other-sheet0.css')
@@ -116,7 +116,7 @@ describe('extractLinksFromCss', () => {
         `
         const parsedCss = postcss.parse(cssString)
 
-        const links = extractLinksFromCss(parsedCss, 'https://base.url/stylesheet.css')
+        const links = findLinksInCss(parsedCss, 'https://base.url/stylesheet.css')
 
         expect(links).toHaveLength(3)
         expect(links[0].target).toBe('bg.png')
@@ -138,7 +138,7 @@ describe('extractLinksFromCss', () => {
         `
         const parsedCss = postcss.parse(cssString)
 
-        const links = extractLinksFromCss(parsedCss, 'https://base.url/stylesheet.css')
+        const links = findLinksInCss(parsedCss, 'https://base.url/stylesheet.css')
 
         expect(links).toHaveLength(3)
         expect(links[0].target).toBe('/fonts/myfont.woff2')
@@ -150,13 +150,13 @@ describe('extractLinksFromCss', () => {
     })
 })
 
-describe('extractLinksFromCssSynced', () => {
+describe('findLinksInCssSynced', () => {
     let cssString
     let links
 
     beforeEach(() => {
         cssString = `p { background-image: url('background.png'); }`
-        links = extractLinksFromCssSynced({
+        links = findLinksInCssSynced({
             get: () => { return cssString },
             set: v => { cssString = v },
             baseUrl: 'https://base.url/',

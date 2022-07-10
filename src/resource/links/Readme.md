@@ -1,4 +1,4 @@
-# extract-links
+# Links abstraction & extraction for DOM/CSS
 
 This code was written for freeze-dry, but with reusability in mind, to aid in any project that wants to list and/or modify the links defined in a web page. It could be packaged & published by itself if there is demand for it.
 
@@ -8,7 +8,7 @@ Note that in this project, the word link means *any* reference to another resour
 
 ### For a DOM Document
 
-    extractLinksFromDom(doc, { docUrl })
+    findLinksInDom(doc, { docUrl })
 
 Pass a Document as `doc`; gives back an array of links (described below).
 
@@ -18,7 +18,7 @@ still take precedence).
 
 Usage example: (assume the document just contains `<a href="/page"><img src="img.png"></a>`)
 
-    const links = extractLinksFromDom(window.document)
+    const links = findLinksInDom(window.document)
     // links[0].target === '/page'
     // links[1].target === 'img.png'
 
@@ -39,30 +39,29 @@ contain.
 
 #### Using [postcss]
 
-    extractLinksFromCss(parsedCss, baseUrl)
+    findLinksInCss(parsedCss, baseUrl)
 
 Where `parsedCss` is a postcss Root node.
 
 Example usage:
 
     const parsedCss = postcss.parse(`body { background: url('bg.png'); }`)
-    const links = extractLinksFromCss(parsedCss, baseUrl)
+    const links = findLinksInCss(parsedCss, baseUrl)
 
     links[0].target = 'other.png'
     // parsedCss.toResult().css === `body { background: url('other.png'); }`
 
 #### Syncing with a string
 
-    extractLinksFromCssSynced({ get, set, baseUrl })
+    findLinksInCssSynced({ get, set, baseUrl })
 
-Note this is form interally runs `extractLinksFromCss`. And in its turn, this form is used by
-`extractLinksFromDom` in order to extract links found within a `<style>` tag or `style` element
-attribute.
+Note this is form interally runs `findLinksInCss`. And in its turn, this form is used by
+`findLinksInDom` in order to find links in a `<style>` tag or `style` element attribute.
 
 Example usage:
 
     let stylesheetString = `body { background: url('bg.png'); }`
-    const links = extractLinksFromCssSynced({
+    const links = findLinksInCssSynced({
         get: () => stylesheetString,
         set: newValue => { stylesheetString = newValue },
         baseUrl: stylesheetUrl,
@@ -109,9 +108,9 @@ value. Except for `target`, all properties are read-only.
 
 ## How the live view works
 
-Extracted links remain coupled with the DOM/stylesheet, so e.g. `link.target` will always return its current target, and setting its target will mutate the DOM/stylesheet.
+Links remain coupled with the DOM/stylesheet, so e.g. `link.target` will always return its current target, and setting its target will mutate the DOM/stylesheet.
 
-However, the links array itself will not update when links are inserted or removed, so e.g. a newly inserted `<a>` element will not appear in the previously extracted array of links; similar to the behaviour of `Document.querySelectorAll` (this behaviour could be changed in the future).
+However, the links array itself will not update when links are inserted or removed, so e.g. a newly inserted `<a>` element will not appear in the previously returned array of links; similar to the behaviour of `Document.querySelectorAll` (this behaviour could be changed in the future).
 
 <details><summary><b>
 Caveat: changing attributes/stylesheets containing multiple links
@@ -120,8 +119,8 @@ Caveat: changing attributes/stylesheets containing multiple links
 Sometimes a single string define multiple links, such as the `srcset` of an `<img>`, the `style` of
 any element, as well as the text content of a `<style>` element or stylesheet. Because there is no
 identifier to distinguish the individual links, the links are identified by their index in the array
-of extracted links. This means that if by modifying the attribute/stylesheet you insert or remove a
-link, previously extracted links will now correspond to different links than you may expect.
+of found links. This means that if by modifying the attribute/stylesheet you insert or remove a
+link, previously found links will now correspond to different links than you may expect.
 
 Say, our body contains:
 
@@ -129,7 +128,7 @@ Say, our body contains:
 
 And we run:
 
-    const links = extractLinksFromDom(window.document)
+    const links = findLinksInDom(window.document)
     const srcsetLinks = links.filter(link => link.from.attribute === 'srcset')
 
     const largeLink = srcsetLinks[1]
@@ -139,7 +138,7 @@ And we run:
     // largeLink.target === 'big.png'
 
 Perhaps to your surprise, `largeLink.target === 'big.png'`, because that is now the second link in
-the `srcset`. In any case, we would have to run extractLinksFromDom again to get all three links.
+the `srcset`. In any case, we would have to run findLinksInDom again to get all three links.
 </details>
 
 [WHATWG fetch spec]: https://fetch.spec.whatwg.org/#concept-request-destination (as of 2018-05-17)

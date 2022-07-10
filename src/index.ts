@@ -13,5 +13,5 @@ export { default as setMementoTags } from './set-memento-tags'
 export { default as setLinkTarget } from './set-link-target'
 
 export * from './types'
-export * from './extract-links/types'
-export * from './extract-links/url-attributes/types'
+export * from './resource/links/types'
+export * from './resource/links/url-attributes/types'

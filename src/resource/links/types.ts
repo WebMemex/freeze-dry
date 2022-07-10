@@ -1,5 +1,5 @@
-import { FrameElement } from '../types/util'
-import { Resource, DomResource } from '../resource' // TODO Remove need for this (recursive) import
+import { FrameElement } from '../../types/util'
+import { Resource, DomResource } from '..' // TODO Remove need for this (recursive) import
 import type { SubresourceType } from './url-attributes/types'
 
 // UrlString is used for strings that are guaranteed/presumed to be absolute URLs.

@@ -1,8 +1,8 @@
 import { documentOuterHTML } from '../package'
 import { Resource } from './resource'
-import type { HtmlLink } from '../extract-links/types'
+import type { HtmlLink } from './links/types'
 import type { GlobalConfig, UrlString, FrameElement } from '../types'
-import { extractLinksFromDom } from '../extract-links'
+import { findLinksInDom } from './links'
 import { blobToText } from './util'
 import makeDomStatic from '../make-dom-static'
 
@@ -52,7 +52,7 @@ export class DomResource extends Resource {
         this._doc = doc
         this._url = url
         this._config = config
-        this._linksInDom = extractLinksFromDom(doc, { docUrl: url })
+        this._linksInDom = findLinksInDom(doc, { docUrl: url })
         for (const link of this._linksInDom) link.from.resource = this
     }
 
@@ -91,7 +91,7 @@ export class DomResource extends Resource {
      * The target of a {@link Link} can be modified, which updates the resource content accordingly.
      *
      * However, even though the *content* of a link is ‘live’ (i.e. its `target` is read and written
-     * directly from/to the DOM), the list of links is extracted only at the construction of the
+     * directly from/to the DOM), the list of links is created only at the construction of the
      * DomResource. Thus, if the DOM is modified afterwards, any newly created links will be missing
      * from this list.
      */
@@ -115,7 +115,7 @@ export class DomResource extends Resource {
      * stylesheets).
      */
     get linksInDom(): HtmlLink[] {
-        // TODO should we extract the links again, in case the document changed?
+        // TODO should we list the links again, in case the document changed?
         return this._linksInDom
     }
 

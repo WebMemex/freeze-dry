@@ -10,7 +10,7 @@ export type SubresourceType = 'audio' | 'document' | 'embed' | 'font' | 'image' 
     | 'script' | 'style' | 'track' | 'video'
 
 /**
- * Details on an HTML attribute relevant for extracting links from it.
+ * Details about an HTML attribute that are relevant for finding links in it.
  */
 export interface AttributeInfo {
     /**
@@ -42,7 +42,7 @@ export interface AttributeInfo {
      */
     readonly subresourceType?: SubresourceType;
     /**
-     * Turn the extracted (possibly) relative URL into an absolute URL.
+     * Turn the link’s (possibly) relative target into an absolute URL.
      * @param url - The (possibly relative) URL.
      * @param element - The element containing the attribute.
      * @param baseUrl - The base URL of the containing document (if it has a `<base>` tag)

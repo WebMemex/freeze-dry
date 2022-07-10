@@ -2,7 +2,7 @@
 // Intended to, for example, create a live view on the URLs inside an element's style or srcset
 // attribute, that allows both reading and writing the URLs in place.
 
-import { memoize, mutableProxyFactory } from '../package'
+import { memoize, mutableProxyFactory } from '../../package'
 import type { Parser, TokenPointer } from './url-attributes/types'
 
 interface ParsedView extends Array<TokenPointer> {

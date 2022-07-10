@@ -2,7 +2,7 @@
 import { flatOptions } from './package'
 
 import type { FreezeDryConfig, ProcessSubresourceRecurse } from './types/index'
-import type { SubresourceLink } from './extract-links/types'
+import type { SubresourceLink } from './resource/links/types'
 import blobToDataUrl from './blob-to-data-url'
 import setLinkTarget from './set-link-target'
 import { Resource, DomCloneResource } from './resource'

@@ -128,7 +128,7 @@ Freeze-dry finalises the snapshot by adding some tags:
 
 A web page’s subresources are the resources it links to which a web browser may load to display the page. Each subresource is defined by a link, but not each link defines a subresource: the `src` attribute of an `<img>` element defines a subresource, but the `href` of an `<a>` element does not (the latter is called ‘jump link’ in Ted’s original hypertext musings, or —confusingly– ‘hyperlink’ in WHATWG-speak).
 
-Unfortunately, browsers do not provide a way to list a document’s (subresource) links. The DOM provides `document.links`, but this is an old relic that only lists `<link>`, `<a>` and `<area>` elements. Web standards do list the various attributes that can define a link (or even multiple links, as with an image’s `srcset`), and note for each whether this link is a subresource link. Freeze-dry combines the lists from the [HTML 4.0][], [HTML 5.2][], and the [WHATWG HTML][] specifications. See the source files in `src/extract-links`.
+Unfortunately, browsers do not provide a way to list a document’s (subresource) links. The DOM provides `document.links`, but this is an old relic that only lists `<link>`, `<a>` and `<area>` elements. Web standards do list the various attributes that can define a link (or even multiple links, as with an image’s `srcset`), and note for each whether this link is a subresource link. Freeze-dry combines the lists from the [HTML 4.0][], [HTML 5.2][], and the [WHATWG HTML][] specifications. See the source files in `src/resource/links`.
 
 [HTML 4.0]: https://www.w3.org/TR/REC-html40/index/attributes.html
 [HTML 5.2]: https://www.w3.org/TR/2017/REC-html52-20171214/fullindex.html#attributes-table

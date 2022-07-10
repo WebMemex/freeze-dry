@@ -1,4 +1,4 @@
-import { relativeToAbsoluteIri } from '../package'
+import { relativeToAbsoluteIri } from '../../package'
 
 import type { UrlString } from './types'
 

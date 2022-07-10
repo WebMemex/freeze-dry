@@ -1,19 +1,19 @@
 import getBaseUrl from './get-base-url'
 import { syncingParsedView } from './parse-tools'
-import { extractLinksFromCssSynced } from './from-css'
+import { findLinksInCssSynced } from './from-css'
 import urlAttributes from './url-attributes/index'
 import type { UrlString, HtmlLink } from './types'
 import type { AttributeInfo } from './url-attributes/types'
 
 /**
- * Extracts links from an HTML Document.
+ * Find all links in an HTML Document.
  *
- * @param doc - The Document to extract links from.
+ * @param doc - The Document to find links in.
  * @param options.docUrl - Can be specified to override `doc.URL`.
- * @returns The extracted links. Each {@link Link} provides a live, editable view on one URL inside
+ * @returns The found links. Each {@link Link} provides a live, editable view on one URL inside
  * the DOM.
  */
-export function extractLinksFromDom(doc: Document, {
+export function findLinksInDom(doc: Document, {
     docUrl = undefined,
 }: {
     docUrl?: UrlString,
@@ -24,14 +24,14 @@ export function extractLinksFromDom(doc: Document, {
 
     const rootElement = doc.documentElement // = the <html> element.
     const links = [
-        ...extractLinksFromAttributes({ rootElement, baseUrl, docUrl }),
-        ...extractLinksFromStyleAttributes({ rootElement, baseUrl }),
-        ...extractLinksFromStyleTags({ rootElement, baseUrl }),
+        ...findLinksInAttributes({ rootElement, baseUrl, docUrl }),
+        ...findLinksInStyleAttributes({ rootElement, baseUrl }),
+        ...findLinksInStyleTags({ rootElement, baseUrl }),
     ]
     return links
 }
 
-function extractLinksFromAttributes({
+function findLinksInAttributes({
     rootElement,
     baseUrl,
     docUrl,
@@ -41,7 +41,7 @@ function extractLinksFromAttributes({
     docUrl?: UrlString,
 }): HtmlLink[] {
     // For each known attribute type, we find all elements having it.
-    // Note the 'style' attribute is handled separately, in extractLinksFromStyleAttributes below.
+    // Note the 'style' attribute is handled separately, in findLinksInStyleAttributes below.
     const links = Object.values(urlAttributes).flatMap(attributeInfo => {
         const { attribute, elements: elementNames } = attributeInfo
         const selector = elementNames
@@ -103,7 +103,7 @@ function linksInAttribute({
     return links
 }
 
-function extractLinksFromStyleAttributes({
+function findLinksInStyleAttributes({
     rootElement,
     baseUrl,
 }: {
@@ -114,8 +114,8 @@ function extractLinksFromStyleAttributes({
     const querySelector = '*[style]'
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
     const links = elements.flatMap(element => {
-        // Extract the links from the CSS using a live&editable view on the attribute value.
-        const cssLinks = extractLinksFromCssSynced({
+        // Find the links in the CSS using a live&editable view on the attribute value.
+        const cssLinks = findLinksInCssSynced({
             // XXX We treat an absent attribute as an empty string; feels slightly wrong.
             get: () => element.getAttribute('style') || '',
             set: newValue => { element.setAttribute('style', newValue) },
@@ -142,7 +142,7 @@ function extractLinksFromStyleAttributes({
     return links // links in the style attributes of *all* elements
 }
 
-function extractLinksFromStyleTags({
+function findLinksInStyleTags({
     rootElement,
     baseUrl,
 }: {
@@ -153,8 +153,8 @@ function extractLinksFromStyleTags({
     const elements = Array.from(rootElement.querySelectorAll(querySelector))
 
     const links = elements.flatMap(element => {
-        // Extract the links from the CSS using a live&editable view on the content.
-        const cssLinks = extractLinksFromCssSynced({
+        // Find the links in the CSS using a live&editable view on the content.
+        const cssLinks = findLinksInCssSynced({
             // A <style> element's textContent should never be null, but we please the type checker.
             get: () => element.textContent || '',
             set: newValue => { element.textContent = newValue },

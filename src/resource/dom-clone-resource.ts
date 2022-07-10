@@ -2,7 +2,7 @@ import { pathForDomNode, domNodeAtPath } from '../package'
 
 import type { GlobalConfig, UrlString, FrameElement } from '../types'
 import { DomResource } from '.'
-import type { HtmlDocumentLink } from '../extract-links/types'
+import type { HtmlDocumentLink } from './links/types'
 
 /**
  * DomCloneResource represents an HTML document, but works on a clone of the DOM it was given.

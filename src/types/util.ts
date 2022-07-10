@@ -1,4 +1,4 @@
-import type { UrlString } from '../extract-links/types'
+import type { UrlString } from '../resource/links/types'
 export type { UrlString }
 
 /**
