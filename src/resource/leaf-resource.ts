@@ -6,6 +6,8 @@ import type { UrlString } from '../types'
  * LeafResource represents any {@link Resource} without links (e.g. fonts, images, videos).
  *
  * It basically contains a Blob and a URL, and does nothing special.
+ *
+ * @category Resources
  */
 export class LeafResource extends Resource {
     private _blob: Blob

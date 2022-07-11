@@ -3,12 +3,14 @@ import { flatOptions } from './package'
 
 import type { FreezeDryConfig, ProcessSubresourceRecurse } from './types'
 import type { SubresourceLink } from './resource'
-import blobToDataUrl from './blob-to-data-url'
-import setLinkTarget from './set-link-target'
+import {
+    blobToDataUrl,
+    setLinkTarget,
+    setMementoTags,
+    setContentSecurityPolicy,
+    setCharsetDeclaration,
+} from './util'
 import { Resource, DomCloneResource } from './resource'
-import setMementoTags from './set-memento-tags'
-import setContentSecurityPolicy from './set-content-security-policy'
-import setCharsetDeclaration from './set-charset-declaration'
 
 /**
  * Freeze-dry an HTML Document.
@@ -17,23 +19,28 @@ import setCharsetDeclaration from './set-charset-declaration'
  * FreezeDryer} instance.
  *
  * @example
- * // Simplest use case
+ * Simplest use case:
+ * ```
  * const html = await freezeDry()
+ * ```
  *
- * // With options
+ * With options:
+ *
+ * ```
  * const html = await freezeDry(document, { timeout: 5000 })
+ * ```
  *
- * @param document - Document to be freeze-dried. Remains unmodified. @defaultValue `window.document`.
+ * @param document - Document to be freeze-dried. Remains unmodified. Defaults to `window.document`.
  * @param options - Options to customise freezeDry’s behaviour. See {@link FreezeDryConfig}.
- * @returns The freeze-dried document as a self-contained, static string of HTML.
+ * @returns The freeze-dried document as a self-contained, static HTML string.
+ *
+ * @category Main
  */
 export async function freezeDry(
     document: Document = typeof window !== 'undefined' && window.document || fail('No document given to freeze-dry'),
     options: Partial<FreezeDryConfig> = {},
 ): Promise<string> {
     const freezeDryer = await new FreezeDryer(document, options).run()
-
-    // Return the snapshot as a single string of HTML
     const html = freezeDryer.result.string
     return html
 }
@@ -48,9 +55,14 @@ export async function freezeDry(
  *
  * @example
  * This is roughly what running `freezeDry(document, options)` does:
- *     const freezeDryer = new FreezeDryer(document, options)
- *     await freezeDryier.run()
- *     const html = freezeDryer.result.string
+ *
+ * ```
+ * const freezeDryer = new FreezeDryer(document, options)
+ * await freezeDryier.run()
+ * const html = freezeDryer.result.string
+ * ```
+ *
+ * @category Main
  */
 export class FreezeDryer implements AbortController {
     /**
@@ -196,10 +208,10 @@ export class FreezeDryer implements AbortController {
         // Step 4.1: Add metadata about the snapshot to the snapshot itself.
         if (this.config.addMetadata)
             setMementoTags(this.result.doc, { originalUrl: this.result.url, datetime: this.config.now })
-        // Step 4.2: Set a strict Content Security Policy in a <meta> tag.
+        // Step 4.2: Set a strict Content Security Policy in a `<meta>` tag.
         if (this.config.contentSecurityPolicy !== null)
             setContentSecurityPolicy(this.result.doc, this.config.contentSecurityPolicy)
-        // Step 4.3: Create/replace the <meta charset=…> element.
+        // Step 4.3: Create/replace the `<meta charset=…>` element.
         if (this.config.charsetDeclaration !== undefined)
             setCharsetDeclaration(this.result.doc, this.config.charsetDeclaration)
     }

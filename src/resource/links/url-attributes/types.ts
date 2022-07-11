@@ -17,7 +17,7 @@ export interface AttributeInfo {
     /**
      * Parser for the attribute value, returns an array of zero, one, or multiple URLs.
      * Each url is an object `{ token, index }`, to help replacing the url on the right spot.
-     * (to e.g. replace the correct 5 in <meta http-equiv="refresh" content="5; url=5">)
+     * (to e.g. replace the correct 5 in `<meta http-equiv="refresh" content="5; url=5">`)
      */
     readonly parse: Parser;
     /**

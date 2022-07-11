@@ -2,6 +2,12 @@ import type { UrlString, SubresourceType, GlobalConfig, ProcessSubresourceCallba
 import type { Link, SubresourceLink } from './links'
 import { DomResource, StylesheetResource, LeafResource } from './index'
 
+/**
+ * Each {@link Resource} subclass implements a static method `fromBlob` to instantiate it from a
+ * `{ blob, url }` pair.
+ *
+ * @category Resources
+ */
 export interface ResourceFactory {
     fromBlob(args: { url: UrlString, blob: Blob, config?: GlobalConfig }): Promise<Resource>
 }
@@ -16,17 +22,20 @@ export interface ResourceFactory {
  * StylesheetResource}) which may link to a font ({@link LeafResource}).
  *
  * Each such subclass of Resource exposes the links it contains. Note that besides the user-visible
- * links made by `<a>` elements, links are also created by e.g. the `src` of an `<img>` element (in
- * HTML), or the `url(…)` in a `background-image` value (in CSS).
+ * links made by `<a>` elements, links are also created by e.g. the `src="…"` of an `<img>` element
+ * (in HTML), or the `url(…)` in a `background-image` value (in CSS).
  *
  * The target of a {@link Link} can be modified, which updates the resource content accordingly.
  *
  * Each subclass also provides a `dry()` method that transforms the contents to be usable outside of
  * its original context (e.g. served from a different URL), and to be as accurately as possible a
- * a snapshot of the current state of the resource (e.g. any dynamic state is made part of the DOM).
+ * snapshot of its current state (e.g. dynamic DOM state is made part of its HTML).
  *
- * The content can be accessed as a Blob via {@link blob}, and as a string via `text` on subclasses
- * for text-based resources (HTML in {@link DomResource}, CSS in {@link StylesheetResource}).
+ * Any Resource’s content can be accessed as a {@link blob}. Subclasses may also provide other
+ * formats: {@link DomResource.doc}, {@link DomResource.string}, and {@link
+ * StylesheetResource.string}.
+ *
+ * @category Resources
  */
 export abstract class Resource {
     /** URL of the resource. */

@@ -5,8 +5,10 @@
  * @param doc - The Document to add the element to.
  * @param charsetDeclaration - The character set name (usually `'utf-8'`).
  * @returns Nothing; the document is mutated.
+ *
+ * @category Util
  */
-export default function setCharsetDeclaration(doc: Document, charsetDeclaration: string | null) {
+export function setCharsetDeclaration(doc: Document, charsetDeclaration: string | null) {
     // Ensure a head element exists.
     if (!doc.head) {
         const head = doc.createElement('head')

@@ -10,6 +10,8 @@ export * from './util'
  * @param recurse - The callback that can be used to process this subresource’s subresources.
  * Invoking it will invoke this function itself again, while enabling `freezeDry` to track progress
  * and trigger event handlers.
+ *
+ * @category Config
  */
 export type ProcessSubresourceCallback = (
     link: SubresourceLink,
@@ -21,6 +23,8 @@ export type ProcessSubresourceCallback = (
  * Equivalent to {@link ProcessSubresourceCallback}, expect there is no need to pass it the
  * `recurse` parameter again.
  * @param link - The ((…)sub)subresource link to be processed.
+ *
+ * @category Config
  */
 export type ProcessSubresourceRecurse = (
     link: SubresourceLink,
@@ -31,6 +35,8 @@ export type ProcessSubresourceRecurse = (
  * `resource.dry()` as part of this transformation, to run the default actions.
  * @param resource - The resource to be ‘dried’.
  * @param isRootDocument - Whether `resource` is the top-level document (rather than a subresource).
+ *
+ * @category Config
  */
 export type DryResourceCallback = (
     resource: Resource,
@@ -41,6 +47,8 @@ export type DryResourceCallback = (
  * Function for choosing a new URL for a subresource.
  *
  * @returns the new URL for linking to this subresource.
+ *
+ * @category Config
  */
 export type NewUrlForResourceCallback = (resource: Resource) => string | Promise<string>
 
@@ -56,6 +64,8 @@ export type NewUrlForResourceCallback = (resource: Resource) => string | Promise
  *       'img-src': ['data:'],
  *       'style-src': ['data:', "'unsafe-inline'"],
  *     }
+ *
+ * @category Config
  */
 export type ContentSecurityPolicy = string | {
     [directive: string]: string | string[] | undefined | null,
@@ -65,8 +75,10 @@ export type ContentSecurityPolicy = string | {
  * The configuration for freeze-dry.
  *
  * The configuration is set by the `options` passed to {@link freezeDry} or {@link FreezeDryer}.
+ *
+ * @category Config
  */
-export interface FreezeDryConfig extends GlobalConfig {
+export interface FreezeDryConfig {
     /**
      * Maximum time (in milliseconds) spent on fetching the page’s subresources. The resulting HTML
      * will have only succesfully fetched subresources inlined.
@@ -90,7 +102,7 @@ export interface FreezeDryConfig extends GlobalConfig {
     docUrl?: UrlString,
 
     /**
-     * The value put into the <meta charset="…"> element of the snapshot.
+     * The value put into the `<meta charset="…">` element of the snapshot.
      *
      * If you will store/serve the returned string using an encoding other than UTF8, pass its name
      * here; or pass null or an empty string to omit the declaration altogether.
@@ -149,15 +161,17 @@ export interface FreezeDryConfig extends GlobalConfig {
      * creating a `data:` URL. If `processSubresource` is also given, this option is ignored.
      */
     newUrlForResource: NewUrlForResourceCallback,
-}
 
-/**
- * Optional configuration relevant to various methods within freeze-dry.
- */
-export interface GlobalConfig {
     /**
      * Overrides the object providing global DOM interfaces (instead of `globalThis`/`window`).
      * Only relevant when freezeDry is not run ‘in’ but ‘on’ a DOM (e.g. in NodeJS on [JSDOM](https://github.com/jsdom/jsdom/)).
      */
-    glob?: typeof globalThis,
+     glob?: typeof globalThis,
 }
+
+/**
+ * Optional configuration relevant to various methods within freeze-dry.
+ *
+ * @category Config
+ */
+export type GlobalConfig = Pick<FreezeDryConfig, 'glob'>

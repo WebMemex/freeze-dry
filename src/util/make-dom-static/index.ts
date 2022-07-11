@@ -1,5 +1,5 @@
-import removeScripts from './remove-scripts'
-import type { GlobalConfig } from '../types'
+import { removeScripts } from './remove-scripts'
+import type { GlobalConfig } from '../../types'
 
 export  { removeScripts }
 
@@ -8,8 +8,10 @@ export  { removeScripts }
  *
  * @param doc - The Document to be modified.
  * @returns Nothing; the Document is mutated.
+ *
+ * @category Util
  */
-export default function makeDomStatic(doc: Document, config: GlobalConfig = {}) {
+export function makeDomStatic(doc: Document, config: GlobalConfig = {}) {
     removeScripts(doc, config)
 
     // If noscript content was not shown, we do not want it to show in the snapshot either. Also, we
@@ -26,9 +28,11 @@ export default function makeDomStatic(doc: Document, config: GlobalConfig = {}) 
 }
 
 /**
- * Remove any <noscript> tags from the document.
+ * Remove any `<noscript>` tags from the document.
  *
  * @param doc - The Document to be modified.
+ *
+ * @category Util
  */
 export function removeNoscript(doc: Document) {
     const noscripts = Array.from(doc.querySelectorAll('noscript'))
@@ -39,6 +43,8 @@ export function removeNoscript(doc: Document) {
  * Disable editing on editable elements.
  *
  * @param doc - The Document to be modified.
+ *
+ * @category Util
  */
 export function removeContentEditable(doc: Document, config: GlobalConfig = {}) {
     const glob = config.glob || globalThis

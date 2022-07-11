@@ -79,7 +79,7 @@ value. Except for `target`, all properties are read-only.
   thus be a relative URL. This property can be written to, which will modify the document.
 
 - `absoluteTarget`: the link's target URL as an absolute URL. This takes into account factors like
-  the <base href="..."> tag, so usually you may prefer to use `absoluteTarget` rather than `target`.
+  the `<base href="...">` tag, so usually you may prefer to use `absoluteTarget` rather than `target`.
 
 - `from`: information needed to find the link in the DOM or stylesheet, for scenarios where one
   needs to do more than just reading or modifying the link target.

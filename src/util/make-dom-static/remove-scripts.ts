@@ -1,12 +1,14 @@
-import type { GlobalConfig } from '../types'
+import type { GlobalConfig } from '../../types'
 
 /**
  * Remove all scripts contained in the given Document/Element.
  *
  * @param docOrElement - The Document or Element to remove scripts from.
  * @returns Nothing; the document/element contents are mutated.
+ *
+ * @category Util
  */
-export default function removeScripts(
+export function removeScripts(
     docOrElement: Element | Document,
     config: GlobalConfig = {},
 ) {

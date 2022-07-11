@@ -1,4 +1,4 @@
-import type { ContentSecurityPolicy } from './types'
+import type { ContentSecurityPolicy } from '../types'
 
 /**
  * Puts the given CSP directives into a `<meta>` tag of the given document.
@@ -6,8 +6,10 @@ import type { ContentSecurityPolicy } from './types'
  * @param doc - The Document to be modified.
  * @param csp - The desired value of the Content Security Policy.
  * @returns Nothing; the Document is mutated.
+ *
+ * @category Util
  */
-export default function setContentSecurityPolicy(doc: Document, csp: ContentSecurityPolicy) {
+export function setContentSecurityPolicy(doc: Document, csp: ContentSecurityPolicy) {
     const cspString = cspToString(csp)
 
     // Ensure a head element exists.

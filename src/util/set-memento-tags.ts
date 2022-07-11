@@ -8,8 +8,10 @@
  * @param options.datetime - The moment the page was snapshotted.
  * @param options.originalUrl - The page's original location.
  * @returns Nothing; the Document is mutated.
+ *
+ * @category Util
  */
-export default function setMementoTags(doc: Document, {
+export function setMementoTags(doc: Document, {
     originalUrl,
     datetime
 }: {

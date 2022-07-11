@@ -7,7 +7,9 @@ import type { GlobalConfig } from '../types'
  *
  * @param blob - The Blob to convert.
  * @param config - Optional environment configuration.
- * @returns the blob’s content.
+ * @returns The blob’s content as a string.
+ *
+ * @category Util
  */
 export async function blobToText(blob: Blob, config: GlobalConfig = {}): Promise<string> {
     const text = await new Promise<string>((resolve, reject) => {

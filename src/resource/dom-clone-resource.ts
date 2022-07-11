@@ -18,6 +18,8 @@ import type { HtmlDocumentLink } from './links'
  * @example
  * const domResource = new DomCloneResource(window.document)
  * domResource.cloneFramedDocs(true)
+ *
+ * @category Resources
  */
 export class DomCloneResource extends DomResource {
     private _framesContentDocClones: Map<FrameElement, DomCloneResource | null>

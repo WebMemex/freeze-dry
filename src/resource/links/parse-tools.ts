@@ -12,13 +12,15 @@ interface ParsedView extends Array<TokenPointer> {
 
 /**
  * Allows manipulating tokens within a string.
- * @param {string => Object[]} parse - given a string, must return an array of objects { token,
- * index, note? }
+ *
+ * @param {string => Object[]} parse - given a string, must return an array of objects `{ token,
+ * index, note? }`
  * @=>
  * @param {string} value - the string to be parsed.
- * @returns {Object[]} tokens - the array of { token, index, note? } objects as returned by
- * parse(value), where each token field is writable, and with a special toString() method that
+ * @returns {Object[]} tokens - the array of `{ token, index, note? }` objects as returned by
+ * parse(value), where each token field is writable, and with a special `toString()` method that
  * reconstructs the original string using the current values of the tokens.
+ *
  * @example
  * const view = parsedView(extractUrls)('bla http://example.com blub')
  * view.forEach(tokenInfo => { tokenInfo.token = tokenInfo.token.replace(/^https?:/, 'dat:') })
@@ -55,9 +57,10 @@ export const parsedView: (parse: Parser) => (value: string) => ParsedView = pars
 
 /**
  * Like parsedView, but helps syncing the string with another variable/state/attribute/...
- * It reads the string using get() at any operation, and afterward writes it back using set(string).
+ * It reads the string using `get()` at any operation, and afterward writes it back using
+ * `set(string)`.
  * @param {string => Object[]} options.parse - parser to apply to the string, should return an array
- * of objects { token, index, note? }
+ * of objects `{ token, index, note? }`
  * @param {() => string} options.get - string getter; invoked whenever a token is accessed.
  * @param {string => void} options.set - string setter; invoked when any of its tokens was modified.
  */
@@ -76,18 +79,23 @@ export const syncingParsedView: (kwargs: {
 
 /**
  * Transparently handles getting+transforming and untransforming+setting of a variable.
- * The result is nearly equivalent to the following: {
+ * The result is nearly equivalent to the following:
+ *
+ * ```
+ * {
  *   get: () => transform(get()),
  *   set: value => set(untransform(value)),
  * }
- * ..except it remembers the last value to only run transform() or set() when needed.
+ * ```
+ *
+ * ..except it remembers the last value to only run `transform()` or `set()` when needed.
  * @param {() => T1} options.get - getter for the current untransformed value.
  * @param {T1 => void} options.set - setter to update the current untransformed value.
  * @param {T1 => T2} options.transform - the transformation to apply.
  * @param {T2 => T1} options.untransform - the exact inverse of transformation.
  * @param {(T1, T1) => boolean} [options.isEqual] - compares equality of two untransformed values.
- * Defaults to (new, old) => new === old.
- * @returns {Object} A pair of functions { get, set }.
+ * Defaults to `(new, old) => new === old`.
+ * @returns {Object} A pair of functions `{ get, set }`.
  */
 export function transformingCache<T1, T2>({
     get,
@@ -138,8 +146,8 @@ export function transformingCache<T1, T2>({
 type ProxyMethodListener<T> = (method: keyof typeof Reflect, args: [T, ...any[] ]) => void
 
 /**
- * A Proxy that appears as the object returned by get(), *at any moment*, and writes back changes
- * using set(object).
+ * A Proxy that appears as the object returned by `get()`, *at any moment*, and writes back changes
+ * using `set(object)`.
  * @param {() => Object} get - getter for the object; is run before any operation on the object.
  * @param {Object => void} set - setter for the object; is run after any operation on the object.
  * @returns {Proxy} The proxy.
@@ -166,8 +174,10 @@ export function syncingProxy<T extends object>({ get, set }: {
 }
 
 /**
- * Like syncingProxy, this appears as the object return by get(), at any moment. It also proxies any
- * member object, so that e.g. proxy.a.b will be updated to correspond to get().a.b at any moment.
+ * Like {@link syncingProxy}, this appears as the object return by get(), at any moment. It also
+ * proxies any member object, so that e.g. `proxy.a.b` will be updated to correspond to `get().a.b`
+ * at any moment.
+ *
  * @param {() => Object} get - getter to obtain the object; is run before any operation on the
  * object or any of its members (or members' members, etc.).
  * @param {Object => void} set - setter to update the object; is run after any operation on the
@@ -242,6 +252,7 @@ const modifyingOperations = [
 
 /**
  * A proxy to the object, that runs the given hooks before and after every operation on the object.
+ *
  * @param {(method: string, args[]) => void} before - is run before any operation on the object.
  * Gets passed the name of the method that will be invoked, and its arguments.
  * @param {(method: string, args[]) => void} after - is run after any operation on the object.
@@ -272,6 +283,7 @@ export function makeListenerProxy<T extends object>(
 
 /**
  * A higher order proxy to have a proxy also wrap every attribute in the same type of proxy.
+ *
  * @param {(Object, path: string) => Proxy} createProxy
  * @=>
  * @param {Object} object - the object which, and whose members, will be wrapped using createProxy.

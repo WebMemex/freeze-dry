@@ -4,7 +4,7 @@ import { Resource } from './resource'
 import type { GlobalConfig, UrlString } from '../types'
 import { findLinksInCss } from './links'
 import type { CssLink } from './links'
-import { blobToText } from './util'
+import { blobToText } from '../util'
 
 /**
  * StylesheetResource represents a CSS stylesheet.
@@ -13,6 +13,8 @@ import { blobToText } from './util'
  * stylesheet refers to, as well as any `@import`ed stylesheets.
  *
  * To {@link dry} a stylesheet means expanding any relative URLs in links to absolute URLs.
+ *
+ * @category Resources
  */
 export class StylesheetResource extends Resource {
     private _url: UrlString

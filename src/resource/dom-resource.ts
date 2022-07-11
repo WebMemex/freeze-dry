@@ -3,8 +3,7 @@ import { Resource } from './resource'
 import type { GlobalConfig, UrlString, FrameElement } from '../types'
 import type { HtmlLink } from './links'
 import { findLinksInDom } from './links'
-import { blobToText } from './util'
-import makeDomStatic from '../make-dom-static'
+import { blobToText, makeDomStatic } from '../util'
 
 /**
  * DomResource represents an HTML document.
@@ -13,9 +12,12 @@ import makeDomStatic from '../make-dom-static'
  * (e.g. an `<a>`’s `href` or `<img>`’s `src`) and those defined in inline CSS (e.g. a `background:
  * url(…)` in a `<style>` element).
  *
- * {@link DomResource.dry} attempts to capture the dynamic state of a DOM into its HTML, to make
- * its HTML (available at {@link string}) a more accurate reflection of its current state. This
- * includes, like with other Resources, expanding any relative URLs in links to absolute URLs.
+ * {@link DomResource.dry | `DomResource.dry`} attempts to capture the dynamic state of a DOM into
+ * its HTML, to make its HTML (available at {@link string}) a more accurate reflection of its
+ * current state. This includes, like with other Resources, expanding any relative URLs in links to
+ * absolute URLs.
+ *
+ * @category Resources
  */
 export class DomResource extends Resource {
     private _doc: Document
@@ -24,6 +26,12 @@ export class DomResource extends Resource {
     private _linksInDom: HtmlLink[]
 
     /**
+     * Represent a given Document. Any changes to {@link DomResource.links} will directly update the
+     * Document contents.
+     *
+     * If the Document is prone to modification by any other scripts, you may want to use {@link
+     * DomCloneResource} instead, to make a clone of the Document and work on that one instead.
+     *
      * @param doc - The Document this Resource represents.
      * @param url - Since the passed Document already has a property `doc.URL`, the `url` parameter
      * is optional; if passed it will override the value of `doc.URL` when determining the target of

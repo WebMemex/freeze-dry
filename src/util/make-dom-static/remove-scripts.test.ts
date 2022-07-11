@@ -1,4 +1,4 @@
-import removeScripts from './remove-scripts'
+import { removeScripts } from './remove-scripts'
 
 const config = {
     glob: window,

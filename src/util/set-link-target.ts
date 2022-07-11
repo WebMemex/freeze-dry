@@ -1,4 +1,4 @@
-import type { Link, HtmlAttributeDefinedLink } from './resource'
+import type { Link, HtmlAttributeDefinedLink } from '../resource'
 
 /**
  * Set the link’s target to a new URL.
@@ -10,14 +10,17 @@ import type { Link, HtmlAttributeDefinedLink } from './resource'
  * - If the link is defined by an attribute of an HTML element, and `config.rememberOriginalUrls` is
  *  `true`, the attribute’s existing value is preserved in a `data-original-…` attribute.
  *
- * Note that modifying a {@link Link}’s target updates the {@link Resource} that defines the link.
+ * Note that modifying a {@link Link}’s target updates the {@link Resource} that
+ * contains the link.
  *
  * @param link - The link to modify.
  * @param target - The link’s new target: a relative or absolute URL.
  * @param config.rememberOriginalUrls - If true, and the link is defined by an attribute of an HTML
  * element, the attribute’s existing value is preserved in a `data-original-…` attribute.
+ *
+ * @category Util
  */
-export default function setLinkTarget(
+export function setLinkTarget(
     link: Link,
     target: string,
     config: { rememberOriginalUrls?: boolean } = {},
