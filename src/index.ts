@@ -13,7 +13,7 @@
  * The {@link Resource} and {@link Link} abstractions help deal with links and subresources of web
  * pages. Several utility functions are available too.
  *
- * @module Freeze-dry API
+ * @module
  */
 
 /**

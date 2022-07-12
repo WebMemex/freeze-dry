@@ -40,7 +40,8 @@
     "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
-    "typedoc": "^0.23.5",
+    "ts-node": "^10.8.2",
+    "typedoc": "^0.23.7",
     "typescript": ">=4.5.0",
     "vite": "^2.9.9"
   },

@@ -10,6 +10,10 @@ module.exports = {
     'src/index.ts',
   ],
   out: '../apidocs',
+  name: 'Freeze-dry API documentation',
+  readme: 'none',
   githubPages: false,
   hideGenerator: true,
+  plugin: './typedoc-theme',
+  theme: 'mytheme',
 }
