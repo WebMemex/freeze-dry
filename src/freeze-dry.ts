@@ -16,7 +16,9 @@ import { Resource, DomCloneResource } from './resource'
  * Freeze-dry an HTML Document.
  *
  * Technically, this function is a convenience wrapper that instantiates and runs a {@link
- * FreezeDryer} instance.
+ * FreezeDryer} instance. Use that class instead if you need more control; for example to access the
+ * incomplete result before `freezeDry` finishes, or to obtain it as a `Document` or `Blob` rather
+ * than a string.
  *
  * @example
  * Simplest use case:
@@ -50,7 +52,7 @@ export async function freezeDry(
  *
  * For most use cases, use the {@link freezeDry} function, a convenience wrapper around this class.
  *
- * Use this class instead if you need more control. For example to access the incomplete result
+ * Use this class instead if you need more control; for example to access the incomplete result
  * before `freezeDry` finishes, or to obtain it as a `Document` or `Blob` rather than a string.
  *
  * @example
@@ -223,6 +225,7 @@ export class FreezeDryer implements AbortController {
         const defaultOptions: FreezeDryConfig = {
             // Config for tweaking snapshot output
             addMetadata: true,
+            rememberOriginalUrls: true,
             now: new Date(),
             contentSecurityPolicy: {
                 'default-src': ["'none'"], // By default, block all connectivity and scripts.
@@ -237,11 +240,10 @@ export class FreezeDryer implements AbortController {
             // Config for dealing with subresources
             timeout: Infinity,
             signal: undefined,
-            processSubresource: this.processSubresource.bind(this),
             fetchResource: undefined, // defaults to browser’s fetch
             dryResource: this.dryResource.bind(this),
             newUrlForResource: this.newUrlForResource.bind(this),
-            rememberOriginalUrls: true,
+            processSubresource: this.processSubresource.bind(this),
 
             // Other config
             docUrl: undefined,

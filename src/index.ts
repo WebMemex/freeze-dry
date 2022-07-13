@@ -1,11 +1,12 @@
 /**
- * For most of the freeze-drying functionality, the {@link freezeDry} function is all you need.
+ * For most of the freeze-drying functionality, the {@link freezeDry} function is all you need. Its
+ * behaviour can be {@link FreezeDryConfig | configured} through its `options` parameter.
  *
- * I you need more control than `freezeDry`’s options can give, you can use the {@link FreezeDryer}
- * class directly (`freezeDry` is a simple convenience wrapper around it).
+ * For slightly more control, you can use the {@link FreezeDryer} class directly (`freezeDry` is a
+ * simple convenience wrapper around it).
  *
  * For still more advanced customisation needs, freeze-dry exposes many of its internal classes and
- * functions, that you could use to ‘build your own freeze-dry’.
+ * functions, that you could use to build your own `freezeDry`-ish function.
  *
  * Note that these exposed internals are not a stable API, and may be updated in future versions
  * once typical usage patterns and needs become clear.

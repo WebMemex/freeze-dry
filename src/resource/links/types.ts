@@ -4,9 +4,12 @@ import { Resource, DomResource } from '..' // TODO Remove need for this (recursi
 /**
  * A representation of a link between web resources.
  *
- * A Link contains:
+ * Links are obtained via {@link Resource.links | `Resource.links`}, and provide a live view on the
+ * links defined in the resource. Changing the target of a link will change the resource content.
+ *
+ * A Link contains (see {@link Link_base}):
  * - `from`: an {@link Anchor} representing the place this link ‘points from’.
- * - `target`: the link target, possibly relative URL.
+ * - `target`: the link target, possibly relative URL. Can be modified.
  * - `absoluteTarget`: the link target, expanded to an absolute URL if needed.
  * - `isSubresource`: whether the link’s target is considered a subresource.
  * - `subresourceType`: what type of subresource it links to (if applicable).
@@ -23,7 +26,7 @@ export type Link = NonSubresourceLink | SubresourceLink
  *
  * @category Links
  */
-interface Link_base {
+export interface Link_base {
     /**
      * The link’s target URL.
      *
@@ -72,7 +75,7 @@ export interface NonSubresourceLink extends Link_base {
 }
 
 /**
- * A link that makes its target ‘part of’ the document.
+ * A {@link Link} that makes its target ‘part of’ the document.
  *
  * @category Links
  */
@@ -94,8 +97,8 @@ export interface SubresourceLink extends Link_base {
 
 
 /**
- * The place a link points ‘from’. For links in HTML or CSS, this is the place where the link is
- * defined (only an HTTP `Link` header can specify the anchor of a link).
+ * The place a {@link Link} points ‘from’. For links in HTML or CSS, this is the place where the
+ * link is defined (only an HTTP `Link` header can specify the anchor of a link).
  *
  * @category Links
  */
@@ -112,8 +115,14 @@ export interface Anchor {
 export interface AttributeAnchor<E extends Element, A extends string> extends Anchor {
     element: E;
     attribute: A;
-    // Range is kept optional while it is not yet implemented for the `style` attribute (it depends
-    // on CssAnchor.range)
+    /**
+     * The character position of the URL inside the attribute.
+     *
+     * Relevant for attributes that contain more than a single URL; e.g. the `srcset` of an `<img>`.
+     *
+     * It is not yet implemented for the `style` attribute (it depends on {@link CssAnchor.range |
+     * `CssAnchor.range`}).
+     */
     rangeWithinAttribute?: [number, number];
 }
 
@@ -124,7 +133,11 @@ export interface AttributeAnchor<E extends Element, A extends string> extends An
  */
 export interface TextContentAnchor<E extends Element> extends Anchor {
     element: E;
-    // Range is kept optional because not yet implemented (it depends on CssAnchor.range)
+    /**
+     * The character position of the URL inside `element`’s text content.
+     *
+     * _**Not yet implemented (it depends on {@link CssAnchor.range | `CssAnchor.range`})**_
+     */
     rangeWithinTextContent?: [number, number];
 }
 
@@ -134,8 +147,12 @@ export interface TextContentAnchor<E extends Element> extends Anchor {
  * @category Links
  */
 export interface CssAnchor extends Anchor {
-    // The character position of the URL inside the stylesheet text.
-    range?: [number, number]; // optional because not yet implemented
+    /**
+     * The character position of the URL inside the stylesheet text.
+     *
+     * _**Not yet implemented.**_
+     */
+    range?: [number, number];
 }
 
 
@@ -185,11 +202,11 @@ export type HtmlSubresourceLink =
 /**
  * A {@link Link} defined in an HTML document, that links to a subresource.
  *
- * This interface is not for direct use, but is extended by all subtypes of {@link HtmlSubresourceLink}.
+ * This type is not for direct use, but is extended by all subtypes of {@link HtmlSubresourceLink}.
  *
  * @category Links
  */
-type HtmlSubresourceLink_base = HtmlLink_base & SubresourceLink
+export type HtmlSubresourceLink_base = HtmlLink_base & SubresourceLink
 
 /**
  * A {@link Link} defined in an HTML document, that links to a subresource of unknown type.
@@ -349,7 +366,7 @@ export type CssLink = CssSubresourceLink // (all links in CSS are subresource li
  *
  * @category Links
  */
-interface CssLink_base extends Link_base {
+export interface CssLink_base extends Link_base {
     readonly from: CssAnchor;
 }
 
@@ -367,11 +384,11 @@ export type CssSubresourceLink = CssFontLink | CssImageLink | CssStyleLink
  *
  * Note that all links in stylesheets are subresource links.
  *
- * This interface is not for direct use, but is extended by all subtypes of {@link CssSubresourceLink}.
+ * This type is not for direct use, but is extended by all subtypes of {@link CssSubresourceLink}.
  *
  * @category Links
  */
-type CssSubresourceLink_base = CssLink_base & SubresourceLink
+export type CssSubresourceLink_base = CssLink_base & SubresourceLink
 
 /**
  * A {@link Link} defined in a CSS stylesheet, that links to a `font` subresource.

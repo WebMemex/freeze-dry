@@ -3,16 +3,6 @@ import type { Link, SubresourceLink } from './links'
 import { DomResource, StylesheetResource, LeafResource } from './index'
 
 /**
- * Each {@link Resource} subclass implements a static method `fromBlob` to instantiate it from a
- * `{ blob, url }` pair.
- *
- * @category Resources
- */
-export interface ResourceFactory {
-    fromBlob(args: { url: UrlString, blob: Blob, config?: GlobalConfig }): Promise<Resource>
-}
-
-/**
  * Resource is an abstraction to help deal with links and subresources of web pages.
  *
  * Each Resource has content and a URL, and may have links to other URLs, which can again be
@@ -32,8 +22,8 @@ export interface ResourceFactory {
  * snapshot of its current state (e.g. dynamic DOM state is made part of its HTML).
  *
  * Any Resource’s content can be accessed as a {@link blob}. Subclasses may also provide other
- * formats: {@link DomResource.doc}, {@link DomResource.string}, and {@link
- * StylesheetResource.string}.
+ * formats: {@link DomResource.doc | `DomResource.doc`}, {@link DomResource.string |
+ * `DomResource.string`}, and {@link StylesheetResource.string | `StylesheetResource.string`}.
  *
  * @category Resources
  */
@@ -216,4 +206,14 @@ export abstract class Resource {
         }
         return resourceClasses[subresourceType]
     }
+}
+
+/**
+ * Each {@link Resource} subclass implements a static method `fromBlob` to instantiate it from a
+ * `{ blob, url }` pair.
+ *
+ * @category Resources
+ */
+ export interface ResourceFactory {
+    fromBlob(args: { url: UrlString, blob: Blob, config?: GlobalConfig }): Promise<Resource>
 }

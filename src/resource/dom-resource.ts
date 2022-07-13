@@ -26,8 +26,8 @@ export class DomResource extends Resource {
     private _linksInDom: HtmlLink[]
 
     /**
-     * Represent a given Document. Any changes to {@link DomResource.links} will directly update the
-     * Document contents.
+     * Represent a given Document. Any changes to its {@link DomResource.links} will directly update
+     * the Document contents.
      *
      * If the Document is prone to modification by any other scripts, you may want to use {@link
      * DomCloneResource} instead, to make a clone of the Document and work on that one instead.
@@ -144,7 +144,7 @@ export class DomResource extends Resource {
      * Make the DOM ‘dry’: try make its HTML represent its current state as accurately as possible.
      *
      * Drying performs several transformations:
-     * - Relative links are expanded to be absolute (by {@link Resource.dry}).
+     * - Relative links are expanded to be absolute (by {@link Resource.dry | `Resource.dry`}).
      * - Scripts, `<noscript>` elements, and `contenteditable` attributes are removed (by {@link
      *   makeDomStatic}).
      * - `srcdoc` values are updated (by {@link updateSrcdocValues}).

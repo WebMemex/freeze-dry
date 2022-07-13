@@ -9,3 +9,8 @@
 .tsd-index-panel .tsd-index-list > * {
   display: block;
 }
+
+:root {
+  --light-color-background: white;
+  --light-color-background-secondary: snow;
+}

@@ -1,6 +1,10 @@
 /**
  * UrlString is used for strings that are guaranteed/presumed to be absolute URLs.
  *
+ * It is intended to avoid accidentally passing a relative URL to a function that expects an
+ * absolute URL. Type assertions may be required in cases where a string is known to be an absolute
+ * URL. For example: `document.URL as UrlString`.
+ *
  * @category Other
  */
 // Specify just enough to make it incompatible with an arbitrary string.
@@ -23,13 +27,3 @@ export type UrlString = `${string}:${string}`
  * @category Other
  */
 export type FrameElement = HTMLFrameElement | HTMLIFrameElement
-
-/**
- * A function that is API-compatible with the global `fetch()`, but may also resolve to an object
- * `{ blob, url }` instead of a `Response`.
- *
- * @category Config
- */
-export type Fetchy = WindowOrWorkerGlobalScope['fetch']
-    | ((...args: Parameters<WindowOrWorkerGlobalScope['fetch']>)
-        => Promise<{ blob: Blob, url: UrlString }>)
