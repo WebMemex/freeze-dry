@@ -6,6 +6,7 @@ import {
     PageEvent,
     Reflection,
     ContainerReflection,
+    Renderer,
 } from 'typedoc';
 
 class MyThemeRenderContext extends DefaultThemeRenderContext {
@@ -20,18 +21,12 @@ class MyThemeRenderContext extends DefaultThemeRenderContext {
 
     override settings = () => null
     override primaryNavigation = () => null;
-    override secondaryNavigation = (props: PageEvent<Reflection>) => (
-        <>
-            <h3>
-                Contents
-            </h3>
-            {/* The default theme shows siblings if the reflection lacks children. Avoid this. */}
-            {(props.model instanceof ContainerReflection && props.model.children?.length)
-                ? this.superish.secondaryNavigation(props)
-                : null
-            }
-        </>
-    )
+    override secondaryNavigation = (props: PageEvent<Reflection>) => {
+        // Use the index partial to show categories etc.
+        return (props.model instanceof ContainerReflection)
+            ? this.superish.index(props.model)
+            : null
+    }
 }
 
 class MyTheme extends DefaultTheme {
@@ -43,5 +38,5 @@ class MyTheme extends DefaultTheme {
 }
 
 export function load(app: Application) {
-    app.renderer.defineTheme("mytheme", MyTheme)
+    app.renderer.defineTheme('mytheme', MyTheme)
 }

@@ -15,5 +15,6 @@ module.exports = {
   githubPages: false,
   hideGenerator: true,
   plugin: './typedoc-theme',
+  customCss: './typedoc-theme/mytheme.css', // the theme should include this css, but not sure how.
   theme: 'mytheme',
 }
