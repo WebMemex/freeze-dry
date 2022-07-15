@@ -32,10 +32,18 @@ is used in (and spun off from) the [WebMemex][] browser extension.
 But the main difference from all the above: freeze-dry is a JavaScript/TypeScript module, and highly
 customisable, so it can be used in other software for various snapshotting (or other) purposes.
 
+For example, the researchers at Ink & Switch found freeze-dry their *“[favorite solution]”* to make web page clippings for their Capstone creativity tool:
+
+> The solution we settled on for Capstone is freeze-dry. Its use was just a few lines of code.
+>
+> Freeze Dry takes the page’s DOM as it looks in the moment, with all the context of the user’s browser including authentication cookies and modifications made to the page dynamically via Javascript. It disables anything that will make the page change (scripts, network access). It captures every external asset required to faithfully render that and inlines it into the HTML.
+>
+> We felt that this is a philosophically-strong approach to the problem. Freeze-dry can save to a serialized `.HTML` file for viewing in any browser; for Capstone, we stored the clipped page as one giant string in the app’s datastore.
+
 [SingleFile]: https://github.com/gildas-lormeau/SingleFile
 [WebScrapbook]: https://addons.mozilla.org/en-US/firefox/addon/webscrapbook/
 [WebMemex]: https://webmemex.org/
-[Capstone]: https://www.inkandswitch.com/capstone/#appendix-c-web-page-archiving
+[favorite solution]: https://www.inkandswitch.com/capstone/#our-favorite-solution-freeze-dry
 
 
 ## How does it work?
