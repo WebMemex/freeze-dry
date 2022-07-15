@@ -6,7 +6,6 @@ import {
     PageEvent,
     Reflection,
     ContainerReflection,
-    Renderer,
 } from 'typedoc';
 
 class MyThemeRenderContext extends DefaultThemeRenderContext {
@@ -20,7 +19,21 @@ class MyThemeRenderContext extends DefaultThemeRenderContext {
     }
 
     override settings = () => null
-    override primaryNavigation = () => null;
+
+    override primaryNavigation = () => (
+        // XXX Keep in sync with /doc/_include/top_layout.html
+        <ul class="mynavigation">
+            <li>
+                <a href="/">Freeze-dry main page</a>
+            </li>
+            <li>
+                <a href="/how-it-works/">How freeze-dry works</a>
+            </li>
+            <li>
+                <a href="/api/">API overview</a>
+            </li>
+        </ul>
+    )
     override secondaryNavigation = (props: PageEvent<Reflection>) => {
         // Use the index partial to show categories etc.
         return (props.model instanceof ContainerReflection)

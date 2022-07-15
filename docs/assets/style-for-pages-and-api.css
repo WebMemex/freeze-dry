@@ -1,0 +1,8 @@
+ul.mynavigation {
+  font-weight: bold;
+  list-style: none;
+  padding: unset;
+}
+ul.mynavigation li {
+  margin: 1em 0;
+}

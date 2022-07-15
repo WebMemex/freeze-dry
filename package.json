@@ -21,9 +21,10 @@
     "test:playwright": "playwright test",
     "test-server": "vite --port 3000 --strictPort",
     "typecheck": "tsc --noEmit || true",
-    "docs": "typedoc"
+    "docs": "rimraf _site && eleventy && typedoc"
   },
   "devDependencies": {
+    "@11ty/eleventy": "^1.0.1",
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
     "@babel/plugin-transform-runtime": "^7.9.6",
@@ -35,11 +36,15 @@
     "@typescript-eslint/parser": "^2.27.0",
     "babel-jest": "^25.2.6",
     "blob-util": "^2.0.0",
+    "eleventy-plugin-toc": "^1.1.5",
     "eslint": "^6.8.0",
     "jest": "^25.2.7",
     "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
+    "markdown-it": "^13.0.1",
+    "markdown-it-anchor": "^8.6.4",
+    "rimraf": "^3.0.2",
     "ts-node": "^10.8.2",
     "typedoc": "^0.23.7",
     "typescript": ">=4.5.0",

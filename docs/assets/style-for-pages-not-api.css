@@ -1,0 +1,21 @@
+html {
+  font-family: Lato, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+}
+
+main {
+  max-width: 40em;
+}
+
+nav {
+  margin: 2em;
+}
+
+.toc ul {
+  list-style: none;
+  padding-left: 1em;
+}

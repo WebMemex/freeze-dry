@@ -14,7 +14,7 @@ module.exports = {
   entryPoints: [
     'src/index.ts',
   ],
-  out: '../apidocs',
+  out: '_site/api',
   name: 'Freeze-dry API documentation',
   readme: 'none',
   githubPages: false,
