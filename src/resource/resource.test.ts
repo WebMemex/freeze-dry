@@ -1,9 +1,10 @@
-import { Resource } from './resource'
+import { Resource } from '.'
+import { UrlString } from '../types'
 import type { Link } from './links'
 
 class TestResource extends Resource {
-    blob: null
-    constructor(public url: string, public links: Link[]) {
+    blob = null
+    constructor(public url: UrlString, public links: Link[]) {
         super()
     }
 }

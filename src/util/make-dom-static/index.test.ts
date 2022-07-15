@@ -1,4 +1,4 @@
-import makeDomStatic from './index'
+import { makeDomStatic } from './index'
 
 const config = {
     glob: window,
