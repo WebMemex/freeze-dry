@@ -13,30 +13,44 @@
   "main": "lib/index.js",
   "scripts": {
     "check-globals": "eslint --config .eslintrc-check-globals.json 'src/**/*.ts'",
+    "bundle": "vite build",
     "prepare": "npm run build:types && npm run build:js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:js": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.d.ts,**/*.test.js,**/*.test.ts'",
     "watch": "babel src -d lib --extensions '.js,.ts' --ignore '**/*.d.ts,**/*.test.js,**/*.test.ts' -w",
-    "test": "jest --verbose",
-    "typecheck": "tsc --noEmit || true"
+    "test": "npm run test:jest && npm run test:playwright",
+    "test:jest": "jest --verbose",
+    "test:playwright": "playwright test",
+    "test-server": "vite --port 3000 --strictPort",
+    "typecheck": "tsc --noEmit || true",
+    "docs": "rimraf _site && eleventy && typedoc"
   },
   "devDependencies": {
+    "@11ty/eleventy": "^1.0.1",
     "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-transform-runtime": "^7.9.0",
-    "@babel/preset-env": "^7.9.0",
+    "@babel/core": "^7.9.6",
+    "@babel/plugin-transform-runtime": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
     "@babel/preset-typescript": "^7.9.0",
+    "@playwright/test": "^1.20.1",
     "@types/jest": "^24.0.25",
     "@types/node": "^13.11.0",
     "@typescript-eslint/parser": "^2.27.0",
     "babel-jest": "^25.2.6",
     "blob-util": "^2.0.0",
+    "eleventy-plugin-toc": "^1.1.5",
     "eslint": "^6.8.0",
     "jest": "^25.2.7",
     "jest-cli": "^25.2.7",
     "jest-fetch-mock": "=1.2.0",
     "jsdom": "^15.1.1",
-    "typescript": "^3.8.3"
+    "markdown-it": "^13.0.1",
+    "markdown-it-anchor": "^8.6.4",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.8.2",
+    "typedoc": "^0.23.7",
+    "typescript": ">=4.5.0",
+    "vite": "^2.9.9"
   },
   "dependencies": {
     "@babel/runtime": "^7.4.5",
@@ -47,11 +61,14 @@
     "memoize-weak": "^1.0.2",
     "mutable-proxy": "^1.0.0",
     "path-to-domnode": "^1.0.1",
-    "postcss": "^7.0.1",
+    "postcss": "^8.0.1",
     "postcss-values-parser": "^1.5.0",
     "relative-to-absolute-iri": "^1.0.5"
   },
   "jest": {
+    "testMatch": [
+      "**/*test.[tj]s"
+    ],
     "testURL": "https://example.com/test/page"
   }
 }

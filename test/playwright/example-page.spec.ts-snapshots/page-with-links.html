@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; media-src data:; style-src data: 'unsafe-inline'; font-src data:; frame-src data:"><meta http-equiv="Memento-Datetime" content="Sat, 18 Aug 2018 18:02:20 GMT"><link rel="original" href="http://localhost:3000/pages/page-with-links.html">
+        
+    </head>
+    <body>
+        <h1>Test page with links</h1>
+        <p>
+            <a href="http://localhost:3000/pages/something">A relative link to <code>something</code>.</a> (should be made absolute)
+        </p>
+        <p>
+            <a href="http://localhost:3000/pages/something#section3">A relative link to <code>something#section3</code>.</a> (should be made absolute)
+        </p>
+        <p>
+            <a href="#section3">A relative link to <code>#section3</code>.</a> (should remain unchanged)
+        </p>
+        <p>
+            <a href="#section3">A relative link to <code>page-with-links.html#section3</code>.</a> (should become <code>#section3</code>)
+        </p>
+        <p>
+            <a href="https://example.org/something">An absolute link to <code>https://example.org/something</code>.</a> (should remain unchanged)
+        </p>
+    
+
+</body></html>

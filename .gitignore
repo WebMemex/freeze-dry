@@ -1,2 +1,6 @@
-node_modules
-lib
+/node_modules
+/lib
+/dist
+/test-results
+/playwright-report
+/_site

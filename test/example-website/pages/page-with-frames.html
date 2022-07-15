@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+    </head>
+    <body>
+        <h1>Test page with frames</h1>
+
+        <h2>Frame with <code>src</code> attribute</h2>
+        <iframe name="src" src="/iframe/innerpage.html"></iframe>
+
+        <h2>Frame with <code>src</code> and <code>srcdoc</code> attributes</h2>
+        <iframe name="src-srcdoc" src="/iframe/innerpage.html" srcdoc="<h1>frame with src and srcdoc</h1>"></iframe>
+
+        <h2>Frame with only <code>srcdoc</code> attribute</h2>
+        <iframe name="srcdoc" srcdoc="<h1>frame with only srcdoc</h1>"></iframe>
+
+        <h2>Empty frame (no <code>src</code> nor <code>srcdoc</code>)</h2>
+        <iframe name="empty"></iframe>
+    </body>
+</html>

@@ -9,5 +9,8 @@
   "ignorePatterns": ["*.test.ts"],
   "rules": {
     "no-undef": "error"
+  },
+  "globals": {
+    "globalThis": "readonly"
   }
 }

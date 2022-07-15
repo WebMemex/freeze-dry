@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <script>
+            function clickHandler() { alert('You clicked the button, and its handler works.') }
+        </script>
+    </head>
+    <body>
+        <h1>Test page with scripts</h1>
+        <p>
+            <button onclick="clickHandler()">A button with javascript <code>onclick</code> handler.</button>
+        </p>
+        <p>
+            <a href=" javascript: alert('spam')">This is a spammy <code>javascript:</code> ‘link’.</a>
+        </p>
+        <noscript>
+            <p>
+                This paragraph is in a </code>&lt;noscript&gt;</code> tag.
+            </p>
+        </noscript>
+        <script>
+            document.write('&lt;p&gt;This paragraph was added using &lt;code&gt;document.write()&lt;/code&gt; in an inline script.&lt;/p&gt;')
+        </script>
+    </body>
+</html>

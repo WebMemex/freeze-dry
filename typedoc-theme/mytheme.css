@@ -1,0 +1,18 @@
+@import '/assets/style-for-pages-and-api.css';
+
+/* For index, use columns, not grid.
+ * (not sure if a grid can give both auto column width and vertical ordering)
+ */
+.tsd-index-panel .tsd-index-list {
+  display: revert;
+  column-count: auto;
+  column-width: 20em;
+}
+.tsd-index-panel .tsd-index-list > * {
+  display: block;
+}
+
+:root {
+  --light-color-background: white;
+  --light-color-background-secondary: snow;
+}

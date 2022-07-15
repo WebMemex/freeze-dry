@@ -1,7 +1,12 @@
 {
     "compilerOptions": {
+        "isolatedModules": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "noUncheckedIndexedAccess": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitOverride": true,
         "target": "ES2017",
         "lib": [
             "es2020",
