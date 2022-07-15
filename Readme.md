@@ -34,11 +34,11 @@ customisable, so it can be used in other software for various snapshotting (or o
 
 For example, the researchers at Ink & Switch found freeze-dry their *“[favorite solution]”* to make web page clippings for their Capstone creativity tool:
 
-> The solution we settled on for Capstone is freeze-dry. Its use was just a few lines of code.
+> “The solution we settled on for Capstone is freeze-dry. Its use was just a few lines of code.
 >
 > Freeze Dry takes the page’s DOM as it looks in the moment, with all the context of the user’s browser including authentication cookies and modifications made to the page dynamically via Javascript. It disables anything that will make the page change (scripts, network access). It captures every external asset required to faithfully render that and inlines it into the HTML.
 >
-> We felt that this is a philosophically-strong approach to the problem. Freeze-dry can save to a serialized `.HTML` file for viewing in any browser; for Capstone, we stored the clipped page as one giant string in the app’s datastore.
+> We felt that this is a philosophically-strong approach to the problem. Freeze-dry can save to a serialized `.HTML` file for viewing in any browser; for Capstone, we stored the clipped page as one giant string in the app’s datastore.”
 
 [SingleFile]: https://github.com/gildas-lormeau/SingleFile
 [WebScrapbook]: https://addons.mozilla.org/en-US/firefox/addon/webscrapbook/

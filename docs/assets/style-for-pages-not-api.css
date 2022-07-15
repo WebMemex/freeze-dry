@@ -1,21 +1,52 @@
 html {
   font-family: Lato, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-size: 18px;
 }
 
-body {
-  display: flex;
-  justify-content: center;
+@media (min-width: 800px) {
+  body {
+    display: flex;
+    flex-direction: row-reverse;
+  }
+
+  main {
+    max-width: 40em;
+  }
+
+  .sidebar {
+    flex-grow: 1;
+  }
+
+  nav {
+    margin-left: 4em;
+    width: 25em;
+    position: sticky;
+    top: 3em;
+  }
 }
 
-main {
-  max-width: 40em;
+nav a {
+  text-decoration: none;
 }
 
-nav {
-  margin: 2em;
+nav a.active,
+nav a.hover {
+  text-decoration: underline;
+}
+
+nav h3 {
+  margin-top: 2em;
 }
 
 .toc ul {
   list-style: none;
   padding-left: 1em;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+blockquote {
+  font-style: italic;
 }

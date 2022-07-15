@@ -24,13 +24,13 @@ class MyThemeRenderContext extends DefaultThemeRenderContext {
         // XXX Keep in sync with /doc/_include/top_layout.html
         <ul class="mynavigation">
             <li>
-                <a href="/">Freeze-dry main page</a>
+                <a href="/">Freeze-dry: web page conservation</a>
             </li>
             <li>
                 <a href="/how-it-works/">How freeze-dry works</a>
             </li>
             <li>
-                <a href="/api/">API overview</a>
+                <a href="/api/" style="text-decoration: underline;">API documentation</a>
             </li>
         </ul>
     )

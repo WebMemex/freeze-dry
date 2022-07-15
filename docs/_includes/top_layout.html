@@ -8,24 +8,32 @@
     <link rel="stylesheet" href="/assets/style-for-pages-and-api.css"/>
   </head>
   <body>
+    <div class="sidebar">
+      <nav>
+        <!-- Keep in sync with /typedoc-theme/mytheme.tsx -->
+        <ul class="mynavigation">
+          <li>
+              <a href="/" {% if page.url == '/' %}class="active"{% endif %}">
+                Freeze-dry: web page conservation
+              </a>
+          </li>
+          <li>
+              <a href="/how-it-works/" {%if page.url ==  '/how-it-works/' %}class="active"{% endif %}">
+                How freeze-dry works
+              </a>
+          </li>
+          <li>
+              <a href="/api/">API documentation</a>
+          </li>
+        </ul>
+        <h3>Page contents</h3>
+        {{ content | toc }}
+      </nav>
+    </div>
     <main>
       {{ content }}
     </main>
-    <nav>
-      <!-- Keep in sync with /typedoc-theme/mytheme.tsx -->
-      <ul class="mynavigation">
-        <li>
-            <a href="/">Freeze-dry main page</a>
-        </li>
-        <li>
-            <a href="/how-it-works/">How freeze-dry works</a>
-        </li>
-        <li>
-            <a href="/api/">API documentation</a>
-        </li>
-      </ul>
-      <h3>Page contents</h3>
-      {{ content | toc }}
-    </nav>
+    <div class="sidebar">
+    </div>
   </body>
 </html>
