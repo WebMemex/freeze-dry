@@ -32,13 +32,19 @@ is used in (and spun off from) the [WebMemex][] browser extension.
 But the main difference from all the above: freeze-dry is a JavaScript/TypeScript module, and highly
 customisable, so it can be used in other software for various snapshotting (or other) purposes.
 
-For example, the researchers at Ink & Switch found freeze-dry their *“[favorite solution]”* to make web page clippings for their Capstone creativity tool:
+For example, the researchers at Ink & Switch found freeze-dry their *“[favorite solution]”* to make
+web page clippings for their Capstone creativity tool:
 
 > “The solution we settled on for Capstone is freeze-dry. Its use was just a few lines of code.
 >
-> Freeze Dry takes the page’s DOM as it looks in the moment, with all the context of the user’s browser including authentication cookies and modifications made to the page dynamically via Javascript. It disables anything that will make the page change (scripts, network access). It captures every external asset required to faithfully render that and inlines it into the HTML.
+> Freeze Dry takes the page’s DOM as it looks in the moment, with all the context of the user’s
+> browser including authentication cookies and modifications made to the page dynamically via
+> Javascript. It disables anything that will make the page change (scripts, network access). It
+> captures every external asset required to faithfully render that and inlines it into the HTML.
 >
-> We felt that this is a philosophically-strong approach to the problem. Freeze-dry can save to a serialized `.HTML` file for viewing in any browser; for Capstone, we stored the clipped page as one giant string in the app’s datastore.”
+> We felt that this is a philosophically-strong approach to the problem. Freeze-dry can save to a
+> serialized `.HTML` file for viewing in any browser; for Capstone, we stored the clipped page as
+> one giant string in the app’s datastore.”
 
 [SingleFile]: https://github.com/gildas-lormeau/SingleFile
 [WebScrapbook]: https://addons.mozilla.org/en-US/firefox/addon/webscrapbook/
@@ -61,16 +67,41 @@ For a detailed explanation, see [How freeze-dry works][].
 [How freeze-dry works]: ./how-it-works/
 
 
-## Usage
+## Install
 
-Get the module, e.g. using `npm`:
+### Old-fashioned JS
+
+For a good old Javascript global variable, [download][] the latest `.umd.js` script and include it
+among your scripts, e.g.:
+
+    <script src="./freeze-dry.umd.js"></script>
+
+The freeze-dry function is then `freezeDry.freezeDry()` (adjust example code accordingly).
+
+### ES module
+
+For using it as a module in the browser, [download][] the latest `.es.js` module and `import` it in
+your code, e.g.:
+
+    import freezeDry from './freeze-dry.es.js'
+
+### NPM package
+
+For use via npm/yarn/… (to bundle it with webpack/rollup/vite/…), download the package, e.g.:
 
     npm install freeze-dry
 
-Then, in your code:
+Then, in your code, either `import` or `require` it:
 
     import freezeDry from 'freeze-dry'
-    …
+
+    const { freezeDry } = require('freeze-dry')
+
+[download]: https://freezedry.webmemex.org/dist/
+
+
+## Usage
+
     const html = await freezeDry(document, options)
 
 In a few seconds, `freezeDry` should return your snapshot as a string (potentially a very long one).

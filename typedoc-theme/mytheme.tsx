@@ -32,6 +32,9 @@ class MyThemeRenderContext extends DefaultThemeRenderContext {
             <li>
                 <a href="/api/" style="text-decoration: underline;">API documentation</a>
             </li>
+            <li>
+              <a href="https://github.com/WebMemex/freeze-dry/">Code</a>
+            </li>
         </ul>
     )
     override secondaryNavigation = (props: PageEvent<Reflection>) => {
