@@ -1,5 +1,13 @@
 # Changelog for freeze-dry
 
+## 0.3.0 (2022-07-19)
+
+- Support extensive customisation.
+- Export internals: Resource classes, Link types, and utility functions.
+- Support iframes with `srcdoc` attribute.
+- Add browser-based tests using Playwright.
+- Write documentation
+
 ## 0.2.5 (2021-07-16)
 
 - Fix failure on invalid itemProp/itemType attributes.
@@ -12,9 +20,9 @@
 
 ## 0.2.3 (2019-06-04)
 
-- Presumptively put a <meta charset="utf-8"> declaration in the snapshot by default; while adding
+- Presumptively put a `<meta charset="utf-8">` declaration in the snapshot by default; while adding
   the charsetDeclaration option for choosing another value. (solves issue #29)
-- Keep/make links within the document (e.g. <a href="#top">) relative. (solves issue #40)
+- Keep/make links within the document (e.g. `<a href="#top">`) relative. (solves issue #40)
 - Fix choking on invalid URLs (solves issue #41)
 
 ## 0.2.2 (2019-01-27)
