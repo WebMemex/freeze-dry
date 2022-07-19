@@ -1,7 +1,3 @@
----
-layout: top_layout
----
-
 # Freeze-dry: web page conservation
 
 Freeze-dry captures a web page as it is currently shown in the browser. It takes the DOM, grabs its

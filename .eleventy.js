@@ -16,6 +16,9 @@ module.exports = eleventyConfig => {
     wrapper: 'div',
     ul: true,
   })
+
+  eleventyConfig.addGlobalData('layout', 'top_layout')
+
   return {
     dir: {
       input: "docs",

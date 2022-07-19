@@ -1,7 +1,3 @@
----
-layout: top_layout
----
-
 # How freeze-dry works
 
 As a first approximation, `freezeDry` can be thought of as a simple function that captures the DOM
