@@ -1,5 +1,9 @@
 # Changelog for freeze-dry
 
+## 1.0.0 (2022-09-18)
+
+- Call it good enough.
+
 ## 0.3.0 (2022-07-19)
 
 - Support extensive customisation.
